@@ -32,8 +32,8 @@ bl_info = {
     "blender": (2, 80, 0),
     "location": "Properties Panel",
     "description": "Import-Export multiple video-bame formats",
-    "wiki_url": "https://github.com/Brachi/albam",
-    "tracker_url": "https://github.com/Brachi/albam/issues",
+    #"wiki_url": "https://github.com/Brachi/albam",
+    #"tracker_url": "https://github.com/Brachi/albam/issues",
     "category": "Import-Export"}
 
 #import pkgutil
