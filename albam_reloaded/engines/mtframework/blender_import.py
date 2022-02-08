@@ -82,15 +82,15 @@ def import_mod(blender_object, file_path, **kwargs):
             print('Error building mesh {0} for mod {1}'.format(i, file_path))
             print('Details:', err)
 
-    if mod.bone_count:
+    if mod.bone_count: # create  skeleton? 
         armature_name = 'skel_{}'.format(blender_object.name)
         root = _create_blender_armature_from_mod(blender_object, mod, armature_name)
-        #root.show_x_ray = True
+        #root.show_x_ray = True # deprecated 
         root.show_in_front = True
     else:
         root = blender_object
 
-    for mesh in meshes:
+    for mesh in meshes: # skin mesh to bones? 
         #bpy.context.scene.objects.link(mesh)
         bpy.context.collection.objects.link(mesh)
         mesh.parent = root
@@ -262,12 +262,13 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
         blender_material.blend_method = 'CLIP' # set transparency method OPAQUE’, ‘CLIP’, ‘HASHED’, ‘BLEND’
 
         principled_node = blender_material.node_tree.nodes.get("Principled BSDF")
-        #principled_node.inputs[19].default_value = 0.0 #change alpha
         principled_node.inputs['Specular'].default_value = 0.2 # change specular
 
+        ''' Old code
         #blender_material.use_transparency = True 
         #blender_material.alpha = 0.0
         #blender_material.specular_intensity = 0.2  # would be nice to get this info from the mod
+        '''
 
         # unknown data for export, registered already
         # TODO: do this with a util function
@@ -298,7 +299,7 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
             print("texture target is {}".format(texture_target))
             texture_code_to_blender_texture(texture_code, slot, blender_material)
             #slot.texture = texture_target
-            print(dir(texture_target))
+            #print(dir(texture_target))
             slot.image = texture_target.image
 
     return materials
@@ -309,11 +310,12 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
     armature_ob = bpy.data.objects.new(armature_name, armature)
     armature_ob.parent = blender_object
 
-    if bpy.context.mode != 'OBJECT':
+    #set to Object mode
+    if bpy.context.mode != 'OBJECT': 
         bpy.ops.object.mode_set(mode='OBJECT')
     # deselect all objects
     for i in bpy.context.scene.objects:
-    #    i.select = False
+    #    i.select = False #deprecated
         i.select_set(False) # my change
     #bpy.context.scene.objects.link(armature_ob)
     bpy.context.collection.objects.link(armature_ob)
@@ -324,10 +326,11 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
     bpy.ops.object.mode_set(mode='EDIT')
 
     blender_bones = []
-    for i, bone in enumerate(mod.bones_array):
+    for i, bone in enumerate(mod.bones_array): # add counter to the array
         blender_bone = armature.edit_bones.new(str(i))
         blender_bones.append(blender_bone)
         parents = get_bone_parents_from_mod(bone, mod.bones_array)
+        #print(parents)
         if not parents:
             blender_bone.head = Vector((bone.location_x / 100,
                                         bone.location_z * -1 / 100,
@@ -335,9 +338,11 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
             continue
         chain = [i] + parents
         wtm = Matrix.Translation((0, 0, 0))
+        print(wtm)
         for bi in reversed(chain):
             b = mod.bones_array[bi]
-            wtm *= Matrix.Translation((b.location_x / 100, b.location_z / 100 * -1, b.location_y / 100))
+            wtm = wtm @ Matrix.Translation((b.location_x / 100, b.location_z / 100 * -1, b.location_y / 100))
+            #wtm = wtm * Matrix.Translation((b.location_x / 100, b.location_z / 100 * -1, b.location_y / 100)) # * was replaced with @
         blender_bone.head = wtm.to_translation()
         blender_bone.parent = blender_bones[bone.parent_index]
 
