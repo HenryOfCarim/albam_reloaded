@@ -135,6 +135,7 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
     #blender_texture_slot.use_map_alpha = True
     principled_node = blender_material.node_tree.nodes.get("Principled BSDF")
     link = blender_material.node_tree.links.new
+
     if texture_code == 0:
         # Diffuse
         link(blender_texture_slot.outputs['Color'], principled_node.inputs['Base Color'])
@@ -143,31 +144,53 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
         #blender_texture_slot.use_map_color_diffuse = True
     elif texture_code == 1:
         # Normal
+        # Since normal maps have offset channels, they need to be rearranged for Blender
+        rgb_separate_node = blender_material.node_tree.nodes.new('ShaderNodeSeparateRGB')
+        rgb_separate_node.location =(-600, -500)
+        rgb_combine_node = blender_material.node_tree.nodes.new('ShaderNodeCombineRGB')
+        rgb_combine_node.location = (-400, -400)
+
         normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
-        normal_map_node.location = (-500, -200)
-        blender_texture_slot.location = (-900, -200)
+        normal_map_node.location = (-200, -300)
+        blender_texture_slot.location = (-900, -400)
+        
+        link(blender_texture_slot.outputs['Color'], rgb_separate_node.inputs['Image'])
+        link(blender_texture_slot.outputs['Alpha'], rgb_combine_node.inputs['R']) # set normal node to shader socket
+        link(rgb_separate_node.outputs['G'], rgb_combine_node.inputs['G'])
+        link(rgb_separate_node.outputs['B'], rgb_combine_node.inputs['B'])
+        link(rgb_combine_node.outputs['Image'], normal_map_node.inputs['Color'])
         link(normal_map_node.outputs['Normal'], principled_node.inputs['Normal']) # set normal node to shader socket
-        link(blender_texture_slot.outputs['Color'], normal_map_node.inputs['Color'])
-        #blender_texture_slot.use_map_color_diffuse = False
-        #blender_texture_slot.use_map_normal = True
-        #blender_texture_slot.normal_factor = 0.05
+
+        ''' Old code
+        blender_texture_slot.use_map_color_diffuse = False
+        blender_texture_slot.use_map_normal = True
+        blender_texture_slot.normal_factor = 0.05'''
     elif texture_code == 2:
         # Specular
-        blender_texture_slot.location =(-300, 40)
-        link(blender_texture_slot.outputs['Color'], principled_node.inputs['Specular'])
-        #blender_texture_slot.use_map_color_diffuse = False
-        #blender_texture_slot.use_map_specular = True
-        #blender_material.specular_intensity = 0.0
+        # No sure should it have this Specular to Roughness conversion
+        blender_texture_slot.location =(-500, -10)
+        invert_spec_node = blender_material.node_tree.nodes.new('ShaderNodeInvert')
+        invert_spec_node.location = (-200, -10)
+
+        link(blender_texture_slot.outputs['Color'], invert_spec_node.inputs['Color'])
+        link(invert_spec_node.outputs['Color'], principled_node.inputs['Roughness'])
+        ''' Old code
+        blender_texture_slot.use_map_color_diffuse = False
+        blender_texture_slot.use_map_specular = True
+        blender_material.specular_intensity = 0.0'''
     elif texture_code == 7:
         # cube map normal
+        # What is cube mape normal?
         normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
+        normal_map_node.space = ('WORLD')
         link(normal_map_node.outputs['Normal'], principled_node.inputs['Normal']) # set normal node to shader socket
         link(blender_texture_slot.outputs['Color'], normal_map_node.inputs['Color'])
-        #blender_texture_slot.use_map_color_diffuse = False
-        #blender_texture_slot.use_map_normal = True
-        #blender_texture_slot.normal_factor = 0.05
-        #blender_texture_slot.texture_coords = 'GLOBAL'
-        #blender_texture_slot.mapping = 'CUBE'
+        ''' Old code
+        blender_texture_slot.use_map_color_diffuse = False
+        blender_texture_slot.use_map_normal = True
+        blender_texture_slot.normal_factor = 0.05
+        blender_texture_slot.texture_coords = 'GLOBAL'
+        blender_texture_slot.mapping = 'CUBE'''
     else:
         print('texture_code not supported', texture_code)
         blender_texture_slot.use_map_color_diffuse = False
