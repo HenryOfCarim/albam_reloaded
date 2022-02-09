@@ -127,10 +127,11 @@ def get_bone_parents_from_mod(bone, bones_array):
 
 
 def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_material):
-    '''Function for detecting texture type and map it to blender shader sockets
-        texture_code - index for detecting type of a texture
-        blender_texture_slot - image texture node
-        blender_material - shader material
+    ''' 
+        Function for detecting texture type and map it to blender shader sockets
+        texture_code : index for detecting type of a texture
+        blender_texture_slot : image texture node
+        blender_material : shader material
     '''
     #blender_texture_slot.use_map_alpha = True
     principled_node = blender_material.node_tree.nodes.get("Principled BSDF")
