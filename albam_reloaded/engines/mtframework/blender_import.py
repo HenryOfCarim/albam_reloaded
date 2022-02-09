@@ -33,8 +33,6 @@ def import_arc(blender_object, file_path, **kwargs):
     """
 
     unpack_dir = kwargs.get('unpack_dir')
-    print('Unpack dir is {}'.format(unpack_dir))
-
     if file_path.endswith(tuple(KNOWN_ARC_BLENDER_CRASH) + tuple(CORRUPTED_ARCS)):
         raise ValueError('The arc file provided is not supported yet, it might crash Blender')
 
@@ -86,7 +84,7 @@ def import_mod(blender_object, file_path, **kwargs):
         armature_name = 'skel_{}'.format(blender_object.name)
         root = _create_blender_armature_from_mod(blender_object, mod, armature_name)
         #root.show_x_ray = True # deprecated 
-        root.show_in_front = True
+        root.show_in_front = True # set x-ray view for bones
     else:
         root = blender_object
 
@@ -142,7 +140,7 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
             vg.add((vertex_index,), weight_value, 'ADD')
 
     if uvs_per_vertex:
-        #me_ob.uv_textures.new(name) #
+        #me_ob.uv_textures.new(name) # deprecated
         #print(dir(me_ob))
         me_ob.uv_layers.new(name=name)
         uv_layer = me_ob.uv_layers[-1].data
@@ -295,10 +293,10 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
                 # This means the conversion failed before
                 # TODO: logging
                 continue
-            print("texture target type is {}".format(type(texture_target)))
-            print("texture target is {}".format(texture_target))
+            #print("texture target type is {}".format(type(texture_target)))
+            #print("texture target is {}".format(texture_target))
             texture_code_to_blender_texture(texture_code, slot, blender_material)
-            #slot.texture = texture_target
+            #slot.texture = texture_target # deprecated?
             #print(dir(texture_target))
             slot.image = texture_target.image
 
@@ -317,11 +315,11 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
     for i in bpy.context.scene.objects:
     #    i.select = False #deprecated
         i.select_set(False) # my change
-    #bpy.context.scene.objects.link(armature_ob)
+    #bpy.context.scene.objects.link(armature_ob) # deprecated
     bpy.context.collection.objects.link(armature_ob)
-    #bpy.context.scene.objects.active = armature_ob
+    #bpy.context.scene.objects.active = armature_ob # deprecated 
     bpy.context.view_layer.objects.active = armature_ob
-    #armature_ob.select = True
+    #armature_ob.select = True # deprecated
     armature_ob.select_set(True)
     bpy.ops.object.mode_set(mode='EDIT')
 
@@ -330,7 +328,6 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
         blender_bone = armature.edit_bones.new(str(i))
         blender_bones.append(blender_bone)
         parents = get_bone_parents_from_mod(bone, mod.bones_array)
-        #print(parents)
         if not parents:
             blender_bone.head = Vector((bone.location_x / 100,
                                         bone.location_z * -1 / 100,
@@ -338,11 +335,10 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
             continue
         chain = [i] + parents
         wtm = Matrix.Translation((0, 0, 0))
-        print(wtm)
         for bi in reversed(chain):
             b = mod.bones_array[bi]
             wtm = wtm @ Matrix.Translation((b.location_x / 100, b.location_z / 100 * -1, b.location_y / 100))
-            #wtm = wtm * Matrix.Translation((b.location_x / 100, b.location_z / 100 * -1, b.location_y / 100)) # * was replaced with @
+            #wtm = wtm * Matrix.Translation((b.location_x / 100, b.location_z / 100 * -1, b.location_y / 100)) # deprecated * was replaced with @
         blender_bone.head = wtm.to_translation()
         blender_bone.parent = blender_bones[bone.parent_index]
 

@@ -36,11 +36,6 @@ bl_info = {
     #"tracker_url": "https://github.com/Brachi/albam/issues",
     "category": "Import-Export"}
 
-#import pkgutil
-
-#search_path = ['.'] # Используйте None, чтобы увидеть все модули, импортируемые из sys.path
-#all_modules = [x[1] for x in pkgutil.iter_modules(path=search_path)]
-#print(all_modules)
 
 classes = ( AlbamImportedItemName,
             AlbamImportedItem,
@@ -82,7 +77,7 @@ def register():
         prop_instance = prop_cls(**kwargs)
         setattr(bpy.types.Mesh, prop_name, prop_instance)
     
-    #bpy.utils.register_module(__name__) #register modules
+    #bpy.utils.register_module(__name__) #register modules # deprecated
     auto_load.register()
     #from bpy.utils import register_class
     #for cls in classes:
@@ -90,9 +85,9 @@ def register():
 
     bpy.types.Scene.albam_item_to_export = bpy.props.StringProperty()
     #print(str(bpy.types.Scene.albam_item_to_export))
-    bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName)
+    bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName) # register name property for scene
 
-    bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem)
+    bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem) # register new object properties
 
 def unregister():
     #from bpy.utils import unregister_class

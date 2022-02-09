@@ -65,7 +65,11 @@ ExportedMod = namedtuple('ExportedMod', ('mod', 'exported_materials'))
 
 @blender_registry.register_function('export', b'ARC\x00')
 def export_arc(blender_object, file_path):
+    #print("blender expor file_path is {}".format(file_path))
+    #rint("blender export blender object is {}".format(blender_object))
+    #print(blender_object.albam_imported_item.data)
     saved_arc = Arc(file_path=BytesIO(blender_object.albam_imported_item.data))
+
     mods = {}
     texture_dirs = {}
     textures_to_export = []
