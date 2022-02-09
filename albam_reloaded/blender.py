@@ -8,36 +8,39 @@ except ImportError:
 
 from .registry import blender_registry
 
-class AlbamImportedItemName(bpy.types.PropertyGroup):
+class AlbamImportedItemName(bpy.types.PropertyGroup): #class for  bpy.types.Scene.albam_items_imported registration
     '''All imported object names are saved here to then show them in the
     export list'''
-    name = bpy.props.StringProperty(name="Imported Item", default="Unknown")
+    name : bpy.props.StringProperty(name="Imported Item", default="Unknown")
 
 
-class AlbamImportedItem(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(options={'HIDDEN'})
-    source_path = bpy.props.StringProperty(options={'HIDDEN'})
-    folder = bpy.props.StringProperty(options={'HIDDEN'})  # Always in posix format
-    data = bpy.props.StringProperty(options={'HIDDEN'}, subtype='BYTE_STRING')
-    file_type = bpy.props.StringProperty(options={'HIDDEN'})
+class AlbamImportedItem(bpy.types.PropertyGroup): # class  for bpy.types.Object.albam_imported_item registration
+    name : bpy.props.StringProperty(options={'HIDDEN'})
+    source_path : bpy.props.StringProperty(options={'HIDDEN'})
+    folder : bpy.props.StringProperty(options={'HIDDEN'})  # Always in posix format
+    data : bpy.props.StringProperty(options={'HIDDEN'}, subtype='BYTE_STRING')
+    file_type : bpy.props.StringProperty(options={'HIDDEN'})
 
 
 class CustomMaterialOptions(bpy.types.Panel):
+    '''Custom Properies panel in the Material section'''
+    
     bl_label = "Albam material"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
 
-    @staticmethod # WTF?
+    @staticmethod # Guess outdated method to get active material and select its node
     def active_node_mat(mat):  # pragma: no cover
         # taken from blender source
         if mat is not None:
-            print(dir(mat))
-            mat_node = mat.active_node_material
-            if mat_node:
-                return mat_node
-            else:
-                return mat
+            #mat_node = mat.active_node_material # deprecated
+            #mat_node = mat
+            #if mat_node:
+            #    return mat_node
+            #else:
+            #     return mat
+            return mat
 
         return None
 
@@ -104,23 +107,18 @@ class AlbamImportExportPanel(bpy.types.Panel): #UI Panel
     def draw(self, context):  # pragma: no cover
         scn = context.scene
         layout = self.layout
-        #row = layout.row()
         layout.operator('albam_import.item', text='Import')
-        #row = layout.row()
         layout.prop_search(scn, 'albam_item_to_export', scn, 'albam_items_imported', text='select')
-        #row = layout.row()
         layout.operator('albam_export.item', text='Export')
 
 
 class AlbamImportOperator(bpy.types.Operator):
     bl_idname = "albam_import.item"
     bl_label = "import item"
-    filepath : bpy.props.StringProperty() # my test
     directory : bpy.props.StringProperty(subtype='DIR_PATH') #fileselect_add properies here
-    #directory : bpy.props.StringProperty()
     files : bpy.props.CollectionProperty(name='adf', type=bpy.types.OperatorFileListElement) #fileselect_add properies here
     filter_glob : bpy.props.StringProperty(default="*.arc", options={'HIDDEN'})
-    unpack_dir = bpy.props.StringProperty(options={'HIDDEN'})
+    unpack_dir : bpy.props.StringProperty(options={'HIDDEN'})
 
     def invoke(self, context, event):  # pragma: no cover
         wm = context.window_manager
@@ -128,11 +126,6 @@ class AlbamImportOperator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        #print(self.directory)
-        #for f in self.files:
-        #    print(f.name)
-        #to_import = os.path.join(self.directory, self.files[0].name)
-        #print(to_import)
         to_import = [os.path.join(self.directory, f.name) for f in self.files] # combine path to file and file name list to a new list
         #print(to_import)
         for file_path in to_import:
@@ -142,32 +135,30 @@ class AlbamImportOperator(bpy.types.Operator):
         return {'FINISHED'}
 
     def _import_file(self, **kwargs):
-            
             parent = kwargs.get('parent') #?
             file_path = kwargs.get('file_path')
             context = kwargs['context']
             kwargs['unpack_dir'] = self.unpack_dir
             print("unpack dir is{}" .format(kwargs['unpack_dir']))
-            with open(file_path, 'rb') as f: #read file as binary
+            with open(file_path, 'rb') as f: #read file as a binary
                 data = f.read() # store file to data var
             id_magic = data[:4] # get first 4 bytes(?)
 
+            #print("data is {}".format(data))
             func = blender_registry.import_registry.get(id_magic) # find header in dictionary
             if not func:
                 raise TypeError('File not supported for import. Id magic: {}'.format(id_magic))
-
-            print('id_magic:{}'.format(id_magic))
+            #print('id_magic:{}'.format(id_magic))
 
             name = os.path.basename(file_path) #name of the imported archive
-            print('name:{}'.format(name))
+            #print('name:{}'.format(name))
             obj = bpy.data.objects.new(name, None) # Create a new object with the arc archive name, data = None
-            #obj = bpy.context.collection.objects.link(name)
             obj.parent = parent
-            obj.albam_imported_item['data'] = data
+            obj.albam_imported_item['data'] = data # error?
+            #print("import data is {}".format(obj.albam_imported_item.data))
             obj.albam_imported_item.source_path = str(file_path)
             
             # TODO: proper logging/raising and rollback if failure
-            #func(blender_object=obj, **kwargs)
 
             results_dict = func(blender_object=obj, **kwargs)
             #results_dict = False
@@ -203,7 +194,11 @@ class AlbamExportOperator(bpy.types.Operator):
 
     def execute(self, context):
         object_name = context.scene.albam_item_to_export
+        #print("object_name is {}".format(object_name))
         obj = bpy.data.objects[object_name]
+        #print("export obj is {}".format(obj))
+        #for objs in bpy.data.objects:
+        #    print(objs.name)
         id_magic = obj.albam_imported_item['data'][:4]
         func = blender_registry.export_registry.get(id_magic)
         if not func:
