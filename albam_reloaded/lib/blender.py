@@ -140,23 +140,41 @@ def create_mesh_name(mesh, index, file_path):
                                  mesh.level_of_detail)
 
 
+def get_textures_from_the_material(blender_material):
+    '''Get all image textures form '''
+    textures = []
+    if blender_material:
+        if blender_material.node_tree:
+            for tn in blender_material.node_tree.nodes:
+                if tn.type == 'TEX_IMAGE':
+                    textures.append(tn)
+    return textures
+
+
 def get_textures_from_blender_objects(blender_objects):
-    """
-    Only counting the first material of the mesh
+    """Gets all materials from a scene and returns a set with texure nodes
+        blender_objects : list of all object in scene
+        Only counting the first material of the mesh
     """
     textures = set()
-    meshes = {ob.data for ob in blender_objects if ob.type == 'MESH'}
+    #meshes = {ob.data for ob in blender_objects if ob.type == 'MESH'} # add only meshes to the tuple # old code stored meshes istead of objects
+    meshes = {ob for ob in blender_objects if ob.type == 'MESH'}
     for ob in meshes:
-        if not ob.materials:
-            continue
-        for ts in ob.materials[0].texture_slots:
-            if ts and ts.texture and ts.texture.image:
-                textures.add(ts.texture)
-    return sorted(textures, key=lambda t: t.name)
-
+        obt = get_textures_from_the_material(ob.material_slots[0].material)
+        for tn in obt:
+            #print("node dir is {}".format(dir(tn)))
+            #print("texture name is {}".format(tn.image.name))
+            textures.add((tn)) # add texure nodes to a set
+            '''Old code
+            for ts in ob.materials[0].texture_slots:#
+                if ts and ts.texture and ts.texture.image:
+                    textures.add(ts.texture)
+            return sorted(textures, key=lambda t: t.name)
+            '''
+    return sorted(textures, key=lambda t: t.image.name)
 
 def get_materials_from_blender_objects(blender_objects):
-    """
+    """Get material data from objects
     Only counting the first material of the mesh
     """
     materials = set()

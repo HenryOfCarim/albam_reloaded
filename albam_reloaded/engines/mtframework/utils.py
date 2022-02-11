@@ -184,6 +184,7 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
         # What is cube mape normal?
         normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
         normal_map_node.space = ('WORLD')
+        blender_texture_slot.projection = 'BOX'
         link(normal_map_node.outputs['Normal'], principled_node.inputs['Normal']) # set normal node to shader socket
         link(blender_texture_slot.outputs['Color'], normal_map_node.inputs['Color'])
         ''' Old code
@@ -194,29 +195,47 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
         blender_texture_slot.mapping = 'CUBE'''
     else:
         print('texture_code not supported', texture_code)
-        blender_texture_slot.use_map_color_diffuse = False
+        #blender_texture_slot.use_map_color_diffuse = False # deprecated
         # TODO: 3, 4, 5, 6,
 
 
 def blender_texture_to_texture_code(blender_texture_slot):
+    '''This function return a type ID of the image texture node dependind of node connetion
+        blender_texture_slot : bpy.types.ShaderNodeTexImage
+    
+    '''
+
     texture_code = 0
+    color_out = blender_texture_slot.outputs['Color'] 
+    alpha_out = blender_texture_slot.outputs['Alpha']
+
+    color_socket = (color_out.links[0].to_node.name)
+    alpha_socket = None
+    if alpha_out.links:
+        alpha_socket = (alpha_out.links[0].to_node.name)
 
     # Diffuse
-    if blender_texture_slot.use_map_color_diffuse:
+    #if blender_texture_slot.use_map_color_diffuse:
+    if color_socket and alpha_socket == "Principled BSDF":
         texture_code = 0
 
     # Normal
-    elif blender_texture_slot.use_map_normal and blender_texture_slot.texture_coords == 'UV':
+    #elif blender_texture_slot.projection and blender_texture_slot.texture_coords == 'UV':
+    elif (blender_texture_slot.projection == 'FLAT' and
+         alpha_socket == "Combine RGB"):
         texture_code = 1
 
     # Specular
-    elif blender_texture_slot.use_map_specular:
+    #elif blender_texture_slot.use_map_specular:
+    elif color_socket == "Invert":
         texture_code = 2
 
     # Cube normal
-    elif (blender_texture_slot.use_map_normal and
-          blender_texture_slot.texture_coords == 'GLOBAL' and
-          blender_texture_slot.mapping == 'CUBE'):
+    #elif (blender_texture_slot.use_map_normal and
+    #      blender_texture_slot.texture_coords == 'GLOBAL' and
+    #      blender_texture_slot.mapping == 'CUBE'):
+    elif (blender_texture_slot.projection == 'BOX' and
+          alpha_socket == "Combine RGB"):
         texture_code = 7
 
     return texture_code

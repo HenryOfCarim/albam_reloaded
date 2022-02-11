@@ -210,11 +210,8 @@ def _create_blender_textures_from_mod(mod, base_dir):
 
     for i, texture_path in enumerate(mod.textures_array):
         path = texture_path[:].decode('ascii').partition('\x00')[0] # relative path to a texture in the ARC archive without extension
-        #print("path is {}".format(path))
         path = os.path.join(base_dir, *path.split(ntpath.sep))# full path to a texture
-        #print("path is {}".format(path))
         path = '.'.join((path, 'tex')) # full path to a texture with .tex extension
-        #print("path is {}".format(path))
         if not os.path.isfile(path):
             # TODO: log warnings, figure out 'rtex' format
             print('path {} does not exist'.format(path))
@@ -222,7 +219,6 @@ def _create_blender_textures_from_mod(mod, base_dir):
         tex = Tex112(path)
         try:
             dds = tex.to_dds()
-            #print(type(dds))
         except TextureError as err:
             # TODO: log this instead of printing it
             print('Error converting "{}"to dds: {}'.format(path, err))
@@ -257,7 +253,7 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
     for i, material in enumerate(mod.materials_data_array):
         blender_material = bpy.data.materials.new('{}_{}'.format(model_name, str(i).zfill(2)))
         blender_material.use_nodes = True
-        blender_material.blend_method = 'CLIP' # set transparency method OPAQUE’, ‘CLIP’, ‘HASHED’, ‘BLEND’
+        blender_material.blend_method = 'CLIP' # set transparency method 'OPAQUE', 'CLIP', 'HASHED', 'BLEND'
 
         principled_node = blender_material.node_tree.nodes.get("Principled BSDF")
         principled_node.inputs['Specular'].default_value = 0.2 # change specular

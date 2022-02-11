@@ -1,5 +1,6 @@
 from collections import OrderedDict, namedtuple
 import ctypes
+import enum
 from io import BytesIO
 from itertools import chain
 import ntpath
@@ -35,6 +36,7 @@ from ...lib.misc import ntpath_to_os_path
 from ...lib.blender import (
     triangles_list_to_triangles_strip,
     get_bounding_box_positions_from_blender_objects,
+    get_textures_from_the_material,
     get_textures_from_blender_objects,
     get_materials_from_blender_objects,
     get_vertex_count_from_blender_objects,
@@ -113,11 +115,11 @@ def export_arc(blender_object, file_path):
             tex = Tex112.from_dds(file_path=bpy.path.abspath(blender_texture.image.filepath))
             # metadata saved
             # TODO: use an util function
-            for field in tex._fields_:
+            '''for field in tex._fields_: Custom attributes don't work
                 attr_name = field[0]
                 if not attr_name.startswith('unk_'):
                     continue
-                setattr(tex, attr_name, getattr(blender_texture, attr_name))
+                setattr(tex, attr_name, getattr(blender_texture, attr_name))'''
 
             with open(destination_path, 'wb') as w:
                 w.write(tex)
@@ -290,7 +292,7 @@ def _get_tangents_per_vertex(blender_mesh):
         uv_name = blender_mesh.uv_layers[0].name
     except IndexError:
         uv_name = ''
-    blender_mesh.calc_tangents(uv_name)
+    blender_mesh.calc_tangents(uvmap=uv_name)
     for loop in blender_mesh.loops:
         tangents.setdefault(loop.vertex_index, loop.tangent)
     return tangents
@@ -395,6 +397,12 @@ def _infer_level_of_detail(name):
         return int(match.group('level_of_detail'))
     return 1
 
+def _get_shadow_method(blender_material):
+    index = 0
+    if blender_material:
+        if not blender_material.shadow_method == 'NONE':
+            index = 1
+    return index
 
 def _export_meshes(blender_meshes, bounding_box, bone_palettes, exported_materials):
     """
@@ -456,8 +464,8 @@ def _export_meshes(blender_meshes, bounding_box, bone_palettes, exported_materia
         m156.vertex_index_start_2 = vertex_position
         m156.vertex_group_count = 1  # using 'TEST' bounding box
         m156.bone_palette_index = bone_palette_index
-        m156.use_cast_shadows = int(blender_material.use_cast_shadows)
-
+        #m156.use_cast_shadows = int(blender_material.use_cast_shadows)
+        m156.use_cast_shadows = int(_get_shadow_method(blender_material))
         vertex_position += vertex_count
         face_position += index_count
 
@@ -468,8 +476,10 @@ def _export_meshes(blender_meshes, bounding_box, bone_palettes, exported_materia
 
 
 def _export_textures_and_materials(blender_objects, saved_mod):
-    textures = get_textures_from_blender_objects(blender_objects)
-    blender_materials = get_materials_from_blender_objects(blender_objects)
+    textures = get_textures_from_blender_objects(blender_objects) # get a set of ShaderNodeTexImage
+    blender_materials = get_materials_from_blender_objects(blender_objects) # get a set with blender_objects.data.materials
+
+    print(dir(blender_materials[0]))
 
     textures_array = ((ctypes.c_char * 64) * len(textures))()
     materials_data_array = (MaterialData * len(blender_materials))()
@@ -478,7 +488,8 @@ def _export_textures_and_materials(blender_objects, saved_mod):
     default_texture_dir = get_default_texture_dir(saved_mod)
 
     for i, texture in enumerate(textures):
-        texture_dir = texture_dirs.get(texture.name)
+        #texture_dir = texture_dirs.get(texture.name)
+        texture_dir = texture_dirs.get(texture.image.name)
         if not texture_dir:
             texture_dir = default_texture_dir
             texture_dirs[texture.name] = texture_dir
@@ -498,7 +509,7 @@ def _export_textures_and_materials(blender_objects, saved_mod):
         textures_array[i] = (ctypes.c_char * 64)(*file_path)
 
     for mat_index, mat in enumerate(blender_materials):
-        material_data = MaterialData()
+        material_data = MaterialData() #get sructure with game data material fields
         # Setting uknown data
         # TODO: do this with a util function
         for field in material_data._fields_:
@@ -507,12 +518,19 @@ def _export_textures_and_materials(blender_objects, saved_mod):
                 continue
             setattr(material_data, attr_name, getattr(mat, attr_name))
 
-        for texture_slot in mat.texture_slots:
-            if not texture_slot or not texture_slot.texture:
-                continue
-            texture = texture_slot.texture
+        mat_tex = get_textures_from_the_material(mat)
+        for texture_slot in mat_tex:
+            #print(i.image.name)
+
+        #for texture_slot in mat.texture_slots: #error
+
+            #if not texture_slot or not texture_slot.texture:
+            #    continue
+
+            texture = texture_slot.image.name
             # texture_indices expects index-1 based
-            texture_index = textures.index(texture) + 1
+            #texture_index = textures.index(texture) + 1
+            texture_index = textures.index(texture_slot) + 1
             texture_code = blender_texture_to_texture_code(texture_slot)
             material_data.texture_indices[texture_code] = texture_index
         materials_data_array[mat_index] = material_data
