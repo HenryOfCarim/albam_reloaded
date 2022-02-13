@@ -8,13 +8,16 @@ except ImportError:
 
 from .registry import blender_registry
 
-class AlbamImportedItemName(bpy.types.PropertyGroup): #class for  bpy.types.Scene.albam_items_imported registration
-    '''All imported object names are saved here to then show them in the
-    export list'''
+class AlbamImportedItemName(bpy.types.PropertyGroup): #
+    '''Class for  bpy.types.Scene.albam_items_imported __init__.py registration
+    All imported object names are saved here to then show them in the
+    export list
+    '''
     name : bpy.props.StringProperty(name="Imported Item", default="Unknown")
 
 
-class AlbamImportedItem(bpy.types.PropertyGroup): # class  for bpy.types.Object.albam_imported_item registration
+class AlbamImportedItem(bpy.types.PropertyGroup):
+    '''Class for bpy.types.Object.albam_imported_item __init__.py registration'''
     name : bpy.props.StringProperty(options={'HIDDEN'})
     source_path : bpy.props.StringProperty(options={'HIDDEN'})
     folder : bpy.props.StringProperty(options={'HIDDEN'})  # Always in posix format
@@ -24,17 +27,17 @@ class AlbamImportedItem(bpy.types.PropertyGroup): # class  for bpy.types.Object.
 
 class CustomMaterialOptions(bpy.types.Panel):
     '''Custom Properies panel in the Material section'''
-    
     bl_label = "Albam material"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
 
-    @staticmethod # Guess outdated method to get active material and select its node
+    @staticmethod #? Guess outdated method to get active material and select its node
     def active_node_mat(mat):  # pragma: no cover
+        '''mat: bpy.data.materials['Pl0200.mod_08']'''
         # taken from blender source
         if mat is not None:
-            #mat_node = mat.active_node_material # deprecated
+            #mat_node = mat.active_node_material # deprecated TODO
             #mat_node = mat
             #if mat_node:
             #    return mat_node
@@ -58,27 +61,31 @@ class CustomMaterialOptions(bpy.types.Panel):
 
 
 class CustomTextureOptions(bpy.types.Panel):
+    "Custom Propertis panel for texures"
     bl_label = "Albam texture"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "texture"
 
     def draw(self, context):  # pragma: no cover
-        tex = context.texture
+        tex = context.texture #bpy.data.textures['00pl0200_01Face_BM']
         layout = self.layout
+            
         if not tex:
-            return
-        for prop_name, _, _ in blender_registry.bpy_props.get('texture', []):
+                return
+        for prop_name, _, _ in blender_registry.bpy_props.get('texture', []): # prop_name :'unk_byte_1', _:1 -value
             layout.prop(tex, prop_name)
 
-    @classmethod
-    def poll(cls, context):  # pragma: no cover
-        if not hasattr(context, "texture_slot"):
-            return False
-        return context.texture
+        @classmethod
+        def poll(cls, context):  # pragma: no cover #function is optional, used to check if the operator can run.
+            if not hasattr(context, "texture_slot"): # useless code detect Texture slot for textures in a Material datablock
+                print("material data has attribute")
+                return False
+            return context.texture
 
 
 class CustomMeshOptions(bpy.types.Panel):
+    "Custom Propertis panel for meshes"
     bl_label = "Albam mesh"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -97,8 +104,9 @@ class CustomMeshOptions(bpy.types.Panel):
         return bool(context.mesh)
 
 
-class AlbamImportExportPanel(bpy.types.Panel): #UI Panel
-    bl_idname = "Test_Albam_Panel" # my lines
+class AlbamImportExportPanel(bpy.types.Panel):
+    '''UI Panel in 3D view'''
+    bl_idname = "Albam_UI_Panel" # my lines
     bl_label = "Albam"
     bl_category = "Albam" # my lines
     bl_space_type = "VIEW_3D"
@@ -113,6 +121,7 @@ class AlbamImportExportPanel(bpy.types.Panel): #UI Panel
 
 
 class AlbamImportOperator(bpy.types.Operator):
+    '''Import button operator'''
     bl_idname = "albam_import.item"
     bl_label = "import item"
     directory : bpy.props.StringProperty(subtype='DIR_PATH') #fileselect_add properies here
@@ -177,6 +186,7 @@ class AlbamImportOperator(bpy.types.Operator):
 
 
 class AlbamExportOperator(bpy.types.Operator):
+    '''Export button operator'''
     bl_idname = "albam_export.item"
     bl_label = "export item"
     filepath : bpy.props.StringProperty()

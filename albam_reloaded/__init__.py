@@ -45,7 +45,6 @@ classes = ( AlbamImportedItemName,
             AlbamImportExportPanel,
             AlbamImportOperator,
             AlbamExportOperator,
-            #BlenderRegistry,
            )
 
 def register():
@@ -79,21 +78,22 @@ def register():
     
     #bpy.utils.register_module(__name__) #register modules # deprecated
     auto_load.register()
-    #from bpy.utils import register_class
-    #for cls in classes:
-    #    register_class(cls)
-
+    ''' Classic blender 2.80 registration of classes
+    from bpy.utils import register_class
+    for cls in classes:
+        register_class(cls)'''
     bpy.types.Scene.albam_item_to_export = bpy.props.StringProperty()
-    #print(str(bpy.types.Scene.albam_item_to_export))
     bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName) # register name property for scene
-
     bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem) # register new object properties
 
 def unregister():
-    #from bpy.utils import unregister_class
-    #for cls in reversed(classes):
-    #     unregister_class(cls)
-    #print("unregister module")
+    ''' Classic blender 2.80 unregistration of classes
+    from bpy.utils import unregister_class
+    for cls in reversed(classes):
+         unregister_class(cls)'''
+    bpy.types.Scene.albam_item_to_export = bpy.props.StringProperty()
+    bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName)
+    bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem)
     auto_load.unregister()
 
 if __name__ == "__main__":

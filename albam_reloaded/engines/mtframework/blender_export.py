@@ -1,6 +1,5 @@
 from collections import OrderedDict, namedtuple
 import ctypes
-import enum
 from io import BytesIO
 from itertools import chain
 import ntpath
@@ -67,10 +66,11 @@ ExportedMod = namedtuple('ExportedMod', ('mod', 'exported_materials'))
 
 @blender_registry.register_function('export', b'ARC\x00')
 def export_arc(blender_object, file_path):
-    #print("blender expor file_path is {}".format(file_path))
-    #rint("blender export blender object is {}".format(blender_object))
-    #print(blender_object.albam_imported_item.data)
-    saved_arc = Arc(file_path=BytesIO(blender_object.albam_imported_item.data))
+    '''
+        blender_object : bpy.data.objects['uPl02JillCos1.arc']
+        file_path : full path to .ars
+    '''
+    saved_arc = Arc(file_path=BytesIO(blender_object.albam_imported_item.data)) # <albam_reloaded.engines.mtframework.arc.GenArc object
 
     mods = {}
     texture_dirs = {}
@@ -81,9 +81,9 @@ def export_arc(blender_object, file_path):
         if not exportable:
             continue
 
-        exported_mod = export_mod156(child)
-        mods[child.name] = exported_mod
-        texture_dirs.update(exported_mod.exported_materials.texture_dirs)
+        exported_mod = export_mod156(child) #run export_mod156 function
+        mods[child.name] = exported_mod # {'Pl0200.mod': <ExportedMod, len() = 2>}
+        texture_dirs.update(exported_mod.exported_materials.texture_dirs) # path inside arc 'pawn\\pl\\pl02\\model'
         textures_to_export.extend(exported_mod.exported_materials.blender_textures)
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -108,6 +108,7 @@ def export_arc(blender_object, file_path):
 
         for blender_texture in textures_to_export:
             texture_name = blender_texture.name
+            #texture_name = blender_texture.image.name
             resolved_path = ntpath_to_os_path(texture_dirs[texture_name])
             tex_file_path = bpy.path.abspath(blender_texture.image.filepath)
             tex_filename_no_ext = os.path.splitext(os.path.basename(tex_file_path))[0]
@@ -115,11 +116,11 @@ def export_arc(blender_object, file_path):
             tex = Tex112.from_dds(file_path=bpy.path.abspath(blender_texture.image.filepath))
             # metadata saved
             # TODO: use an util function
-            '''for field in tex._fields_: Custom attributes don't work
+            for field in tex._fields_:
                 attr_name = field[0]
                 if not attr_name.startswith('unk_'):
                     continue
-                setattr(tex, attr_name, getattr(blender_texture, attr_name))'''
+                setattr(tex, attr_name, getattr(blender_texture, attr_name))
 
             with open(destination_path, 'wb') as w:
                 w.write(tex)
@@ -476,6 +477,9 @@ def _export_meshes(blender_meshes, bounding_box, bone_palettes, exported_materia
 
 
 def _export_textures_and_materials(blender_objects, saved_mod):
+    '''blender_objects : bpy.data.objects['Pl0200.mod_0000_LOD_1']
+       saved_mod : <albam_reloaded.engines.mtframework.mod_156.GenMod156 object>  
+    '''
     textures = get_textures_from_blender_objects(blender_objects) # get a set of ShaderNodeTexImage
     blender_materials = get_materials_from_blender_objects(blender_objects) # get a set with blender_objects.data.materials
 
@@ -518,19 +522,23 @@ def _export_textures_and_materials(blender_objects, saved_mod):
                 continue
             setattr(material_data, attr_name, getattr(mat, attr_name))
 
-        mat_tex = get_textures_from_the_material(mat)
-        for texture_slot in mat_tex:
-            #print(i.image.name)
-
-        #for texture_slot in mat.texture_slots: #error
-
-            #if not texture_slot or not texture_slot.texture:
-            #    continue
-
-            texture = texture_slot.image.name
+        ''' Old code    
+        for texture_slot in mat.texture_slots:
+            if not texture_slot or not texture_slot.texture:
+                continue
+            texture = texture_slot.texture
             # texture_indices expects index-1 based
-            #texture_index = textures.index(texture) + 1
-            texture_index = textures.index(texture_slot) + 1
+            texture_index = textures.index(texture) + 1'''
+
+        mat_tex = get_textures_from_the_material(mat) # get listh with imageTexturesnode of the material
+        for texture_slot in mat_tex:
+            texture = texture_slot.image.name
+
+            # texture_indices expects index-1 based
+            mathes = [td for td in textures if td.image == texture_slot.image]
+            print(mathes[0])
+            texture_index = textures.index(mathes[0]) + 1
+            #texture_index = textures.index(texture_slot) + 1
             texture_code = blender_texture_to_texture_code(texture_slot)
             material_data.texture_indices[texture_code] = texture_index
         materials_data_array[mat_index] = material_data

@@ -1,3 +1,4 @@
+import bpy
 from collections import deque, namedtuple
 import os
 
@@ -141,7 +142,9 @@ def create_mesh_name(mesh, index, file_path):
 
 
 def get_textures_from_the_material(blender_material):
-    '''Get all image textures form '''
+    '''Get all image textures nodes form material and return them as a list
+        blender_material : bpy.data.materials[0] object
+    '''
     textures = []
     if blender_material:
         if blender_material.node_tree:
@@ -151,26 +154,27 @@ def get_textures_from_the_material(blender_material):
     return textures
 
 
-def get_textures_from_blender_objects(blender_objects):
-    """Gets all materials from a scene and returns a set with texure nodes
+def get_textures_from_blender_objects(blender_objects): # only blender export funcion
+    """Gets all materials from a scene and returns a set with data.textures objects
+        This is important for geting albam texture attributes before exporting
         blender_objects : list of all object in scene
         Only counting the first material of the mesh
     """
-    textures = set()
-    #meshes = {ob.data for ob in blender_objects if ob.type == 'MESH'} # add only meshes to the tuple # old code stored meshes istead of objects
-    meshes = {ob for ob in blender_objects if ob.type == 'MESH'}
+    texture_data = [td for td in bpy.data.textures]
+    textures = set() 
+    meshes = {ob.data for ob in blender_objects if ob.type == 'MESH'} # add only meshes to the dictionary?
     for ob in meshes:
-        obt = get_textures_from_the_material(ob.material_slots[0].material)
+        obt = get_textures_from_the_material(ob.materials[0])
         for tn in obt:
-            #print("node dir is {}".format(dir(tn)))
-            #print("texture name is {}".format(tn.image.name))
-            textures.add((tn)) # add texure nodes to a set
-            '''Old code
-            for ts in ob.materials[0].texture_slots:#
-                if ts and ts.texture and ts.texture.image:
-                    textures.add(ts.texture)
-            return sorted(textures, key=lambda t: t.name)
-            '''
+            for td in texture_data:
+                if tn.image == td.image:
+                    textures.add((td))
+        '''Old code
+        for ts in ob.materials[0].texture_slots:#
+            if ts and ts.texture and ts.texture.image:
+                textures.add(ts.texture)
+        return sorted(textures, key=lambda t: t.name)
+        '''
     return sorted(textures, key=lambda t: t.image.name)
 
 def get_materials_from_blender_objects(blender_objects):

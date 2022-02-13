@@ -230,11 +230,11 @@ def _create_blender_textures_from_mod(mod, base_dir):
         image = bpy.data.images.load(dds_path)
         texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
         texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
-        texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE') #
-        texture.image = image
+        texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE') # bpy.data.textures['00pl0200_09AllHair_BM']
+        texture.image = image 
         #print(dir(texture))
         #print(texure)
-        textures.append(texture)
+        textures.append(texture) #create a list with bpy.data.textures
 
         # saving meta data for export
         # TODO: use a util function
@@ -249,6 +249,7 @@ def _create_blender_textures_from_mod(mod, base_dir):
 
 
 def _create_blender_materials_from_mod(mod, model_name, textures):
+    '''textures: bpy.data.textures'''
     materials = []
     for i, material in enumerate(mod.materials_data_array):
         blender_material = bpy.data.materials.new('{}_{}'.format(model_name, str(i).zfill(2)))
@@ -266,7 +267,7 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
 
         # unknown data for export, registered already
         # TODO: do this with a util function
-        for field_tuple in material._fields_: # wtf?
+        for field_tuple in material._fields_: # add custom properties to material
             attr_name = field_tuple[0]
             if not attr_name.startswith('unk_'):
                 continue
@@ -294,7 +295,7 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
             texture_code_to_blender_texture(texture_code, slot, blender_material)
             #slot.texture = texture_target # deprecated?
             #print(dir(texture_target))
-            slot.image = texture_target.image
+            slot.image = texture_target.image # set bpy.data.textures[].image as a texures for ShaderNodeTexImage
 
     return materials
 
