@@ -483,8 +483,6 @@ def _export_textures_and_materials(blender_objects, saved_mod):
     textures = get_textures_from_blender_objects(blender_objects) # get a set of ShaderNodeTexImage
     blender_materials = get_materials_from_blender_objects(blender_objects) # get a set with blender_objects.data.materials
 
-    print(dir(blender_materials[0]))
-
     textures_array = ((ctypes.c_char * 64) * len(textures))()
     materials_data_array = (MaterialData * len(blender_materials))()
     materials_mapping = {}  # blender_material.name: material_id
@@ -536,7 +534,7 @@ def _export_textures_and_materials(blender_objects, saved_mod):
 
             # texture_indices expects index-1 based
             mathes = [td for td in textures if td.image == texture_slot.image]
-            print(mathes[0])
+            #print(mathes[0])
             texture_index = textures.index(mathes[0]) + 1
             #texture_index = textures.index(texture_slot) + 1
             texture_code = blender_texture_to_texture_code(texture_slot)

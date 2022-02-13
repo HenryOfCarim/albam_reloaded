@@ -79,7 +79,7 @@ class CustomTextureOptions(bpy.types.Panel):
         @classmethod
         def poll(cls, context):  # pragma: no cover #function is optional, used to check if the operator can run.
             if not hasattr(context, "texture_slot"): # useless code detect Texture slot for textures in a Material datablock
-                print("material data has attribute")
+                #print("material data has attribute")
                 return False
             return context.texture
 
@@ -136,9 +136,8 @@ class AlbamImportOperator(bpy.types.Operator):
 
     def execute(self, context):
         to_import = [os.path.join(self.directory, f.name) for f in self.files] # combine path to file and file name list to a new list
-        #print(to_import)
         for file_path in to_import:
-            print('file path is {}'.format(file_path))
+            #print('file path is {}'.format(file_path))
             self._import_file(file_path=file_path, context=context)
 
         return {'FINISHED'}
@@ -148,7 +147,7 @@ class AlbamImportOperator(bpy.types.Operator):
             file_path = kwargs.get('file_path')
             context = kwargs['context']
             kwargs['unpack_dir'] = self.unpack_dir
-            print("unpack dir is{}" .format(kwargs['unpack_dir']))
+            #print("unpack dir is{}" .format(kwargs['unpack_dir']))
             with open(file_path, 'rb') as f: #read file as a binary
                 data = f.read() # store file to data var
             id_magic = data[:4] # get first 4 bytes(?)

@@ -37,10 +37,10 @@ def import_arc(blender_object, file_path, **kwargs):
         raise ValueError('The arc file provided is not supported yet, it might crash Blender')
 
     base_dir = os.path.basename(file_path).replace('.arc', '_arc_extracted')
-    print('base dir is {}'.format(base_dir))
-    #out = unpack_dir or os.path.join(os.path.expanduser('~'), '.albam', 're5', base_dir) #causing error
-    out = os.path.join(os.path.expanduser('~'), '.albam', 're5', base_dir)
-    print('out dir is {}'.format(out))
+    #print('base dir is {}'.format(base_dir))
+    out = unpack_dir or os.path.join(os.path.expanduser('~'), '.albam', 're5', base_dir) #causing an error
+    #out = os.path.join(os.path.expanduser('~'), '.albam', 're5', base_dir)
+    #print('out dir is {}'.format(out))
     if not os.path.isdir(out):
         os.makedirs(out)
     if not out.endswith(os.path.sep):
