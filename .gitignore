@@ -8,6 +8,7 @@ tests/
 *.swp
 *.swo
 *#
+*.zip
 
 
 # Byte-compiled / optimized / DLL files

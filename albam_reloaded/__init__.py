@@ -13,9 +13,9 @@ from . import auto_load
 auto_load.init()
 
 bl_info = {
-    "name": "Albam",
+    "name": "Albam Reloaded",
     "author": "Sebastian Brachi",
-    "version": (0, 3, 0),
+    "version": (0, 3, 1),
     "blender": (2, 80, 0),
     "location": "Properties Panel",
     "description": "Import-Export multiple video-bame formats",
