@@ -18,7 +18,7 @@ bl_info = {
     "version": (0, 3, 1),
     "blender": (2, 80, 0),
     "location": "Properties Panel",
-    "description": "Import-Export multiple video-bame formats",
+    "description": "Import-Export multiple video-game formats",
     #"wiki_url": "https://github.com/Brachi/albam",
     #"tracker_url": "https://github.com/Brachi/albam/issues",
     "category": "Import-Export"}
