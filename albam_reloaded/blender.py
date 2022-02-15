@@ -25,7 +25,7 @@ class AlbamImportedItem(bpy.types.PropertyGroup):
     file_type : bpy.props.StringProperty(options={'HIDDEN'})
 
 
-class CustomMaterialOptions(bpy.types.Panel):
+class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
     '''Custom Properies panel in the Material section'''
     bl_label = "Albam material"
     bl_space_type = "PROPERTIES"
@@ -34,7 +34,7 @@ class CustomMaterialOptions(bpy.types.Panel):
 
     @staticmethod #? Guess outdated method to get active material and select its node
     def active_node_mat(mat):  # pragma: no cover
-        '''mat: bpy.data.materials['Pl0200.mod_08']'''
+        '''mat: bpy.data.materials'''
         # taken from blender source
         if mat is not None:
             #mat_node = mat.active_node_material # deprecated TODO
@@ -60,7 +60,7 @@ class CustomMaterialOptions(bpy.types.Panel):
         return context.material
 
 
-class CustomTextureOptions(bpy.types.Panel):
+class ALBAM_PT_CustomTextureOptions(bpy.types.Panel):
     "Custom Propertis panel for texures"
     bl_label = "Albam texture"
     bl_space_type = "PROPERTIES"
@@ -84,7 +84,7 @@ class CustomTextureOptions(bpy.types.Panel):
             return context.texture
 
 
-class CustomMeshOptions(bpy.types.Panel):
+class ALBAM_PT_CustomMeshOptions(bpy.types.Panel):
     "Custom Propertis panel for meshes"
     bl_label = "Albam mesh"
     bl_space_type = "PROPERTIES"
@@ -104,9 +104,9 @@ class CustomMeshOptions(bpy.types.Panel):
         return bool(context.mesh)
 
 
-class AlbamImportExportPanel(bpy.types.Panel):
+class ALBAM_PT_ImportExportPanel(bpy.types.Panel):
     '''UI Panel in 3D view'''
-    bl_idname = "Albam_UI_Panel" # my lines
+    bl_idname = "ALBAM_PT_UI_Panel" # my lines
     bl_label = "Albam"
     bl_category = "Albam" # my lines
     bl_space_type = "VIEW_3D"

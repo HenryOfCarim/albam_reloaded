@@ -9,8 +9,8 @@ from . engines.mtframework.blender_import import *
 from . engines.mtframework.blender_export import *
 #from . registry import blender_registry
 from . registry import *
-from . import auto_load
-auto_load.init()
+#from . import auto_load
+#auto_load.init()
 
 bl_info = {
     "name": "Albam Reloaded",
@@ -24,21 +24,20 @@ bl_info = {
     "category": "Import-Export"}
 
 
-classes = ( AlbamImportedItemName,
-            AlbamImportedItem,
-            CustomMaterialOptions,
-            CustomTextureOptions,
-            CustomMeshOptions,
-            AlbamImportExportPanel,
-            AlbamImportOperator,
+classes = ( AlbamImportedItem,
+            AlbamImportedItemName,
+            ALBAM_PT_CustomTextureOptions,
             AlbamExportOperator,
+            ALBAM_PT_ImportExportPanel,
+            ALBAM_PT_CustomMaterialOptions,
+            ALBAM_PT_CustomMeshOptions,
+            AlbamImportOperator,
            )
 
 def register():
 
     for prop_name, prop_cls_name, default in blender_registry.bpy_props.get('material', []):
         prop_cls = getattr(bpy.props, prop_cls_name)
-        #print("test")
         kwargs = {}
         if default:
             kwargs['default'] = default
@@ -64,24 +63,24 @@ def register():
         setattr(bpy.types.Mesh, prop_name, prop_instance)
     
     #bpy.utils.register_module(__name__) #register modules # deprecated
-    auto_load.register()
-    ''' Classic blender 2.80 registration of classes
+    #auto_load.register()
+    ''' Classic blender 2.80 registration of classes'''
     from bpy.utils import register_class
     for cls in classes:
-        register_class(cls)'''
+        register_class(cls)
     bpy.types.Scene.albam_item_to_export = bpy.props.StringProperty()
     bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName) # register name property for scene
     bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem) # register new object properties
 
 def unregister():
-    ''' Classic blender 2.80 unregistration of classes
-    from bpy.utils import unregister_class
-    for cls in reversed(classes):
-         unregister_class(cls)'''
     bpy.types.Scene.albam_item_to_export = bpy.props.StringProperty()
     bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName)
     bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem)
-    auto_load.unregister()
+    #auto_load.unregister()
+    ''' Classic blender 2.80 unregistration of classes'''
+    from bpy.utils import unregister_class
+    for cls in reversed(classes):
+         unregister_class(cls)
 
 if __name__ == "__main__":
     register()
