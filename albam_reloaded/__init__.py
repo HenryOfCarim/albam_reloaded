@@ -7,10 +7,8 @@ except ImportError:
 
 from . engines.mtframework.blender_import import *
 from . engines.mtframework.blender_export import *
-#from . registry import blender_registry
 from . registry import *
-#from . import auto_load
-#auto_load.init()
+
 
 bl_info = {
     "name": "Albam Reloaded",
@@ -62,8 +60,6 @@ def register():
         prop_instance = prop_cls(**kwargs)
         setattr(bpy.types.Mesh, prop_name, prop_instance)
     
-    #bpy.utils.register_module(__name__) #register modules # deprecated
-    #auto_load.register()
     ''' Classic blender 2.80 registration of classes'''
     from bpy.utils import register_class
     for cls in classes:
@@ -76,7 +72,6 @@ def unregister():
     bpy.types.Scene.albam_item_to_export = bpy.props.StringProperty()
     bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName)
     bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem)
-    #auto_load.unregister()
     ''' Classic blender 2.80 unregistration of classes'''
     from bpy.utils import unregister_class
     for cls in reversed(classes):
