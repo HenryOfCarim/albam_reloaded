@@ -8,6 +8,8 @@ try:
 except ImportError:
     pass
 
+from ...exceptions import BuildMeshError, TextureError #my lines IDK where they originally imported
+
 from ...engines.mtframework import Arc, Mod156, Tex112, KNOWN_ARC_BLENDER_CRASH, CORRUPTED_ARCS
 from ...engines.mtframework.utils import (
     get_vertices_array,
@@ -63,7 +65,7 @@ def import_arc(blender_object, file_path, **kwargs):
 
 @blender_registry.register_function('import', identifier=b'MOD\x00')
 def import_mod(blender_object, file_path, **kwargs):
-    base_dir = kwargs.get('base_dir')
+    base_dir = kwargs.get('base_dir') # full path to _extracted folder
 
     mod = Mod156(file_path=file_path)
     textures = _create_blender_textures_from_mod(mod, base_dir)
@@ -130,8 +132,11 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     me_ob.use_auto_smooth = True
 
     mesh_material = materials[mesh.material_index]
+    '''Old code
     if not mesh.use_cast_shadows and mesh_material.use_cast_shadows:
-        mesh_material.use_cast_shadows = False
+        mesh_material.use_cast_shadows = False'''
+    if not mesh.use_cast_shadows and mesh_material.shadow_method: # code gets .use_cast_shadows from mesh's custom props
+        mesh_material.shadow_method = 'NONE' # if use_cast_shadows is false and a material shadows is enabled, set it to NONE
     me_ob.materials.append(mesh_material)
 
     for bone_index, data in weights_per_bone.items():
