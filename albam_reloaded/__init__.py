@@ -13,7 +13,7 @@ from . registry import *
 bl_info = {
     "name": "Albam Reloaded",
     "author": "Sebastian Brachi",
-    "version": (0, 3, 2),
+    "version": (0, 3, 3),
     "blender": (2, 80, 0),
     "location": "Properties Panel",
     "description": "Import-Export multiple video-game formats",
