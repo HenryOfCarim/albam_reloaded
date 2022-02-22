@@ -37,22 +37,23 @@ class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
         '''mat: bpy.data.materials'''
         # taken from blender source
         if mat is not None:
-            #mat_node = mat.active_node_material # deprecated TODO
-            #mat_node = mat
-            #if mat_node:
-            #    return mat_node
-            #else:
-            #     return mat
+            '''Old code
+            mat_node = mat.active_node_material # deprecated TODO
+            mat_node = mat
+            if mat_node:
+                return mat_node
+            else:
+                 return mat'''
             return mat
 
         return None
 
     def draw(self, context):  # pragma: no cover
-        mat = self.active_node_mat(context.material)
+        mat = self.active_node_mat(context.material) #run the method with active material as an argumetn
         if not mat:
             return
         layout = self.layout
-        for prop_name, _, _ in blender_registry.bpy_props.get('material', []):
+        for prop_name, _, _ in blender_registry.bpy_props.get('material', []): #build Albam material panel
             layout.prop(mat, prop_name)
 
     @classmethod
@@ -147,7 +148,6 @@ class AlbamImportOperator(bpy.types.Operator):
             file_path = kwargs.get('file_path')
             context = kwargs['context']
             kwargs['unpack_dir'] = self.unpack_dir
-            #print("unpack dir is{}" .format(kwargs['unpack_dir']))
             with open(file_path, 'rb') as f: #read file as a binary
                 data = f.read() # store file to data var
             id_magic = data[:4] # get first 4 bytes(?)

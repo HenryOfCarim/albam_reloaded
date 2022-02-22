@@ -3,10 +3,10 @@ DEFAULT_TEXTURE = {
     "unk_byte_1": 1,
     "unk_byte_2": 0,
     "unk_byte_3": 0,
-    "unk_float_1": 0.87,
-    "unk_float_2": 0.87,
-    "unk_float_3": 0.87,
-    "unk_float_4": 0.87,
+    "unk_f_red": 0.87,
+    "unk_f_green": 0.87,
+    "unk_f_blue": 0.87,
+    "unk_f_alpha": 0.87,
 }
 
 # Mod156, Chris material 19

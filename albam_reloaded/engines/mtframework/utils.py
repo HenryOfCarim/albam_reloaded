@@ -147,13 +147,13 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
         # Normal
         # Since normal maps have offset channels, they need to be rearranged for Blender
         rgb_separate_node = blender_material.node_tree.nodes.new('ShaderNodeSeparateRGB')
-        rgb_separate_node.location =(-600, -500)
+        rgb_separate_node.location =(-600, -600)
         rgb_combine_node = blender_material.node_tree.nodes.new('ShaderNodeCombineRGB')
-        rgb_combine_node.location = (-400, -400)
+        rgb_combine_node.location = (-400, -500)
 
         normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
-        normal_map_node.location = (-200, -300)
-        blender_texture_slot.location = (-900, -400)
+        normal_map_node.location = (-200, -400)
+        blender_texture_slot.location = (-900, -500)
         
         link(blender_texture_slot.outputs['Color'], rgb_separate_node.inputs['Image'])
         link(blender_texture_slot.outputs['Alpha'], rgb_combine_node.inputs['R']) # set normal node to shader socket
@@ -181,12 +181,14 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
         blender_material.specular_intensity = 0.0'''
     elif texture_code == 7:
         # cube map normal
-        # What is cube mape normal?
-        normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
-        normal_map_node.space = ('WORLD')
+        # maybe detail normal map
+        detail_normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
+        detail_normal_map_node.space = ('WORLD')
+        detail_normal_map_node.location = (-200, -200)
         blender_texture_slot.projection = 'BOX'
-        link(normal_map_node.outputs['Normal'], principled_node.inputs['Normal']) # set normal node to shader socket
-        link(blender_texture_slot.outputs['Color'], normal_map_node.inputs['Color'])
+        blender_texture_slot.location =(-900, -200)
+        #link(detail_normal_map_node.outputs['Normal'], principled_node.inputs['Normal']) # set normal node to shader socket
+        link(blender_texture_slot.outputs['Color'], detail_normal_map_node.inputs['Color'])
         ''' Old code
         blender_texture_slot.use_map_color_diffuse = False
         blender_texture_slot.use_map_normal = True
@@ -202,9 +204,7 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
 def blender_texture_to_texture_code(blender_texture_slot):
     '''This function return a type ID of the image texture node dependind of node connetion
         blender_texture_slot : bpy.types.ShaderNodeTexImage
-    
     '''
-
     texture_code = 0
     color_out = blender_texture_slot.outputs['Color'] 
     alpha_out = blender_texture_slot.outputs['Alpha']
@@ -230,12 +230,12 @@ def blender_texture_to_texture_code(blender_texture_slot):
     elif color_socket == "Invert":
         texture_code = 2
 
-    # Cube normal
+    # Cube normal # Detail map
     #elif (blender_texture_slot.use_map_normal and
     #      blender_texture_slot.texture_coords == 'GLOBAL' and
     #      blender_texture_slot.mapping == 'CUBE'):
     elif (blender_texture_slot.projection == 'BOX' and
-          alpha_socket == "Combine RGB"):
+          alpha_socket == None):
         texture_code = 7
 
     return texture_code
