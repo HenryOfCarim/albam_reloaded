@@ -134,109 +134,127 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
         blender_material : shader material
     '''
     #blender_texture_slot.use_map_alpha = True
-    principled_node = blender_material.node_tree.nodes.get("Principled BSDF")
+    principled_node = blender_material.node_tree.nodes.get('Principled BSDF')
     link = blender_material.node_tree.links.new
 
     if texture_code == 0:
         # Diffuse
         link(blender_texture_slot.outputs['Color'], principled_node.inputs['Base Color'])
         link(blender_texture_slot.outputs['Alpha'], principled_node.inputs['Alpha'])
-        blender_texture_slot.location =(-300, 300)
+        blender_texture_slot.location =(-300, 350)
         #blender_texture_slot.use_map_color_diffuse = True
     elif texture_code == 1:
         # Normal
         # Since normal maps have offset channels, they need to be rearranged for Blender
-        rgb_separate_node = blender_material.node_tree.nodes.new('ShaderNodeSeparateRGB')
-        rgb_separate_node.location =(-600, -600)
-        rgb_combine_node = blender_material.node_tree.nodes.new('ShaderNodeCombineRGB')
-        rgb_combine_node.location = (-400, -500)
+        for n in blender_material.node_tree.nodes:
+            if n.type == 'NORMAL_MAP':
+                print("see normal node on normal creation")
+
+
+        nm_separateRGB_n = blender_material.node_tree.nodes.new('ShaderNodeSeparateRGB')
+        nm_separateRGB_n.location =(-860, -550)
+        nm_combineRGB_n = blender_material.node_tree.nodes.new('ShaderNodeCombineRGB')
+        nm_combineRGB_n.location = (-670, -500)
 
         normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
-        normal_map_node.location = (-200, -400)
-        blender_texture_slot.location = (-900, -500)
+        normal_map_node.location = (-200, -260)
+        #blender_texture_slot.image.colorspace_settings.name = 'Non-Color'
+        blender_texture_slot.location = (-1150, -450)
         
-        link(blender_texture_slot.outputs['Color'], rgb_separate_node.inputs['Image'])
-        link(blender_texture_slot.outputs['Alpha'], rgb_combine_node.inputs['R']) # set normal node to shader socket
-        link(rgb_separate_node.outputs['G'], rgb_combine_node.inputs['G'])
-        link(rgb_separate_node.outputs['B'], rgb_combine_node.inputs['B'])
-        link(rgb_combine_node.outputs['Image'], normal_map_node.inputs['Color'])
+        link(blender_texture_slot.outputs['Color'], nm_separateRGB_n.inputs['Image'])
+        link(blender_texture_slot.outputs['Alpha'], nm_combineRGB_n.inputs['R']) # set normal node to shader socket
+        link(nm_separateRGB_n.outputs['G'], nm_combineRGB_n.inputs['G'])
+        link(nm_separateRGB_n.outputs['B'], nm_combineRGB_n.inputs['B'])
+        link(nm_combineRGB_n.outputs['Image'], normal_map_node.inputs['Color'])
         link(normal_map_node.outputs['Normal'], principled_node.inputs['Normal']) # set normal node to shader socket
-
-        ''' Old code
-        blender_texture_slot.use_map_color_diffuse = False
-        blender_texture_slot.use_map_normal = True
-        blender_texture_slot.normal_factor = 0.05'''
     elif texture_code == 2:
         # Specular
-        # No sure should it have this Specular to Roughness conversion
-        blender_texture_slot.location =(-500, -10)
+        blender_texture_slot.location =(-600, 60)
         invert_spec_node = blender_material.node_tree.nodes.new('ShaderNodeInvert')
-        invert_spec_node.location = (-200, -10)
+        invert_spec_node.location = (-330, 60)
 
         link(blender_texture_slot.outputs['Color'], invert_spec_node.inputs['Color'])
         link(invert_spec_node.outputs['Color'], principled_node.inputs['Roughness'])
-        ''' Old code
-        blender_texture_slot.use_map_color_diffuse = False
-        blender_texture_slot.use_map_specular = True
-        blender_material.specular_intensity = 0.0'''
     elif texture_code == 7:
-        # cube map normal
-        # maybe detail normal map
-        detail_normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
-        detail_normal_map_node.space = ('WORLD')
-        detail_normal_map_node.location = (-200, -200)
-        blender_texture_slot.projection = 'BOX'
-        blender_texture_slot.location =(-900, -200)
-        #link(detail_normal_map_node.outputs['Normal'], principled_node.inputs['Normal']) # set normal node to shader socket
-        link(blender_texture_slot.outputs['Color'], detail_normal_map_node.inputs['Color'])
-        ''' Old code
-        blender_texture_slot.use_map_color_diffuse = False
-        blender_texture_slot.use_map_normal = True
-        blender_texture_slot.normal_factor = 0.05
-        blender_texture_slot.texture_coords = 'GLOBAL'
-        blender_texture_slot.mapping = 'CUBE'''
+        #Detail normal map
+        blender_texture_slot.location =(-1150, -130)
+
+        dt_tex_coord_n = blender_material.node_tree.nodes.new('ShaderNodeTexCoord') 
+        dt_tex_coord_n.location = (-1550, -340)
+        dt_mapping_n = blender_material.node_tree.nodes.new('ShaderNodeMapping')
+        dt_mapping_n.location = (-1350, -340)
+        
+        dt_separateRGB_n = blender_material.node_tree.nodes.new('ShaderNodeSeparateRGB')
+        dt_separateRGB_n.location = (-860, -260)
+        dt_combineRGB_n = blender_material.node_tree.nodes.new('ShaderNodeCombineRGB')
+        dt_combineRGB_n.location =(-670, -220)
+
+        link(dt_tex_coord_n.outputs['UV'], dt_mapping_n.inputs['Vector'])
+        link(dt_mapping_n.outputs['Vector'], blender_texture_slot.inputs['Vector'])
+        print (blender_texture_slot.inputs['Vector'].links[0].from_node.name )
+        
+        link(blender_texture_slot.outputs['Color'], dt_separateRGB_n.inputs['Image'])
+        link(blender_texture_slot.outputs['Alpha'], dt_combineRGB_n.inputs['R'])
+        link(dt_separateRGB_n.outputs['G'], dt_combineRGB_n.inputs['G'])
+        link(dt_separateRGB_n.outputs['B'], dt_combineRGB_n.inputs['B'])
+        (blender_texture_slot.inputs['Vector'].links)
+
+        dt_normal_n = blender_material.node_tree.nodes.get('Normal Map') # check if normal node is already exist
+        if dt_normal_n:
+            dt_mixRGB = blender_material.node_tree.nodes.new('ShaderNodeMixRGB')
+            dt_mixRGB.location = (-470, -250)
+            link(dt_combineRGB_n.outputs['Image'],dt_mixRGB.inputs['Color1'])
+            nm_combineRGB_n = dt_normal_n.inputs['Color'].links[0].from_node # get combine RGB link from the normal map inputs
+            link(dt_mixRGB.outputs['Color'],dt_normal_n.inputs['Color'])
+            link(nm_combineRGB_n.outputs['Image'], dt_mixRGB.inputs['Color2'])
+        else:
+            dt_normal_n = blender_material.node_tree.nodes.new("ShaderNodeNormalMap") # create a new normal map node
+            dt_normal_n.location = (-200, -130)
+            link(link(dt_combineRGB_n.outputs['Image'], dt_normal_n.inputs['Color']))
+            link(dt_normal_n.outputs['Normal'], principled_node.inputs['Normal'])
+
     else:
         print('texture_code not supported', texture_code)
         #blender_texture_slot.use_map_color_diffuse = False # deprecated
+        # 5 - cubemap
         # TODO: 3, 4, 5, 6,
 
 
-def blender_texture_to_texture_code(blender_texture_slot):
+def blender_texture_to_texture_code(blender_texture_image_node):
     '''This function return a type ID of the image texture node dependind of node connetion
-        blender_texture_slot : bpy.types.ShaderNodeTexImage
+        blender_texture_image_node : bpy.types.ShaderNodeTexImage
     '''
     texture_code = 0
-    color_out = blender_texture_slot.outputs['Color'] 
-    alpha_out = blender_texture_slot.outputs['Alpha']
+    color_out = blender_texture_image_node.outputs['Color'] 
+    alpha_out = blender_texture_image_node.outputs['Alpha']
+    vector_in = blender_texture_image_node.inputs['Vector']
 
     color_socket = (color_out.links[0].to_node.name)
     alpha_socket = None
+    vector_socket = None
     if alpha_out.links:
         alpha_socket = (alpha_out.links[0].to_node.name)
 
+    if vector_in.links:
+        vector_socket =(vector_in.links[0].from_node.name)
+
     # Diffuse
-    #if blender_texture_slot.use_map_color_diffuse:
     if color_socket and alpha_socket == "Principled BSDF":
         texture_code = 0
 
     # Normal
-    #elif blender_texture_slot.projection and blender_texture_slot.texture_coords == 'UV':
-    elif (blender_texture_slot.projection == 'FLAT' and
+    elif (not vector_socket and
          alpha_socket == "Combine RGB"):
         texture_code = 1
 
     # Specular
-    #elif blender_texture_slot.use_map_specular:
     elif color_socket == "Invert":
         texture_code = 2
 
-    # Cube normal # Detail map
-    #elif (blender_texture_slot.use_map_normal and
-    #      blender_texture_slot.texture_coords == 'GLOBAL' and
-    #      blender_texture_slot.mapping == 'CUBE'):
-    elif (blender_texture_slot.projection == 'BOX' and
-          alpha_socket == None):
+    # Detail normal map
+    elif (vector_socket == 'Mapping'):
         texture_code = 7
+        print("map to 7")
 
     return texture_code
 
