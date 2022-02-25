@@ -48,7 +48,7 @@ DEFAULT_MATERIAL = {
     "unk_20": 1.0,
     "unk_21": 0.0,
     "unk_22": 0.25,
-    "unk_23": 36.0,
+    "unk_23": 36.0, # detail map multiplier 10.00 default
     "unk_24": 0.0,
     "unk_25": 0.5,
     "unk_26": 0.0,

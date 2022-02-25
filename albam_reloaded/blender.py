@@ -38,23 +38,23 @@ class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
         # taken from blender source
         if mat is not None:
             '''Old code
-            mat_node = mat.active_node_material # deprecated TODO
+            mat_node = mat.active_node_material # deprecated code to get material node
             mat_node = mat
             if mat_node:
                 return mat_node
             else:
                  return mat'''
-            return mat
 
+            return mat
         return None
 
     def draw(self, context):  # pragma: no cover
-        mat = self.active_node_mat(context.material) #run the method with active material as an argumetn
+        mat = self.active_node_mat(context.material) #check if current material is valid
         if not mat:
             return
-        layout = self.layout
-        for prop_name, _, _ in blender_registry.bpy_props.get('material', []): #build Albam material panel
-            layout.prop(mat, prop_name)
+        layout = self.layout # add layout for Albam material panel
+        for prop_name, _, _ in blender_registry.bpy_props.get('material', []): # get unk_ properties for a material:'unk_01' 32835
+            layout.prop(mat, prop_name) # add property for panel
 
     @classmethod
     def poll(cls, context):  # pragma: no cover
@@ -79,9 +79,9 @@ class ALBAM_PT_CustomTextureOptions(bpy.types.Panel):
 
         @classmethod
         def poll(cls, context):  # pragma: no cover #function is optional, used to check if the operator can run.
-            if not hasattr(context, "texture_slot"): # useless code detect Texture slot for textures in a Material datablock
+            #if not hasattr(context, "texture_slot"): # useless code detect Texture slot for textures in a Material datablock
                 #print("material data has attribute")
-                return False
+            #    return False
             return context.texture
 
 
