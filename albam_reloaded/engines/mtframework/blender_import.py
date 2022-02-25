@@ -39,10 +39,8 @@ def import_arc(blender_object, file_path, **kwargs):
         raise ValueError('The arc file provided is not supported yet, it might crash Blender')
 
     base_dir = os.path.basename(file_path).replace('.arc', '_arc_extracted')
-    #print('base dir is {}'.format(base_dir))
     out = unpack_dir or os.path.join(os.path.expanduser('~'), '.albam', 're5', base_dir) #causing an error
     #out = os.path.join(os.path.expanduser('~'), '.albam', 're5', base_dir)
-    #print('out dir is {}'.format(out))
     if not os.path.isdir(out):
         os.makedirs(out)
     if not out.endswith(os.path.sep):
@@ -85,7 +83,6 @@ def import_mod(blender_object, file_path, **kwargs):
     if mod.bone_count: # create  skeleton? 
         armature_name = 'skel_{}'.format(blender_object.name)
         root = _create_blender_armature_from_mod(blender_object, mod, armature_name)
-        #root.show_x_ray = True # deprecated 
         root.show_in_front = True # set x-ray view for bones
     else:
         root = blender_object
@@ -236,6 +233,7 @@ def _create_blender_textures_from_mod(mod, base_dir):
         texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
         texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
         texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE') # bpy.data.textures['00pl0200_09AllHair_BM']
+        texture.use_fake_user = True # TEST
         texture.image = image 
         #print(dir(texture))
         #print(texure)
