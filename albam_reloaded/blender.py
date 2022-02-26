@@ -87,7 +87,7 @@ class ALBAM_PT_CustomTextureOptions(bpy.types.Panel):
 
 class ALBAM_PT_CustomMeshOptions(bpy.types.Panel):
     "Custom Propertis panel for meshes"
-    bl_label = "Albam mesh"
+    bl_label = "[Albam] MTFramework Mesh Options"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "data"

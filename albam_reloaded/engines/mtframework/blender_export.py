@@ -452,6 +452,7 @@ def _export_meshes(blender_meshes, bounding_box, bone_palettes, exported_materia
             # TODO: insert an empty generic material in this case
             raise ExportError('Mesh {} has no materials'.format(blender_mesh.name))
         m156.constant = 1
+        m156.unk_render_group_index = blender_mesh.unk_render_group_index
         m156.level_of_detail = level_of_detail
         m156.vertex_format = CLASSES_TO_VERTEX_FORMATS[type(vertices_array[0])]
         m156.vertex_stride = 32

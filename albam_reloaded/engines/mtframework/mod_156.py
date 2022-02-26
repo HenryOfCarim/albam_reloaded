@@ -188,7 +188,7 @@ class MaterialData(Structure):
 
 @blender_registry.register_bpy_prop('mesh', 'unk_')
 class Mesh156(LittleEndianStructure):
-    _fields_ = (('group_index', c_ushort),
+    _fields_ = (('unk_render_group_index', c_ushort),
                 ('material_index', c_ushort),
                 ('constant', c_ubyte),  # always 1
                 ('level_of_detail', c_ubyte),
