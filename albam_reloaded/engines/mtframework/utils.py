@@ -58,56 +58,32 @@ def get_non_deform_bone_indices(mod):
     return bone_indices.difference(active_bone_indices)
 
 
-def vertices_export_locations(xyz_tuple, bounding_box_width, bounding_box_height, bounding_box_length):
+def vertices_export_locations(xyz_tuple, saved_mod):
     x, y, z = xyz_tuple
 
-    x += bounding_box_width / 2
-    try:
-        x /= bounding_box_width
-    except ZeroDivisionError:
-        pass
-    if x > 1.0:
-        x = 32767
-    else:
-        x *= 32767
+    x -= saved_mod.box_min_x
+    x /= (saved_mod.box_max_x -  saved_mod.box_min_x)
+    x *= 32767
 
-    try:
-        y /= bounding_box_height
-    except ZeroDivisionError:
-        pass
-    if y > 1.0:
-        y = 32767
-    else:
-        y *= 32767
+    y -= saved_mod.box_min_y
+    y /= (saved_mod.box_max_y - saved_mod.box_min_y)
+    y *= 32767
 
-    z += bounding_box_length / 2
-    try:
-        z /= bounding_box_length
-    except ZeroDivisionError:
-        pass
-    if z > 1.0:
-        z = 32767
-    else:
-        z *= 32767
+    z -= saved_mod.box_min_z
+    z /= (saved_mod.box_max_z - saved_mod.box_min_z)
+    z *= 32767
 
     return (round(x), round(y), round(z))
 
 
-def transform_vertices_from_bbox(vertex_format, bounding_box_width, bounding_box_height, bounding_box_length):
+def transform_vertices_from_bbox(vertex_format, mod):
     x = vertex_format.position_x
     y = vertex_format.position_y
     z = vertex_format.position_z
 
-    x *= bounding_box_width
-    x /= 32767
-    x -= bounding_box_width / 2
-
-    y *= bounding_box_height
-    y /= 32767
-
-    z *= bounding_box_length
-    z /= 32767
-    z -= bounding_box_length / 2
+    x  = x / 32767 * (mod.box_max_x - mod.box_min_x) + mod.box_min_x
+    y  = y / 32767 * (mod.box_max_y - mod.box_min_y) + mod.box_min_y
+    z  = z / 32767 * (mod.box_max_z - mod.box_min_z) + mod.box_min_z
 
     return (x, y, z)
 

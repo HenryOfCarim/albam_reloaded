@@ -34,7 +34,6 @@ from ...lib.geometry import z_up_to_y_up
 from ...lib.misc import ntpath_to_os_path
 from ...lib.blender import (
     triangles_list_to_triangles_strip,
-    get_bounding_box_positions_from_blender_objects,
     get_textures_from_the_material,
     get_textures_from_blender_objects,
     get_materials_from_blender_objects,
@@ -141,7 +140,6 @@ def export_mod156(parent_blender_object):
     if not blender_meshes:
         children_objects = list(chain.from_iterable(child.children for child in first_children))
         blender_meshes = [c for c in children_objects if c.type == 'MESH']
-    bounding_box = get_bounding_box_positions_from_blender_objects(blender_meshes)
 
     mesh_count = len(blender_meshes)
     header = struct.unpack('f', struct.pack('4B', mesh_count, 0, 0, 0))[0]
@@ -170,7 +168,7 @@ def export_mod156(parent_blender_object):
         bone_palette_array = (BonePalette * 0)()
 
     exported_materials = _export_textures_and_materials(blender_meshes, saved_mod)
-    exported_meshes = _export_meshes(blender_meshes, bounding_box, bone_palettes, exported_materials)
+    exported_meshes = _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod)
 
     mod = Mod156(id_magic=b'MOD',
                  version=156,
@@ -299,7 +297,7 @@ def _get_tangents_per_vertex(blender_mesh):
     return tangents
 
 
-def _export_vertices(blender_mesh_object, bounding_box, mesh_index, bone_palette):
+def _export_vertices(blender_mesh_object, mesh_index, bone_palette, saved_mod):
     blender_mesh = blender_mesh_object.data
     vertex_count = len(blender_mesh.vertices)
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
@@ -318,10 +316,6 @@ def _export_vertices(blender_mesh_object, bounding_box, mesh_index, bone_palette
         uv_y = pack_half_float(uv_y)
         uvs_per_vertex[vertex_index] = (uv_x, uv_y)
 
-    box_width = abs(bounding_box.min_x * 100) + abs(bounding_box.max_x * 100)
-    box_height = abs(bounding_box.min_y * 100) + abs(bounding_box.max_y * 100)
-    box_length = abs(bounding_box.min_z * 100) + abs(bounding_box.max_z * 100)
-
     vertices_array = (VF * vertex_count)()
     has_bones = hasattr(VF, 'bone_indices')
 
@@ -332,7 +326,7 @@ def _export_vertices(blender_mesh_object, bounding_box, mesh_index, bone_palette
         xyz = z_up_to_y_up(xyz)
         if has_bones:
             # applying bounding box constraints
-            xyz = vertices_export_locations(xyz, box_width, box_length, box_height)
+            xyz = vertices_export_locations(xyz, saved_mod)
             weights_data = weights_per_vertex.get(vertex_index, [])
             weight_values = [w for _, w in weights_data]
             bone_indices = [bone_palette.index(bone_index) for bone_index, _ in weights_data]
@@ -405,7 +399,7 @@ def _get_shadow_method(blender_material):
             index = 1
     return index
 
-def _export_meshes(blender_meshes, bounding_box, bone_palettes, exported_materials):
+def _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod):
     """
     No weird optimization or sharing of offsets in the vertex buffer.
     All the same offsets, different positions like pl0200.mod from
@@ -431,7 +425,7 @@ def _export_meshes(blender_meshes, bounding_box, bone_palettes, exported_materia
                 break
 
         blender_mesh = blender_mesh_ob.data
-        vertices_array = _export_vertices(blender_mesh_ob, bounding_box, mesh_index, bone_palette)
+        vertices_array = _export_vertices(blender_mesh_ob, mesh_index, bone_palette, saved_mod)
         vertex_buffer.extend(vertices_array)
 
         # TODO: is all this format conversion necessary?

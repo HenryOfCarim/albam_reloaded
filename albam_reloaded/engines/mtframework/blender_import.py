@@ -176,14 +176,10 @@ def _import_vertices(mod, mesh):
 
 
 def _import_vertices_mod156(mod, mesh):
-    box_width = abs(mod.box_min_x) + abs(mod.box_max_x)
-    box_height = abs(mod.box_min_y) + abs(mod.box_max_y)
-    box_length = abs(mod.box_min_z) + abs(mod.box_max_z)
-
     vertices_array = get_vertices_array(mod, mesh)
 
     if mesh.vertex_format != 0:
-        locations = (transform_vertices_from_bbox(vf, box_width, box_height, box_length)
+        locations = (transform_vertices_from_bbox(vf, mod)
                      for vf in vertices_array)
     else:
         locations = ((vf.position_x, vf.position_y, vf.position_z) for vf in vertices_array)
