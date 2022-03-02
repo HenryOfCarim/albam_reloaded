@@ -525,6 +525,8 @@ def _export_textures_and_materials(blender_objects, saved_mod):
 
         mat_tex = get_textures_from_the_material(mat) # get listh with imageTexturesnode of the material
         for texture_slot in mat_tex:
+            if not texture_slot or not texture_slot.image:
+                continue
             texture = texture_slot.image.name
 
             # texture_indices expects index-1 based
