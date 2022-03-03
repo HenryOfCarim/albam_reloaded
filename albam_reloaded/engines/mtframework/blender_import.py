@@ -283,17 +283,16 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
                 # TODO
                 print('tex_index {} not found. Texture len(): {}'.format(tex_index, len(textures)))
                 continue
-            #slot = blender_material.texture_slots.add()
-            slot = blender_material.node_tree.nodes.new('ShaderNodeTexImage') 
             if not texture_target:
                 # This means the conversion failed before
                 # TODO: logging
                 continue
-            #print("texture target type is {}".format(type(texture_target)))
-            #print("texture target is {}".format(texture_target))
+            if texture_code == 3 or texture_code == 4 or texture_code == 5 or texture_code == 6:
+                print('texture_code not supported', texture_code)
+                continue
+            slot = blender_material.node_tree.nodes.new('ShaderNodeTexImage') 
             texture_code_to_blender_texture(texture_code, slot, blender_material)
             #slot.texture = texture_target # deprecated?
-            #print(dir(texture_target))
             slot.image = texture_target.image # set bpy.data.textures[].image as a texures for ShaderNodeTexImage
 
     return materials

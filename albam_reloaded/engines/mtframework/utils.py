@@ -1,6 +1,9 @@
+from ast import Return
 import ctypes
 from collections import Counter
 import ntpath
+
+from albam_reloaded.engines.mtframework import tex
 
 from ...exceptions import BuildMeshError
 from ...engines.mtframework.mod_156 import (
@@ -151,6 +154,7 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
 
         link(blender_texture_slot.outputs['Color'], invert_spec_node.inputs['Color'])
         link(invert_spec_node.outputs['Color'], principled_node.inputs['Roughness'])
+
     elif texture_code == 7:
         #Detail normal map
         blender_texture_slot.location =(-1150, -130)
@@ -167,7 +171,7 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
 
         link(dt_tex_coord_n.outputs['UV'], dt_mapping_n.inputs['Vector'])
         link(dt_mapping_n.outputs['Vector'], blender_texture_slot.inputs['Vector'])
-        print (blender_texture_slot.inputs['Vector'].links[0].from_node.name )
+        #print (blender_texture_slot.inputs['Vector'].links[0].from_node.name )
         
         link(blender_texture_slot.outputs['Color'], dt_separateRGB_n.inputs['Image'])
         link(blender_texture_slot.outputs['Alpha'], dt_combineRGB_n.inputs['R'])
@@ -188,7 +192,6 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
             dt_normal_n.location = (-200, -130)
             link(link(dt_combineRGB_n.outputs['Image'], dt_normal_n.inputs['Color']))
             link(dt_normal_n.outputs['Normal'], principled_node.inputs['Normal'])
-
     else:
         print('texture_code not supported', texture_code)
         #blender_texture_slot.use_map_color_diffuse = False # deprecated
@@ -205,9 +208,13 @@ def blender_texture_to_texture_code(blender_texture_image_node):
     alpha_out = blender_texture_image_node.outputs['Alpha']
     vector_in = blender_texture_image_node.inputs['Vector']
 
-    color_socket = (color_out.links[0].to_node.name)
+    color_socket = None
     alpha_socket = None
     vector_socket = None
+
+    if color_out.links:
+        color_socket = (color_out.links[0].to_node.name)
+
     if alpha_out.links:
         alpha_socket = (alpha_out.links[0].to_node.name)
 
@@ -230,7 +237,6 @@ def blender_texture_to_texture_code(blender_texture_image_node):
     # Detail normal map
     elif (vector_socket == 'Mapping'):
         texture_code = 7
-        print("map to 7")
 
     return texture_code
 
