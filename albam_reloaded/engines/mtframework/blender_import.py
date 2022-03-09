@@ -292,8 +292,9 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
                 continue
             slot = blender_material.node_tree.nodes.new('ShaderNodeTexImage') 
             texture_code_to_blender_texture(texture_code, slot, blender_material)
-            #slot.texture = texture_target # deprecated?
             slot.image = texture_target.image # set bpy.data.textures[].image as a texures for ShaderNodeTexImage
+            if  texture_code  == 1 or texture_code  == 7: # change color settings for normal and detail maps
+                slot.image.colorspace_settings.name = 'Non-Color'
 
     return materials
 
