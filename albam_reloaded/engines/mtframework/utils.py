@@ -137,7 +137,6 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
 
         normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
         normal_map_node.location = (-200, -260)
-        #blender_texture_slot.image.colorspace_settings.name = 'Non-Color'
         blender_texture_slot.location = (-1150, -450)
         
         link(blender_texture_slot.outputs['Color'], nm_separateRGB_n.inputs['Image'])
@@ -163,6 +162,17 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
         dt_tex_coord_n.location = (-1550, -340)
         dt_mapping_n = blender_material.node_tree.nodes.new('ShaderNodeMapping')
         dt_mapping_n.location = (-1350, -340)
+
+        # link detail map multiplier to the custom material property
+        for x in range(3):
+            d = dt_mapping_n.inputs[3].driver_add("default_value", x)
+            var1 = d.driver.variables.new()
+            var1.name = "detail_multiplier"
+            var1.targets[0].id_type = 'MATERIAL'
+            var1.targets[0].id = blender_material
+            var1.targets[0].data_path = '["unk_23"]'
+            d.driver.expression = var1.name
+
         
         dt_separateRGB_n = blender_material.node_tree.nodes.new('ShaderNodeSeparateRGB')
         dt_separateRGB_n.location = (-860, -260)
