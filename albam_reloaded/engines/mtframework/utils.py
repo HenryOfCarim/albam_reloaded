@@ -125,26 +125,34 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
     elif texture_code == 1:
         # Normal
         # Since normal maps have offset channels, they need to be rearranged for Blender
-        for n in blender_material.node_tree.nodes:
-            if n.type == 'NORMAL_MAP':
-                print("see normal node on normal creation")
-
-
         nm_separateRGB_n = blender_material.node_tree.nodes.new('ShaderNodeSeparateRGB')
         nm_separateRGB_n.location =(-860, -550)
         nm_combineRGB_n = blender_material.node_tree.nodes.new('ShaderNodeCombineRGB')
         nm_combineRGB_n.location = (-670, -500)
 
-        normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
-        normal_map_node.location = (-200, -260)
         blender_texture_slot.location = (-1150, -450)
-        
         link(blender_texture_slot.outputs['Color'], nm_separateRGB_n.inputs['Image'])
         link(blender_texture_slot.outputs['Alpha'], nm_combineRGB_n.inputs['R']) # set normal node to shader socket
         link(nm_separateRGB_n.outputs['G'], nm_combineRGB_n.inputs['G'])
         link(nm_separateRGB_n.outputs['B'], nm_combineRGB_n.inputs['B'])
-        link(nm_combineRGB_n.outputs['Image'], normal_map_node.inputs['Color'])
+
+        dt_normal_n = blender_material.node_tree.nodes.get('Normal Map')
+        #If a detail map was created before normal map
+        if dt_normal_n:
+            print("see normal node from a detail map(?) on the normal creation")
+            dt_combineRGB_n = dt_normal_n.inputs['Color'].links[0].from_node
+            dt_mixRGB = blender_material.node_tree.nodes.new('ShaderNodeMixRGB')
+            dt_mixRGB.location = (-470, -250)
+            link(dt_combineRGB_n.outputs['Image'],dt_mixRGB.inputs['Color1'])
+            link(nm_combineRGB_n.outputs['Image'],dt_mixRGB.inputs['Color2'])
+            link(dt_mixRGB.outputs['Color'],dt_normal_n.inputs['Color'])
+        else:
+            normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
+            normal_map_node.location = (-200, -260)
+            link(nm_combineRGB_n.outputs['Image'], normal_map_node.inputs['Color'])
+
         link(normal_map_node.outputs['Normal'], principled_node.inputs['Normal']) # set normal node to shader socket
+
     elif texture_code == 2:
         # Specular
         blender_texture_slot.location =(-600, 60)
@@ -170,7 +178,7 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
             var1.name = "detail_multiplier"
             var1.targets[0].id_type = 'MATERIAL'
             var1.targets[0].id = blender_material
-            var1.targets[0].data_path = '["unk_23"]'
+            var1.targets[0].data_path = '["unk_detail_factor"]'
             d.driver.expression = var1.name
 
         
@@ -187,17 +195,17 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
         link(blender_texture_slot.outputs['Alpha'], dt_combineRGB_n.inputs['R'])
         link(dt_separateRGB_n.outputs['G'], dt_combineRGB_n.inputs['G'])
         link(dt_separateRGB_n.outputs['B'], dt_combineRGB_n.inputs['B'])
-        (blender_texture_slot.inputs['Vector'].links)
+        #(blender_texture_slot.inputs['Vector'].links)
 
-        dt_normal_n = blender_material.node_tree.nodes.get('Normal Map') # check if normal node is already exist
-        if dt_normal_n:
+        nm_normal_n = blender_material.node_tree.nodes.get('Normal Map') # check if normal node is already exist
+        if nm_normal_n:
             dt_mixRGB = blender_material.node_tree.nodes.new('ShaderNodeMixRGB')
             dt_mixRGB.location = (-470, -250)
             link(dt_combineRGB_n.outputs['Image'],dt_mixRGB.inputs['Color1'])
-            nm_combineRGB_n = dt_normal_n.inputs['Color'].links[0].from_node # get combine RGB link from the normal map inputs
-            link(dt_mixRGB.outputs['Color'],dt_normal_n.inputs['Color'])
+            nm_combineRGB_n = nm_normal_n.inputs['Color'].links[0].from_node # get combine RGB link from the normal map inputs
+            link(dt_mixRGB.outputs['Color'],nm_normal_n.inputs['Color'])
             link(nm_combineRGB_n.outputs['Image'], dt_mixRGB.inputs['Color2'])
-        else:
+        else: # in case the detail map was created before a normal map
             dt_normal_n = blender_material.node_tree.nodes.new("ShaderNodeNormalMap") # create a new normal map node
             dt_normal_n.location = (-200, -130)
             link(dt_combineRGB_n.outputs['Image'], dt_normal_n.inputs['Color'])

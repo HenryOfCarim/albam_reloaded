@@ -169,7 +169,7 @@ class MaterialData(Structure):
                 ('unk_20', c_float),
                 ('unk_21', c_float),
                 ('unk_22', c_float),
-                ('unk_23', c_float),
+                ('unk_detail_factor', c_float),
                 ('unk_24', c_float),
                 ('unk_25', c_float),
                 ('unk_26', c_float),
