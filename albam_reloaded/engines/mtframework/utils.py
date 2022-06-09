@@ -200,7 +200,7 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
         else:
             dt_normal_n = blender_material.node_tree.nodes.new("ShaderNodeNormalMap") # create a new normal map node
             dt_normal_n.location = (-200, -130)
-            link(link(dt_combineRGB_n.outputs['Image'], dt_normal_n.inputs['Color']))
+            link(dt_combineRGB_n.outputs['Image'], dt_normal_n.inputs['Color'])
             link(dt_normal_n.outputs['Normal'], principled_node.inputs['Normal'])
     else:
         print('texture_code not supported', texture_code)
