@@ -129,7 +129,22 @@ class GroupData(Structure):
 @blender_registry.register_bpy_prop('material', 'unk_')
 class MaterialData(Structure):
     _defaults_ = DEFAULT_MATERIAL
-    _fields_ = (('unk_01', c_ushort),
+    _fields_ = (('unk_01_flag_01', c_uint16, 1), # previously c_ushort
+                ('unk_01_flag_02', c_uint16, 1),
+                ('unk_01_flag_03', c_uint16, 1),
+                ('unk_01_flag_04', c_uint16, 1),
+                ('unk_01_flag_05', c_uint16, 1),
+                ('unk_01_flag_06', c_uint16, 1),
+                ('unk_01_no_alpha', c_uint16, 1),
+                ('unk_01_flag_08', c_uint16, 1),
+                ('unk_01_alpha_transparency', c_uint16, 1),
+                ('unk_01_flag_10', c_uint16, 1),
+                ('unk_01_flag_11', c_uint16, 1),
+                ('unk_01_flag_12', c_uint16, 1),
+                ('unk_01_flag_13', c_uint16, 1),
+                ('unk_01_flag_14', c_uint16, 1),
+                ('unk_01_flag_15', c_uint16, 1),
+                ('unk_01_flag_16', c_uint16, 1),
                 ('unk_flag_01', c_uint16, 1),
                 ('unk_flag_02', c_uint16, 1),
                 ('unk_flag_03', c_uint16, 1),
@@ -162,7 +177,7 @@ class MaterialData(Structure):
                 ('unk_13', c_float),
                 ('unk_14', c_float),
                 ('unk_15', c_float),
-                ('unk_16', c_float),
+                ('unk_16', c_float), # specular contrast ? set 1.0 to see
                 ('unk_17', c_float),
                 ('unk_18', c_float),
                 ('unk_19', c_float),
