@@ -165,7 +165,6 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
     elif texture_code == 7:
         #Detail normal map
         blender_texture_slot.location =(-1150, -130)
-
         dt_tex_coord_n = blender_material.node_tree.nodes.new('ShaderNodeTexCoord') 
         dt_tex_coord_n.location = (-1550, -340)
         dt_mapping_n = blender_material.node_tree.nodes.new('ShaderNodeMapping')
@@ -189,23 +188,21 @@ def texture_code_to_blender_texture(texture_code, blender_texture_slot, blender_
 
         link(dt_tex_coord_n.outputs['UV'], dt_mapping_n.inputs['Vector'])
         link(dt_mapping_n.outputs['Vector'], blender_texture_slot.inputs['Vector'])
-        #print (blender_texture_slot.inputs['Vector'].links[0].from_node.name )
         
         link(blender_texture_slot.outputs['Color'], dt_separateRGB_n.inputs['Image'])
         link(blender_texture_slot.outputs['Alpha'], dt_combineRGB_n.inputs['R'])
         link(dt_separateRGB_n.outputs['G'], dt_combineRGB_n.inputs['G'])
         link(dt_separateRGB_n.outputs['B'], dt_combineRGB_n.inputs['B'])
-        #(blender_texture_slot.inputs['Vector'].links)
 
         nm_normal_n = blender_material.node_tree.nodes.get('Normal Map') # check if normal node is already exist
-        if nm_normal_n:
+        if nm_normal_n: # in case the normal map was created before a detail map
             dt_mixRGB = blender_material.node_tree.nodes.new('ShaderNodeMixRGB')
             dt_mixRGB.location = (-470, -250)
             link(dt_combineRGB_n.outputs['Image'],dt_mixRGB.inputs['Color1'])
             nm_combineRGB_n = nm_normal_n.inputs['Color'].links[0].from_node # get combine RGB link from the normal map inputs
             link(dt_mixRGB.outputs['Color'],nm_normal_n.inputs['Color'])
             link(nm_combineRGB_n.outputs['Image'], dt_mixRGB.inputs['Color2'])
-        else: # in case the detail map was created before a normal map
+        else: 
             dt_normal_n = blender_material.node_tree.nodes.new("ShaderNodeNormalMap") # create a new normal map node
             dt_normal_n.location = (-200, -130)
             link(dt_combineRGB_n.outputs['Image'], dt_normal_n.inputs['Color'])

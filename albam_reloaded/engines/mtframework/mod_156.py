@@ -176,7 +176,7 @@ class MaterialData(Structure):
                 ('unk_12', c_float),
                 ('unk_13', c_float),
                 ('unk_14', c_float),
-                ('unk_15', c_float),
+                ('unk_15', c_float), # glossnes level maybe
                 ('unk_16', c_float), # specular contrast ? set 1.0 to see
                 ('unk_17', c_float),
                 ('unk_18', c_float),
