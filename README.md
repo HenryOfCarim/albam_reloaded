@@ -1,10 +1,18 @@
 # Albam Reloaded
-My amateurish try to port the Sebastian Branchi's albam addon to blender 2.80+
+The port of Sebastian Branchi's albam addon to blender 2.80+ for Resident Evil 5 modding
 
-I fixed all errors during import-export but it didn't tested enough to say it works confidently, based on 0.3-alpha
+With the current version you can:
+-edit character meshes
+-edit character cut-scene heads
+-add new meshes and materials*
+-edit material properties as alpha transparency and detail map UV multiplier
+
+The problems that still prevent from common use:
+- mesh visibility calculation is wrong
+
 # Installing
-However you can try it even now, just download the code as a zip, unpack it somewhere then open Blender,
-go to Edit>Preference>Add-ons>Install , open albam_reloaded folder and press Install Add-on
+Download the latest release, run Blender,
+go to Edit>Preference>Add-ons>Install, select downloaded zip archive and press Install Add-on
 Turn it on after installing
 
 https://user-images.githubusercontent.com/18252816/153188742-fceef27d-1c27-42c9-b977-9e65b6eb4041.mp4
