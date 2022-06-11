@@ -2,10 +2,10 @@
 The port of Sebastian Branchi's albam addon to blender 2.80+ for Resident Evil 5 modding
 
 With the current version you can:
--edit character meshes
--edit character cut-scene heads
--add new meshes and materials*
--edit material properties as alpha transparency and detail map UV multiplier
+- edit character meshes
+- edit character cut-scene heads
+- add new meshes and materials*
+- edit material properties as alpha transparency and detail map UV multiplier
 
 The problems that still prevent from common use:
 - mesh visibility calculation is wrong
