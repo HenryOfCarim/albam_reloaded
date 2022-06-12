@@ -1,5 +1,5 @@
 # Albam Reloaded
-The port of Sebastian Branchi's albam addon to blender 2.80+ for Resident Evil 5 modding
+The port of Sebastian Brachi's albam addon to blender 2.80+ for Resident Evil 5 modding
 
 With the current version you can:
 - edit character meshes
