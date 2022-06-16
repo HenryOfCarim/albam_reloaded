@@ -1,4 +1,7 @@
-import bpy
+try:
+    import bpy
+except ImportError:
+    pass
 from collections import deque, namedtuple
 import os
 

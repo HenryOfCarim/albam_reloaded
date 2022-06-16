@@ -16,6 +16,7 @@ from ...registry import blender_registry
 from ...exceptions import ExportError
 from ...engines.mtframework.mod_156 import (
     Mesh156,
+    WeightBound,
     MaterialData,
     BonePalette,
     CLASSES_TO_VERTEX_FORMATS,
@@ -43,20 +44,7 @@ from ...lib.blender import (
     )
 
 
-# Taken from: RE5->uOm0000Damage.arc->/pawn/om/om0000/model/om0000.mod
-# Not entirely sure what it represents (a bounding box + a matrix?), but it works in all models so far
-CUBE_BBOX = [0.0, 0.0, 0.0, 0.0,
-             0.0, 50.0, 0.0, 86.6025390625,
-             -50.0, 0.0, -50.0, 0.0,
-             50.0, 100.0, 50.0, 0.0,
-             1.0, 0.0, 0.0, 0.0,
-             0.0, 1.0, 0.0, 0.0,
-             0.0, 0.0, 1.0, 0.0,
-             0.0, 50.0, 0.0, 1.0,
-             50.0, 50.0, 50.0, 0.0]
-
-
-ExportedMeshes = namedtuple('ExportedMeshes', ('meshes_array', 'vertex_buffer', 'index_buffer'))
+ExportedMeshes = namedtuple('ExportedMeshes', ('meshes_array', 'vertex_buffer', 'index_buffer', 'weight_bounds'))
 ExportedMaterials = namedtuple('ExportedMaterials', ('textures_array', 'materials_data_array',
                                                      'materials_mapping', 'blender_textures',
                                                      'texture_dirs'))
@@ -141,12 +129,6 @@ def export_mod156(parent_blender_object):
         children_objects = list(chain.from_iterable(child.children for child in first_children))
         blender_meshes = [c for c in children_objects if c.type == 'MESH']
 
-    mesh_count = len(blender_meshes)
-    header = struct.unpack('f', struct.pack('4B', mesh_count, 0, 0, 0))[0]
-    meshes_array_2 = ctypes.c_float * ((mesh_count * 36) + 1)
-    floats = [header] + CUBE_BBOX * mesh_count
-    meshes_array_2 = meshes_array_2(*floats)
-
     if saved_mod.bone_count:
         bone_palettes = _create_bone_palettes(blender_meshes)
         bone_palette_array = (BonePalette * len(bone_palettes))()
@@ -174,7 +156,7 @@ def export_mod156(parent_blender_object):
                  version=156,
                  version_rev=1,
                  bone_count=saved_mod.bone_count,
-                 mesh_count=mesh_count,
+                 mesh_count=len(blender_meshes),
                  material_count=len(exported_materials.materials_data_array),
                  vertex_count=get_vertex_count_from_blender_objects(blender_meshes),
                  face_count=(ctypes.sizeof(exported_meshes.index_buffer) // 2) + 1,
@@ -218,7 +200,8 @@ def export_mod156(parent_blender_object):
                  textures_array=exported_materials.textures_array,
                  materials_data_array=exported_materials.materials_data_array,
                  meshes_array=exported_meshes.meshes_array,
-                 meshes_array_2=meshes_array_2,
+                 num_weight_bounds=len(exported_meshes.weight_bounds),
+                 weight_bounds=exported_meshes.weight_bounds,
                  vertex_buffer=exported_meshes.vertex_buffer,
                  vertex_buffer_2=saved_mod.vertex_buffer_2,
                  index_buffer=exported_meshes.index_buffer
@@ -414,6 +397,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod)
 
     vertex_position = 0
     face_position = 0
+    weight_bounds_list = []
     for mesh_index, blender_mesh_ob in enumerate(blender_meshes):
         level_of_detail = _infer_level_of_detail(blender_mesh_ob.name)
         bone_palette_index = 0
@@ -458,17 +442,32 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod)
         m156.face_count = index_count
         m156.face_offset = 0
         m156.vertex_index_start_2 = vertex_position
-        m156.vertex_group_count = 1  # using 'TEST' bounding box
+        m156.vertex_group_count = len(blender_mesh_ob.vertex_groups)
         m156.bone_palette_index = bone_palette_index
         #m156.use_cast_shadows = int(blender_material.use_cast_shadows)
         m156.use_cast_shadows = int(_get_shadow_method(blender_material))
         vertex_position += vertex_count
         face_position += index_count
 
+        for vg in sorted(blender_mesh_ob.vertex_groups, key=lambda vg: int(vg.name)):
+            weight_bound = WeightBound(
+                bone_id=int(vg.name),
+                # TODO: will we ever figure this one out?
+                unk_01=(ctypes.c_float * 3)(0, 0, 0),
+                # TODO: calculate. Values seem in parent-bone space
+                bsphere=(ctypes.c_float * 4)(0.1, 0.1, 0.1, 0.1),
+                bbox_min=(ctypes.c_float * 4)(0.1, 0.1, 0.1, 0.1),
+                bbox_max=(ctypes.c_float * 4)(0.2, 0.2, 0.2, 0.2),
+                local_transform=(ctypes.c_float * 16)(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
+                # TODO: seems related to bbox_min/max
+                unk_02=(ctypes.c_float * 4)(0, 0, 0, 0)
+            )
+            weight_bounds_list.append(weight_bound)
+
+    weight_bounds = (WeightBound * len(weight_bounds_list))(*weight_bounds_list)
     vertex_buffer = (ctypes.c_ubyte * len(vertex_buffer)).from_buffer(vertex_buffer)
     index_buffer = (ctypes.c_ushort * (len(index_buffer) // 2)).from_buffer(index_buffer)
-
-    return ExportedMeshes(meshes_156, vertex_buffer, index_buffer)
+    return ExportedMeshes(meshes_156, vertex_buffer, index_buffer, weight_bounds)
 
 
 def _export_textures_and_materials(blender_objects, saved_mod):

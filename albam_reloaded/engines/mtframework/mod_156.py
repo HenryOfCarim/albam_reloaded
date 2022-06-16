@@ -9,15 +9,6 @@ from ...lib.structure import DynamicStructure
 from ...registry import blender_registry
 
 
-def get_meshes_sizes(mod):
-    if mod.version == 156:
-        extra = 1  # TODO: investigate
-    else:
-        extra = 0
-    total_count = sum(mesh.vertex_group_count for mesh in mod.meshes_array)
-    return c_float * ((total_count * 36) + extra)
-
-
 def unk_data_depends_on_other_unk(tmp_struct):
     if tmp_struct.unk_08:
         return c_ubyte * (tmp_struct.bones_array_offset - 176)
@@ -83,7 +74,8 @@ class Mod156(DynamicStructure):
                 ('textures_array', lambda s: (c_char * 64) * s.texture_count),
                 ('materials_data_array', lambda s: MaterialData * s.material_count),
                 ('meshes_array', lambda s: Mesh156 * s.mesh_count),
-                ('meshes_array_2', get_meshes_sizes),
+                ('num_weight_bounds', c_uint),
+                ('weight_bounds', lambda s: WeightBound * s.num_weight_bounds),
                 ('vertex_buffer', lambda s: c_ubyte * s.vertex_buffer_size),
                 ('vertex_buffer_2', lambda s: c_ubyte * s.vertex_buffer_2_size),
                 # TODO: investigate the padding
@@ -199,6 +191,18 @@ class MaterialData(Structure):
                 ('unk_35', c_float),
                 ('unk_36', c_float),
                 ('unk_37', c_float),)
+
+
+class WeightBound(Structure):
+    _fields_ = (
+        ('bone_id', c_uint),
+        ('unk_01', c_float * 3),
+        ('bsphere', c_float * 4),
+        ('bbox_min', c_float * 4),
+        ('bbox_max', c_float * 4),
+        ('local_transform', c_float * 16),
+        ('unk_02', c_float * 4)
+    )
 
 
 @blender_registry.register_bpy_prop('mesh', 'unk_')
