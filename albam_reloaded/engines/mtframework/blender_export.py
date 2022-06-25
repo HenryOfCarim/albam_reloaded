@@ -361,8 +361,11 @@ def _create_bone_palettes(blender_mesh_objects):
 
     bone_palette = {'mesh_indices': set(), 'bone_indices': set()}
     for i, mesh in enumerate(blender_mesh_objects):
+        armature = mesh.parent
+        vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
+        vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
         # XXX case where bone names are not integers
-        vertex_group_mapping = {vg.index: int(vg.name) for vg in mesh.vertex_groups}
+        #vertex_group_mapping = {vg.index: int(vg.name) for vg in mesh.vertex_groups}
         bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
 
         msg = "Mesh {} is influenced by more than 32 bones, which is not supported".format(mesh.name)
