@@ -2,13 +2,15 @@ from collections import OrderedDict, namedtuple
 import ctypes
 from io import BytesIO
 from itertools import chain
+import math
 import ntpath
 import os
-import tempfile
 import re
 import struct
+import tempfile
 try:
     import bpy
+    import mathutils
 except ImportError:
     pass
 
@@ -344,8 +346,9 @@ def _create_bone_palettes(blender_mesh_objects):
 
     bone_palette = {'mesh_indices': set(), 'bone_indices': set()}
     for i, mesh in enumerate(blender_mesh_objects):
-        # XXX case where bone names are not integers
-        vertex_group_mapping = {vg.index: int(vg.name) for vg in mesh.vertex_groups}
+        armature = mesh.parent
+        vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
+        vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
         bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
 
         msg = "Mesh {} is influenced by more than 32 bones, which is not supported".format(mesh.name)
@@ -381,6 +384,67 @@ def _get_shadow_method(blender_material):
         if not blender_material.shadow_method == 'NONE':
             index = 1
     return index
+
+
+
+def calculate_weight_bound(blender_mesh, armature, vertex_group):
+    vertices_in_group = []
+
+    bone_index = armature.pose.bones.find(vertex_group.name)
+    pose_bone = armature.pose.bones[bone_index]
+    pose_bone_matrix = mathutils.Matrix.Translation(pose_bone.head).inverted()
+
+    for v in blender_mesh.vertices:
+        v_groups = {g.group for g in v.groups}
+        if vertex_group.index not in v_groups:
+            continue
+        vertices_in_group.append(v)
+
+    vertices_in_group_bone_space = [pose_bone_matrix @ v.co for v in vertices_in_group]
+
+    min_x = min((v[0] for v in vertices_in_group_bone_space))
+    min_y = min((v[1] for v in vertices_in_group_bone_space))
+    min_z = min((v[2] for v in vertices_in_group_bone_space))
+    max_x = max((v[0] for v in vertices_in_group_bone_space))
+    max_y = max((v[1] for v in vertices_in_group_bone_space))
+    max_z = max((v[2] for v in vertices_in_group_bone_space))
+
+    length_x = (max_x - min_x) / 2
+    length_y = (max_y - min_y) / 2
+    length_z = (max_z - min_z) / 2
+
+    center_x = (min_x + max_x) / 2
+    center_y = (min_y + max_y) / 2
+    center_z = (min_z + max_z) / 2
+    center = (center_x, center_y, center_z)
+    radius = max(map(lambda vertex: math.dist(center, vertex[:]), vertices_in_group_bone_space))
+    bsphere_export = (center_x * 100, center_z * 100, -center_y * 100, radius * 100)
+
+    bbox_min_export = (min_x * 100, min_z * 100, -max_y * 100, 0.0)
+    bbox_max_export = (max_x * 100, max_z * 100, -min_y * 100, 0.0)
+
+    # TODO: calculate oabb
+    oabb_export = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        bsphere_export[0], bsphere_export[1], bsphere_export[2], 1
+    ]
+
+    oabb_dimension = (length_x * 100, length_z * 100, length_y * 100, 0.0)
+
+    weight_bound = WeightBound(
+            bone_id=bone_index,
+            unk_01=(ctypes.c_float * 3)(0.0, 0.0, 0.0),
+            bsphere=(ctypes.c_float * 4)(*bsphere_export),
+            bbox_min=(ctypes.c_float * 4)(*bbox_min_export),
+            bbox_max=(ctypes.c_float * 4)(*bbox_max_export),
+            local_transform=(ctypes.c_float * 16)(*oabb_export),
+            unk_02=(ctypes.c_float * 4)(*oabb_dimension),
+    )
+
+    return weight_bound
+
 
 def _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod):
     """
@@ -449,20 +513,13 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod)
         vertex_position += vertex_count
         face_position += index_count
 
-        for vg in sorted(blender_mesh_ob.vertex_groups, key=lambda vg: int(vg.name)):
-            weight_bound = WeightBound(
-                bone_id=int(vg.name),
-                # TODO: will we ever figure this one out?
-                unk_01=(ctypes.c_float * 3)(0, 0, 0),
-                # TODO: calculate. Values seem in parent-bone space
-                bsphere=(ctypes.c_float * 4)(0.1, 0.1, 0.1, 0.1),
-                bbox_min=(ctypes.c_float * 4)(0.1, 0.1, 0.1, 0.1),
-                bbox_max=(ctypes.c_float * 4)(0.2, 0.2, 0.2, 0.2),
-                local_transform=(ctypes.c_float * 16)(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
-                # TODO: seems related to bbox_min/max
-                unk_02=(ctypes.c_float * 4)(0, 0, 0, 0)
-            )
-            weight_bounds_list.append(weight_bound)
+        # TODO: handle models with no bones
+        armature = blender_mesh_ob.parent
+        unsorted_weight_bounds = []
+        for vg in blender_mesh_ob.vertex_groups:
+            weight_bound = calculate_weight_bound(blender_mesh, armature, vg)
+            unsorted_weight_bounds.append(weight_bound)
+        weight_bounds_list.extend(sorted(unsorted_weight_bounds, key=lambda x: x.bone_id))
 
     weight_bounds = (WeightBound * len(weight_bounds_list))(*weight_bounds_list)
     vertex_buffer = (ctypes.c_ubyte * len(vertex_buffer)).from_buffer(vertex_buffer)
