@@ -43,7 +43,10 @@ from ...lib.blender import (
     get_vertex_count_from_blender_objects,
     get_bone_indices_and_weights_per_vertex,
     get_uvs_per_vertex,
-    )
+    BoundingBox,
+    get_model_bounding_box,
+    get_model_bounding_sphere,
+)
 
 
 ExportedMeshes = namedtuple('ExportedMeshes', ('meshes_array', 'vertex_buffer', 'index_buffer', 'weight_bounds'))
@@ -126,6 +129,7 @@ def export_mod156(parent_blender_object):
 
     first_children = [child for child in parent_blender_object.children]
     blender_meshes = [c for c in first_children if c.type == 'MESH']
+
     # only going one level deeper
     if not blender_meshes:
         children_objects = list(chain.from_iterable(child.children for child in first_children))
@@ -151,8 +155,15 @@ def export_mod156(parent_blender_object):
         bone_palettes = {}
         bone_palette_array = (BonePalette * 0)()
 
+    bl_bbox = get_model_bounding_box(blender_meshes)
+    bbox = BoundingBox(
+            bl_bbox.min_x * 100, bl_bbox.min_z * 100, -bl_bbox.max_y * 100,
+            bl_bbox.max_x * 100, bl_bbox.max_z * 100, -bl_bbox.min_y * 100
+    )
+    bl_bsphere = get_model_bounding_sphere(blender_meshes)
+    bsphere = bl_bsphere[0] * 100, bl_bsphere[2] * 100, -bl_bsphere[1] * 100, bl_bsphere[3] * 100
     exported_materials = _export_textures_and_materials(blender_meshes, saved_mod)
-    exported_meshes = _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod)
+    exported_meshes = _export_meshes(blender_meshes, bone_palettes, exported_materials, bbox)
 
     mod = Mod156(id_magic=b'MOD',
                  version=156,
@@ -170,18 +181,18 @@ def export_mod156(parent_blender_object):
                  group_data_array=saved_mod.group_data_array,
                  bone_palette_count=len(bone_palette_array),
                  bones_array_offset=bones_array_offset,
-                 sphere_x=saved_mod.sphere_x,
-                 sphere_y=saved_mod.sphere_y,
-                 sphere_z=saved_mod.sphere_z,
-                 sphere_w=saved_mod.sphere_w,
-                 box_min_x=saved_mod.box_min_x,
-                 box_min_y=saved_mod.box_min_y,
-                 box_min_z=saved_mod.box_min_z,
-                 box_min_w=saved_mod.box_min_w,
-                 box_max_x=saved_mod.box_max_x,
-                 box_max_y=saved_mod.box_max_y,
-                 box_max_z=saved_mod.box_max_z,
-                 box_max_w=saved_mod.box_max_w,
+                 sphere_x=bsphere[0],
+                 sphere_y=bsphere[1],
+                 sphere_z=bsphere[2],
+                 sphere_w=bsphere[3],
+                 box_min_x=bbox.min_x,
+                 box_min_y=bbox.min_y,
+                 box_min_z=bbox.min_z,
+                 box_min_w=0,
+                 box_max_x=bbox.max_x,
+                 box_max_y=bbox.max_y,
+                 box_max_z=bbox.max_z,
+                 box_max_w=0,
                  unk_01=saved_mod.unk_01,
                  unk_02=saved_mod.unk_02,
                  unk_03=saved_mod.unk_03,
@@ -282,7 +293,7 @@ def _get_tangents_per_vertex(blender_mesh):
     return tangents
 
 
-def _export_vertices(blender_mesh_object, mesh_index, bone_palette, saved_mod):
+def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_bounding_box):
     blender_mesh = blender_mesh_object.data
     vertex_count = len(blender_mesh.vertices)
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
@@ -311,7 +322,7 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, saved_mod):
         xyz = z_up_to_y_up(xyz)
         if has_bones:
             # applying bounding box constraints
-            xyz = vertices_export_locations(xyz, saved_mod)
+            xyz = vertices_export_locations(xyz, model_bounding_box)
             weights_data = weights_per_vertex.get(vertex_index, [])
             weight_values = [w for _, w in weights_data]
             bone_indices = [bone_palette.index(bone_index) for bone_index, _ in weights_data]
@@ -446,7 +457,7 @@ def calculate_weight_bound(blender_mesh, armature, vertex_group):
     return weight_bound
 
 
-def _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod):
+def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_bounding_box_export):
     """
     No weird optimization or sharing of offsets in the vertex buffer.
     All the same offsets, different positions like pl0200.mod from
@@ -462,6 +473,8 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod)
     vertex_position = 0
     face_position = 0
     weight_bounds_list = []
+
+
     for mesh_index, blender_mesh_ob in enumerate(blender_meshes):
         level_of_detail = _infer_level_of_detail(blender_mesh_ob.name)
         bone_palette_index = 0
@@ -473,7 +486,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, saved_mod)
                 break
 
         blender_mesh = blender_mesh_ob.data
-        vertices_array = _export_vertices(blender_mesh_ob, mesh_index, bone_palette, saved_mod)
+        vertices_array = _export_vertices(blender_mesh_ob, mesh_index, bone_palette, model_bounding_box_export)
         vertex_buffer.extend(vertices_array)
 
         # TODO: is all this format conversion necessary?

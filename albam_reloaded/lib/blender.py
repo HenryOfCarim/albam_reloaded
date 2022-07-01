@@ -3,24 +3,30 @@ try:
 except ImportError:
     pass
 from collections import deque, namedtuple
+import math
 import os
 
 
-def get_bounding_box_positions_from_blender_objects(blender_objects):
-    bounding_box = namedtuple('bounding_box', ('max_x', 'max_y', 'max_z', 'max_w',
-                                               'min_x', 'min_y', 'min_z', 'min_w',))
-    meshes = [ob.data for ob in blender_objects if ob.type == 'MESH']
-    max_x = -99999999
-    max_y = -99999999
-    max_z = -99999999
-    max_w = 0
+BoundingBox = namedtuple('bounding_box', (
+    'min_x', 'min_y', 'min_z',
+    'max_x', 'max_y', 'max_z',
+))
+
+
+def get_model_bounding_box(blender_objects):
+    meshes = (ob.data for ob in blender_objects if ob.type == 'MESH')
     min_x = 99999999
     min_y = 99999999
     min_z = 99999999
-    min_w = 0
+
+    max_x = -99999999
+    max_y = -99999999
+    max_z = -99999999
+
+
     for mesh in meshes:
         for vert in mesh.vertices:
-            x, y, z = vert.co
+            x, y, z = vert.co[:]
             if x > max_x:
                 max_x = x
             if y > max_y:
@@ -33,7 +39,26 @@ def get_bounding_box_positions_from_blender_objects(blender_objects):
                 min_y = y
             if z < min_z:
                 min_z = z
-    return bounding_box(max_x, max_y, max_z, max_w, min_x, min_y, min_z, min_w)
+    return BoundingBox(
+            min_x, min_y, min_z,
+            max_x, max_y, max_z
+    )
+
+
+def get_model_bounding_sphere(blender_objects):
+    # TODO: optimize
+
+    bbox = get_model_bounding_box(blender_objects)
+    meshes = (ob.data for ob in blender_objects if ob.type == 'MESH')
+    vertices = (v.co for mesh in meshes for v in mesh.vertices)
+
+    center_x = (bbox.min_x + bbox.max_x) / 2
+    center_y = (bbox.min_y + bbox.max_y) / 2
+    center_z = (bbox.min_z + bbox.max_z) / 2
+    center = [center_x, center_y, center_z]
+
+    radius = max(map(lambda vertex: math.dist(center, vertex), vertices))
+    return center + [radius]
 
 
 def strip_triangles_to_triangles_list(strip_indices_array):

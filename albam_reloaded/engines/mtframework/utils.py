@@ -61,19 +61,19 @@ def get_non_deform_bone_indices(mod):
     return bone_indices.difference(active_bone_indices)
 
 
-def vertices_export_locations(xyz_tuple, saved_mod):
+def vertices_export_locations(xyz_tuple, model_bounding_box):
     x, y, z = xyz_tuple
 
-    x -= saved_mod.box_min_x
-    x /= (saved_mod.box_max_x -  saved_mod.box_min_x)
+    x -= model_bounding_box.min_x
+    x /= (model_bounding_box.max_x -  model_bounding_box.min_x)
     x *= 32767
 
-    y -= saved_mod.box_min_y
-    y /= (saved_mod.box_max_y - saved_mod.box_min_y)
+    y -= model_bounding_box.min_y
+    y /= (model_bounding_box.max_y - model_bounding_box.min_y)
     y *= 32767
 
-    z -= saved_mod.box_min_z
-    z /= (saved_mod.box_max_z - saved_mod.box_min_z)
+    z -= model_bounding_box.min_z
+    z /= (model_bounding_box.max_z - model_bounding_box.min_z)
     z *= 32767
 
     return (round(x), round(y), round(z))
