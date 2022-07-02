@@ -200,8 +200,8 @@ class WeightBound(Structure):
         ('bsphere', c_float * 4),
         ('bbox_min', c_float * 4),
         ('bbox_max', c_float * 4),
-        ('local_transform', c_float * 16),
-        ('unk_02', c_float * 4)
+        ('oabb_matrix', c_float * 16),
+        ('oabb_dimension', c_float * 4)
     )
 
 

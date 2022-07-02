@@ -455,8 +455,8 @@ def calculate_weight_bound(blender_mesh, armature, vertex_group):
             bsphere=(ctypes.c_float * 4)(*bsphere_export),
             bbox_min=(ctypes.c_float * 4)(*bbox_min_export),
             bbox_max=(ctypes.c_float * 4)(*bbox_max_export),
-            local_transform=(ctypes.c_float * 16)(*oabb_export),
-            unk_02=(ctypes.c_float * 4)(*oabb_dimension),
+            oabb_matrix=(ctypes.c_float * 16)(*oabb_export),
+            oabb_dimension=(ctypes.c_float * 4)(*oabb_dimension),
     )
 
     return weight_bound
