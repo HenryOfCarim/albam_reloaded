@@ -597,18 +597,18 @@ def _export_textures_and_materials(blender_objects, saved_mod):
             # texture_indices expects index-1 based
             texture_index = textures.index(texture) + 1'''
 
-        mat_tex = get_textures_from_the_material(mat) # get listh with imageTexturesnode of the material
-        for texture_slot in mat_tex:
-            if not texture_slot or not texture_slot.image:
+        mat_tex = get_textures_from_the_material(mat) # get list with all ImageTexture nodes of the material
+        for texture_node in mat_tex:
+            if not texture_node or not texture_node.image:
                 continue
-            texture = texture_slot.image.name
+            texture = texture_node.image.name    
+            texture_data = [td for td in textures if td.image == texture_node.image] # get a texture data linked to the imageTexture node
+            try:
+                texture_index = textures.index(texture_data[0]) + 1 # get the texture data index,  texture_indices expects index-1 based
+            except:
+                raise ExportError("No texture data container linked with {} texture was found. Please create it before the export ".format(texture))
 
-            # texture_indices expects index-1 based
-            mathes = [td for td in textures if td.image == texture_slot.image]
-            #print(mathes[0])
-            texture_index = textures.index(mathes[0]) + 1
-            #texture_index = textures.index(texture_slot) + 1
-            texture_code = blender_texture_to_texture_code(texture_slot)
+            texture_code = blender_texture_to_texture_code(texture_node)
             material_data.texture_indices[texture_code] = texture_index
         materials_data_array[mat_index] = material_data
         materials_mapping[mat.name] = mat_index
