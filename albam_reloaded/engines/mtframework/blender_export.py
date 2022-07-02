@@ -435,6 +435,11 @@ def calculate_weight_bound(blender_mesh, armature, vertex_group):
     bbox_max_export = (max_x * 100, max_z * 100, -min_y * 100, 0.0)
 
     # TODO: calculate oabb
+    # I spotted disappearing meshes (e.g. hands) in some cut-scenes (re5-> "The Wetlands")
+    # References:
+    # - https://github.com/patmo141/object_bounding_box
+    # - https://github.com/AsteriskAmpersand/Mod3-MHW-Importer/tree/master/boundingbox
+    # thanks to AsteriskAmpersand for math help
     oabb_export = [
         1, 0, 0, 0,
         0, 1, 0, 0,
