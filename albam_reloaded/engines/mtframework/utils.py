@@ -58,7 +58,11 @@ def get_non_deform_bone_indices(mod):
     for mesh_index, mesh in enumerate(mod.meshes_array):
         for vi, vert in enumerate(get_vertices_array(mod, mesh)):
             for bone_index in getattr(vert, "bone_indices", []):
-                real_bone_index = mod.bone_palette_array[mesh.bone_palette_index].values[bone_index]
+                try:
+                    real_bone_index = mod.bone_palette_array[mesh.bone_palette_index].values[bone_index]
+                except IndexError:
+                    # Behavior not observed on original files
+                    real_bonde_index = bone_index
                 active_bone_indices.add(real_bone_index)
 
     return bone_indices.difference(active_bone_indices)

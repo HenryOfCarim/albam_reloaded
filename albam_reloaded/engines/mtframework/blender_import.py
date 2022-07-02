@@ -465,7 +465,11 @@ def _get_weights_per_bone(mod, mesh, vertices_array):
             if bone_index >= bone_palette.unk_01:
                 real_bone_index = mod.bones_animation_mapping[bone_index]
             else:
-                real_bone_index = bone_palette.values[bone_index]
+                try:
+                    real_bone_index = bone_palette.values[bone_index]
+                except IndexError:
+                    # Behaviour not observed in original files so far
+                    real_bone_index = bone_index
             if bone_index + vertex.weight_values[bi] == 0:
                 continue
             bone_data = weights_per_bone.setdefault(real_bone_index, [])
