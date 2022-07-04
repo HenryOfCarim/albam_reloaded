@@ -7,6 +7,7 @@ except ImportError:
     bpy = Mock()
 
 from .registry import blender_registry
+from .engines.mtframework.tools import split_UV_seams_operator
 
 class AlbamImportedItemName(bpy.types.PropertyGroup): #
     '''Class for  bpy.types.Scene.albam_items_imported __init__.py registration
@@ -28,8 +29,8 @@ class AlbamImportedItem(bpy.types.PropertyGroup):
 class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
     '''Custom Properies panel in the Material section'''
     bl_label = "Albam material"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
     bl_context = "material"
 
     @staticmethod #? Guess outdated method to get active material and select its node
@@ -64,8 +65,8 @@ class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
 class ALBAM_PT_CustomTextureOptions(bpy.types.Panel):
     "Custom Propertis panel for texures"
     bl_label = "Albam texture"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
     bl_context = "texture"
 
     def draw(self, context):  # pragma: no cover
@@ -88,8 +89,8 @@ class ALBAM_PT_CustomTextureOptions(bpy.types.Panel):
 class ALBAM_PT_CustomMeshOptions(bpy.types.Panel):
     "Custom Propertis panel for meshes"
     bl_label = "[Albam] MTFramework Mesh Options"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
     bl_context = "data"
 
     def draw(self, context):  # pragma: no cover
@@ -105,13 +106,16 @@ class ALBAM_PT_CustomMeshOptions(bpy.types.Panel):
         return bool(context.mesh)
 
 
-class ALBAM_PT_ImportExportPanel(bpy.types.Panel):
+class ALBAM_PT_View3DPanel:
+    '''Parent UI Panel class'''
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Albam"
+
+class ALBAM_PT_ImportExportPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
     '''UI Panel in 3D view'''
-    bl_idname = "ALBAM_PT_UI_Panel" # my lines
+    bl_idname = "ALBAM_PT_UI_Panel"
     bl_label = "Albam"
-    bl_category = "Albam" # my lines
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
 
     def draw(self, context):  # pragma: no cover
         scn = context.scene
@@ -119,6 +123,15 @@ class ALBAM_PT_ImportExportPanel(bpy.types.Panel):
         layout.operator('albam_import.item', text='Import')
         layout.prop_search(scn, 'albam_item_to_export', scn, 'albam_items_imported', text='select')
         layout.operator('albam_export.item', text='Export')
+
+class ALBAM_PT_ToolsPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
+    bl_idname = "ALBAM_PT_TOOLS_Panel"
+    bl_label = "Tools"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator('albam_tools.fix_leaked_texures', text='Fix leaked textures')
 
 
 class AlbamImportOperator(bpy.types.Operator):
@@ -203,7 +216,6 @@ class AlbamExportOperator(bpy.types.Operator):
 
     def execute(self, context):
         object_name = context.scene.albam_item_to_export
-        #print("object_name is {}".format(object_name))
         obj = bpy.data.objects[object_name]
         #print("export obj is {}".format(obj))
         #for objs in bpy.data.objects:
@@ -214,4 +226,16 @@ class AlbamExportOperator(bpy.types.Operator):
             raise TypeError('File not supported for export. Id magic: {}'.format(id_magic))
         bpy.ops.object.mode_set(mode='OBJECT')
         func(obj, self.filepath)
+        return {'FINISHED'}
+
+
+class AlbamFixLeakedTexuresOperator(bpy.types.Operator):
+    '''Fix leaked texures button operator'''
+    bl_idname = "albam_tools.fix_leaked_texures"
+    bl_label = "fix leaked textures"
+
+    def execute(self, context):
+        selection = bpy.context.selected_objects
+        selected_meshes = [obj for obj in selection if obj.type == 'MESH']
+        split_UV_seams_operator(selected_meshes)
         return {'FINISHED'}

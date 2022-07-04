@@ -27,9 +27,11 @@ classes = ( AlbamImportedItem,
             ALBAM_PT_CustomTextureOptions,
             AlbamExportOperator,
             ALBAM_PT_ImportExportPanel,
+            ALBAM_PT_ToolsPanel,
             ALBAM_PT_CustomMaterialOptions,
             ALBAM_PT_CustomMeshOptions,
             AlbamImportOperator,
+            AlbamFixLeakedTexuresOperator,
            )
 
 def register():
