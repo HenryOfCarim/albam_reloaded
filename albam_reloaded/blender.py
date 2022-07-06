@@ -134,10 +134,6 @@ class ALBAM_PT_ToolsPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
         layout = self.layout
         layout.operator('albam_tools.fix_leaked_texures', text="Fix leaked textures")
         layout.operator('albam_tools.select_invalid_meshes', text="Select invalid meshes")
-        col = layout.column()
-        col.label(text="Generate objects:")
-        col.prop(context.scene.my_short_addon, "primitive")
-
 
 
 class AlbamImportOperator(bpy.types.Operator):
@@ -252,7 +248,7 @@ class AlbamFixLeakedTexuresOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 class AlbamSelectInvalidMeshesOperator(bpy.types.Operator):
-    '''Fix leaked texures button operator'''
+    '''Select meshes with more than 32 influences'''
     bl_idname = "albam_tools.select_invalid_meshes"
     bl_label = "select invalid meshes"
 
