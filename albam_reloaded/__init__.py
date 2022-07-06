@@ -32,6 +32,7 @@ classes = ( AlbamImportedItem,
             ALBAM_PT_CustomMeshOptions,
             AlbamImportOperator,
             AlbamFixLeakedTexuresOperator,
+            AlbamSelectInvalidMeshesOperator,
            )
 
 def register():

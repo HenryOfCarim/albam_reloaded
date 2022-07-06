@@ -1,7 +1,7 @@
 import bpy
 import bmesh
 
-def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
+def show_message_box(message = "", title = "Message Box", icon = 'INFO'):
 
     def draw(self, context):
         self.layout.label(text=message)
@@ -57,4 +57,26 @@ def split_UV_seams_operator(selected_meshes):
         # as we did all selection in the OBJECT mode,
         # now we set to EDIT to see results
         bpy.ops.object.mode_set(mode = 'EDIT')
-        ShowMessageBox(message="The fix is complete")
+        show_message_box(message="The fix is complete")
+
+def select_invalid_meshes_operator(scene_meshes):
+    bpy.ops.object.select_all(action='DESELECT')
+    invalid_meshes = []
+    for mesh in scene_meshes:
+        armature = mesh.parent
+        if armature:
+            vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
+            vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
+            bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
+            if len(bone_indices)>32:
+                invalid_meshes.append(mesh)
+        else:
+            continue
+        
+    if invalid_meshes:
+        for mesh in invalid_meshes:
+            mesh.hide_select = False
+            mesh.select_set(True)
+            #bpy.context.view_layer.objects.active = mesh
+    else:
+        show_message_box(message="There is no invalid mesh")

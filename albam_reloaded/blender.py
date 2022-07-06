@@ -7,7 +7,7 @@ except ImportError:
     bpy = Mock()
 
 from .registry import blender_registry
-from .engines.mtframework.tools import split_UV_seams_operator
+from .engines.mtframework.tools import *
 
 class AlbamImportedItemName(bpy.types.PropertyGroup): #
     '''Class for  bpy.types.Scene.albam_items_imported __init__.py registration
@@ -113,7 +113,7 @@ class ALBAM_PT_View3DPanel:
     bl_category = "Albam"
 
 class ALBAM_PT_ImportExportPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
-    '''UI Panel in 3D view'''
+    '''UI Albam subpanel in 3D view'''
     bl_idname = "ALBAM_PT_UI_Panel"
     bl_label = "Albam"
 
@@ -125,13 +125,19 @@ class ALBAM_PT_ImportExportPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
         layout.operator('albam_export.item', text='Export')
 
 class ALBAM_PT_ToolsPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
+    '''UI Tool subpanel in 3D view'''
     bl_idname = "ALBAM_PT_TOOLS_Panel"
     bl_label = "Tools"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
-        layout.operator('albam_tools.fix_leaked_texures', text='Fix leaked textures')
+        layout.operator('albam_tools.fix_leaked_texures', text="Fix leaked textures")
+        layout.operator('albam_tools.select_invalid_meshes', text="Select invalid meshes")
+        col = layout.column()
+        col.label(text="Generate objects:")
+        col.prop(context.scene.my_short_addon, "primitive")
+
 
 
 class AlbamImportOperator(bpy.types.Operator):
@@ -165,24 +171,19 @@ class AlbamImportOperator(bpy.types.Operator):
                 data = f.read() # store file to data var
             id_magic = data[:4] # get first 4 bytes(?)
 
-            #print("data is {}".format(data))
             func = blender_registry.import_registry.get(id_magic) # find header in dictionary
             if not func:
                 raise TypeError('File not supported for import. Id magic: {}'.format(id_magic))
-            #print('id_magic:{}'.format(id_magic))
 
             name = os.path.basename(file_path) #name of the imported archive
-            #print('name:{}'.format(name))
             obj = bpy.data.objects.new(name, None) # Create a new object with the arc archive name, data = None
             obj.parent = parent
-            obj.albam_imported_item['data'] = data # error?
-            #print("import data is {}".format(obj.albam_imported_item.data))
+            obj.albam_imported_item['data'] = data
             obj.albam_imported_item.source_path = str(file_path)
             
             # TODO: proper logging/raising and rollback if failure
 
             results_dict = func(blender_object=obj, **kwargs)
-            #results_dict = False
             #bpy.context.scene.objects.link(obj) #old
             bpy.context.collection.objects.link(obj)
 
@@ -226,6 +227,7 @@ class AlbamExportOperator(bpy.types.Operator):
             raise TypeError('File not supported for export. Id magic: {}'.format(id_magic))
         bpy.ops.object.mode_set(mode='OBJECT')
         func(obj, self.filepath)
+        show_message_box(message="Export is finished")
         return {'FINISHED'}
 
 
@@ -234,8 +236,31 @@ class AlbamFixLeakedTexuresOperator(bpy.types.Operator):
     bl_idname = "albam_tools.fix_leaked_texures"
     bl_label = "fix leaked textures"
 
+    @classmethod
+    def poll(self, context):  # pragma: no cover
+        if not bpy.context.selected_objects:
+            return False
+        return True
+
     def execute(self, context):
         selection = bpy.context.selected_objects
         selected_meshes = [obj for obj in selection if obj.type == 'MESH']
-        split_UV_seams_operator(selected_meshes)
+        if selected_meshes:
+            split_UV_seams_operator(selected_meshes)
+        else:
+            show_message_box(message="There is no mesh in the selection")
+        return {'FINISHED'}
+
+class AlbamSelectInvalidMeshesOperator(bpy.types.Operator):
+    '''Fix leaked texures button operator'''
+    bl_idname = "albam_tools.select_invalid_meshes"
+    bl_label = "select invalid meshes"
+
+    def execute(self, context):
+        selection = bpy.context.scene.objects
+        scene_meshes = [obj for obj in selection if obj.type == 'MESH']
+        if scene_meshes:
+            select_invalid_meshes_operator(scene_meshes)
+        else:
+            show_message_box(message="There is no mesh in the scene")
         return {'FINISHED'}
