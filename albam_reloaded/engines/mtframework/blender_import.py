@@ -23,7 +23,7 @@ from ...engines.mtframework.utils import (
 from ...engines.mtframework.mappers import BONE_INDEX_TO_GROUP
 from ...lib.misc import chunks
 from ...lib.half_float import unpack_half_float
-from ...lib.blender import strip_triangles_to_triangles_list, create_mesh_name
+from ...lib.blender import strip_triangles_to_triangles_list
 from ...registry import blender_registry
 
 
@@ -69,26 +69,28 @@ def import_mod(blender_object, file_path, **kwargs):
     textures = _create_blender_textures_from_mod(mod, base_dir)
     materials = _create_blender_materials_from_mod(mod, blender_object.name, textures)
 
-    meshes = []
-    for i, mesh in enumerate(mod.meshes_array):
-        name = create_mesh_name(mesh, i, file_path)
+    # To simplify, import only main level of detail meshes
+    LODS_TO_IMPORT = (1, 255)
+    blender_meshes = []
+    meshes = [m for m in mod.meshes_array if m.level_of_detail in LODS_TO_IMPORT]
+    for i, mesh in enumerate(meshes):
+        name = _create_mesh_name(i, file_path)
         try:
             m = _build_blender_mesh_from_mod(mod, mesh, i, name, materials)
-            meshes.append(m)
+            blender_meshes.append(m)
         except BuildMeshError as err:
             # TODO: logging
-            print('Error building mesh {0} for mod {1}'.format(i, file_path))
+            print(f'Error building mesh {i} for mod {file_path}')
             print('Details:', err)
 
-    if mod.bone_count: # create  skeleton? 
+    if mod.bone_count:
         armature_name = 'skel_{}'.format(blender_object.name)
         root = _create_blender_armature_from_mod(blender_object, mod, armature_name)
         root.show_in_front = True # set x-ray view for bones
     else:
         root = blender_object
 
-    for mesh in meshes: # skin mesh to bones? 
-        #bpy.context.scene.objects.link(mesh)
+    for mesh in blender_meshes:
         bpy.context.collection.objects.link(mesh)
         mesh.parent = root
         if mod.bone_count:
@@ -151,13 +153,6 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
             offset = loop.vertex_index * 2
             per_loop_list.extend((uvs_per_vertex[offset], uvs_per_vertex[offset + 1]))
         uv_layer.foreach_set('uv', per_loop_list)
-    # Hiding non main level of detail meshes if they have more than one.
-    # For now, assuming that if the mesh has no bones, then it has only one level of detail
-    if weights_per_bone and mesh.level_of_detail in (2, 252):
-        #print(dir(ob))
-        #ob.hide = True
-        ob.hide_viewport  = True
-        ob.hide_render = True
 
     # Saving unknown metadata for export
     # TODO: use a util function
@@ -475,3 +470,10 @@ def _get_weights_per_bone(mod, mesh, vertices_array):
             bone_data = weights_per_bone.setdefault(real_bone_index, [])
             bone_data.append((vertex_index, vertex.weight_values[bi] / 255))
     return weights_per_bone
+
+
+def _create_mesh_name(index, file_path):
+    mesh_name = os.path.basename(file_path)
+    mesh_index = str(index).zfill(4)
+
+    return f'{mesh_name}_{mesh_index}'

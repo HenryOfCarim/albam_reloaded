@@ -48,7 +48,10 @@ from ...lib.blender import (
     get_model_bounding_sphere,
 )
 
-
+# Until it's needed, we simplify modding by exporting all meshes with the always-visible level of detail
+# This way one doesn't need to care about them
+# We might give the ability to create LOD as an advanced feature.
+EXPORT_LEVEL_OF_DETAIL = 255
 ExportedMeshes = namedtuple('ExportedMeshes', ('meshes_array', 'vertex_buffer', 'index_buffer', 'weight_bounds'))
 ExportedMaterials = namedtuple('ExportedMaterials', ('textures_array', 'materials_data_array',
                                                      'materials_mapping', 'blender_textures',
@@ -382,13 +385,6 @@ def _create_bone_palettes(blender_mesh_objects):
     return final
 
 
-def _infer_level_of_detail(name):
-    LEVEL_OF_DETAIL_RE = re.compile(r'.*LOD_(?P<level_of_detail>\d+)$')
-    match = LEVEL_OF_DETAIL_RE.match(name)
-    if match:
-        return int(match.group('level_of_detail'))
-    return 1
-
 def _get_shadow_method(blender_material):
     index = 0
     if blender_material:
@@ -481,7 +477,6 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
 
 
     for mesh_index, blender_mesh_ob in enumerate(blender_meshes):
-        level_of_detail = _infer_level_of_detail(blender_mesh_ob.name)
         bone_palette_index = 0
         bone_palette = []
         for bpi, (meshes_indices, bp) in enumerate(bone_palettes.items()):
@@ -513,7 +508,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
             raise ExportError('Mesh {} has no materials'.format(blender_mesh.name))
         m156.constant = 1
         m156.unk_render_group_index = blender_mesh.unk_render_group_index
-        m156.level_of_detail = level_of_detail
+        m156.level_of_detail = EXPORT_LEVEL_OF_DETAIL
         m156.vertex_format = CLASSES_TO_VERTEX_FORMATS[type(vertices_array[0])]
         m156.vertex_stride = 32
         m156.vertex_count = vertex_count

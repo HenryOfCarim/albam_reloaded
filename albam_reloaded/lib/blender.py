@@ -163,12 +163,6 @@ def triangles_list_to_triangles_strip(blender_mesh):
     return joined_strips
 
 
-def create_mesh_name(mesh, index, file_path):
-    return '{}_{}_LOD_{}'.format(os.path.basename(file_path),
-                                 str(index).zfill(4),
-                                 mesh.level_of_detail)
-
-
 def get_textures_from_the_material(blender_material):
     '''Get all image textures nodes form material and return them as a list
         blender_material : bpy.data.materials[0] object
