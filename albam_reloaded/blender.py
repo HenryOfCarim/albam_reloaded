@@ -134,6 +134,7 @@ class ALBAM_PT_ToolsPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
         layout = self.layout
         layout.operator('albam_tools.fix_leaked_texures', text="Fix leaked textures")
         layout.operator('albam_tools.select_invalid_meshes', text="Select invalid meshes")
+        layout.operator('albam_tools.remove_empty_vertex_groups', text="Remove empty vertex groups")
 
 
 class AlbamImportOperator(bpy.types.Operator):
@@ -212,8 +213,8 @@ class AlbamExportOperator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        object_name = context.scene.albam_item_to_export
-        obj = bpy.data.objects[object_name]
+        object_name = context.scene.albam_item_to_export # '_exported_archive_name_.arc'
+        obj = bpy.data.objects[object_name] 
         #print("export obj is {}".format(obj))
         #for objs in bpy.data.objects:
         #    print(objs.name)
@@ -221,7 +222,7 @@ class AlbamExportOperator(bpy.types.Operator):
         func = blender_registry.export_registry.get(id_magic)
         if not func:
             raise TypeError('File not supported for export. Id magic: {}'.format(id_magic))
-        bpy.ops.object.mode_set(mode='OBJECT')
+        #    bpy.ops.object.mode_set(mode='OBJECT')
         func(obj, self.filepath)
         show_message_box(message="Export is finished")
         return {'FINISHED'}
@@ -253,10 +254,44 @@ class AlbamSelectInvalidMeshesOperator(bpy.types.Operator):
     bl_label = "select invalid meshes"
 
     def execute(self, context):
+        try:
+            bpy.ops.object.mode_set(mode='OBJECT')
+        except:
+            pass
         selection = bpy.context.scene.objects
         scene_meshes = [obj for obj in selection if obj.type == 'MESH']
         if scene_meshes:
             select_invalid_meshes_operator(scene_meshes)
         else:
             show_message_box(message="There is no mesh in the scene")
+        return {'FINISHED'}
+
+class AlbamRemoveEmptyVertexGroupsOperator(bpy.types.Operator):
+    bl_idname = "albam_tools.remove_empty_vertex_groups"
+    bl_label = "remove empty vertex groups"
+    
+    def execute(self, context):
+        try:
+            bpy.ops.object.mode_set(mode='OBJECT')
+        except:
+            pass
+        selection = bpy.context.scene.objects
+        scene_meshes = [obj for obj in selection if obj.type == 'MESH']
+
+        for ob in scene_meshes:
+            #ob = context.object #bpy.data.objects['doom_armor_chest']
+            ob.update_from_editmode()
+            
+            vgroup_used = {i: False for i, k in enumerate(ob.vertex_groups)}
+            
+            for v in ob.data.vertices:
+                for g in v.groups:
+                    if g.weight > 0.0:
+                        vgroup_used[g.group] = True
+            
+            for i, used in sorted(vgroup_used.items(), reverse=True):
+                if not used:
+                    ob.vertex_groups.remove(ob.vertex_groups[i])
+            print(ob.name)
+        show_message_box(message="Removing complete")
         return {'FINISHED'}

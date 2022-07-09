@@ -17,7 +17,7 @@ bl_info = {
     "blender": (2, 80, 0),
     "location": "Properties Panel",
     "description": "Import-Export multiple video-game formats",
-    #"wiki_url": "https://github.com/Brachi/albam",
+    "wiki_url": "https://github.com/HenryOfCarim/albam_reloaded/wiki",
     "tracker_url": "https://github.com/HenryOfCarim/albam_reloaded/issues",
     "category": "Import-Export"}
 
@@ -33,6 +33,7 @@ classes = ( AlbamImportedItem,
             AlbamImportOperator,
             AlbamFixLeakedTexuresOperator,
             AlbamSelectInvalidMeshesOperator,
+            AlbamRemoveEmptyVertexGroupsOperator,
            )
 
 def register():
