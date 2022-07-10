@@ -26,6 +26,15 @@ class AlbamImportedItem(bpy.types.PropertyGroup):
     file_type : bpy.props.StringProperty(options={'HIDDEN'})
 
 
+class AlbamExportSettings(bpy.types.PropertyGroup):
+    '''Export option checkboxes for the Albam panel'''
+    export_visible_bool : bpy.props.BoolProperty(
+        name="Enable or Disable",
+        description="Export visible meshes only",
+        default = False
+        )
+
+
 class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
     '''Custom Properies panel in the Material section'''
     bl_label = "Albam material"
@@ -63,7 +72,7 @@ class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
 
 
 class ALBAM_PT_CustomTextureOptions(bpy.types.Panel):
-    "Custom Propertis panel for texures"
+    '''Custom Propertis panel for texures'''
     bl_label = "Albam texture"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -87,7 +96,7 @@ class ALBAM_PT_CustomTextureOptions(bpy.types.Panel):
 
 
 class ALBAM_PT_CustomMeshOptions(bpy.types.Panel):
-    "Custom Propertis panel for meshes"
+    '''Custom Propertis panel for meshes'''
     bl_label = "[Albam] MTFramework Mesh Options"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -120,9 +129,12 @@ class ALBAM_PT_ImportExportPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
     def draw(self, context):  # pragma: no cover
         scn = context.scene
         layout = self.layout
+        export_settings = scn.albam_export_settings
+
         layout.operator('albam_import.item', text='Import')
         layout.prop_search(scn, 'albam_item_to_export', scn, 'albam_items_imported', text='select')
         layout.operator('albam_export.item', text='Export')
+        layout.prop(export_settings, "export_visible_bool", text="Export visible meshes only ")
 
 class ALBAM_PT_ToolsPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
     '''UI Tool subpanel in 3D view'''
@@ -154,7 +166,6 @@ class AlbamImportOperator(bpy.types.Operator):
     def execute(self, context):
         to_import = [os.path.join(self.directory, f.name) for f in self.files] # combine path to file and file name list to a new list
         for file_path in to_import:
-            #print('file path is {}'.format(file_path))
             self._import_file(file_path=file_path, context=context)
 
         return {'FINISHED'}
@@ -179,7 +190,6 @@ class AlbamImportOperator(bpy.types.Operator):
             obj.albam_imported_item.source_path = str(file_path)
             
             # TODO: proper logging/raising and rollback if failure
-
             results_dict = func(blender_object=obj, **kwargs)
             #bpy.context.scene.objects.link(obj) #old
             bpy.context.collection.objects.link(obj)
@@ -279,7 +289,6 @@ class AlbamRemoveEmptyVertexGroupsOperator(bpy.types.Operator):
         scene_meshes = [obj for obj in selection if obj.type == 'MESH']
 
         for ob in scene_meshes:
-            #ob = context.object #bpy.data.objects['doom_armor_chest']
             ob.update_from_editmode()
             
             vgroup_used = {i: False for i, k in enumerate(ob.vertex_groups)}
@@ -292,6 +301,5 @@ class AlbamRemoveEmptyVertexGroupsOperator(bpy.types.Operator):
             for i, used in sorted(vgroup_used.items(), reverse=True):
                 if not used:
                     ob.vertex_groups.remove(ob.vertex_groups[i])
-            print(ob.name)
         show_message_box(message="Removing complete")
         return {'FINISHED'}
