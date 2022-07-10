@@ -232,7 +232,7 @@ class AlbamExportOperator(bpy.types.Operator):
         func = blender_registry.export_registry.get(id_magic)
         if not func:
             raise TypeError('File not supported for export. Id magic: {}'.format(id_magic))
-        #    bpy.ops.object.mode_set(mode='OBJECT')
+        #bpy.ops.object.mode_set(mode='OBJECT')
         func(obj, self.filepath)
         show_message_box(message="Export is finished")
         return {'FINISHED'}
@@ -275,7 +275,8 @@ class AlbamSelectInvalidMeshesOperator(bpy.types.Operator):
         else:
             show_message_box(message="There is no mesh in the scene")
         return {'FINISHED'}
-
+        
+        
 class AlbamRemoveEmptyVertexGroupsOperator(bpy.types.Operator):
     bl_idname = "albam_tools.remove_empty_vertex_groups"
     bl_label = "remove empty vertex groups"
