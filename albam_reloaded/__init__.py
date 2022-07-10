@@ -17,13 +17,14 @@ bl_info = {
     "blender": (2, 80, 0),
     "location": "Properties Panel",
     "description": "Import-Export multiple video-game formats",
-    #"wiki_url": "https://github.com/Brachi/albam",
+    "wiki_url": "https://github.com/HenryOfCarim/albam_reloaded/wiki",
     "tracker_url": "https://github.com/HenryOfCarim/albam_reloaded/issues",
     "category": "Import-Export"}
 
 
 classes = ( AlbamImportedItem,
             AlbamImportedItemName,
+            AlbamExportSettings,
             ALBAM_PT_CustomTextureOptions,
             AlbamExportOperator,
             ALBAM_PT_ImportExportPanel,
@@ -33,6 +34,7 @@ classes = ( AlbamImportedItem,
             AlbamImportOperator,
             AlbamFixLeakedTexuresOperator,
             AlbamSelectInvalidMeshesOperator,
+            AlbamRemoveEmptyVertexGroupsOperator,
            )
 
 def register():
@@ -70,6 +72,7 @@ def register():
     bpy.types.Scene.albam_item_to_export = bpy.props.StringProperty()
     bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName) # register name property for scene
     bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem) # register new object properties
+    bpy.types.Scene.albam_export_settings = bpy.props.PointerProperty(type=blender.AlbamExportSettings)
 
 def unregister():
     ''' Classic blender 2.80 unregistration of classes'''
@@ -80,6 +83,7 @@ def unregister():
     del bpy.types.Scene.albam_item_to_export 
     del bpy.types.Scene.albam_items_imported
     del bpy.types.Object.albam_imported_item
+    del bpy.types.Scene.albam_export_settings
 
 if __name__ == "__main__":
     register()

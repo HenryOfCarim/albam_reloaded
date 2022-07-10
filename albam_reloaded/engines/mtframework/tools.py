@@ -67,7 +67,10 @@ def select_invalid_meshes_operator(scene_meshes):
         if armature:
             vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
             vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
-            bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
+            try:
+                bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
+            except:
+                print(mesh.name)
             if len(bone_indices)>32:
                 invalid_meshes.append(mesh)
         else:
@@ -78,5 +81,6 @@ def select_invalid_meshes_operator(scene_meshes):
             mesh.hide_select = False
             mesh.select_set(True)
             #bpy.context.view_layer.objects.active = mesh
+        show_message_box(message="Meshes with more than 32 bone influences selected")
     else:
         show_message_box(message="There is no invalid mesh")

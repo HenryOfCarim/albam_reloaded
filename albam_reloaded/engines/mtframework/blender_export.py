@@ -132,11 +132,18 @@ def export_mod156(parent_blender_object):
 
     first_children = [child for child in parent_blender_object.children]
     blender_meshes = [c for c in first_children if c.type == 'MESH']
+    if (bpy.context.scene.albam_export_settings.export_visible_bool == True):
+        visible_meshes = [mesh for mesh in blender_meshes if mesh.mesh.visible_get()]
+        blender_meshes = visible_meshes
+
 
     # only going one level deeper
     if not blender_meshes:
         children_objects = list(chain.from_iterable(child.children for child in first_children))
         blender_meshes = [c for c in children_objects if c.type == 'MESH']
+        if (bpy.context.scene.albam_export_settings.export_visible_bool == True):
+            visible_meshes = [mesh for mesh in blender_meshes if mesh.visible_get()]
+            blender_meshes = visible_meshes
 
     if saved_mod.bone_count:
         bone_palettes = _create_bone_palettes(blender_meshes)
