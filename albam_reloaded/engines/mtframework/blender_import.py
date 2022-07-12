@@ -304,61 +304,41 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
         bpy.ops.object.mode_set(mode='OBJECT')
     # deselect all objects
     for i in bpy.context.scene.objects:
-    #    i.select = False #deprecated
         i.select_set(False) # my change
-    #bpy.context.scene.objects.link(armature_ob) # deprecated
     bpy.context.collection.objects.link(armature_ob)
-    #bpy.context.scene.objects.active = armature_ob # deprecated 
     bpy.context.view_layer.objects.active = armature_ob
-    #armature_ob.select = True # deprecated
     armature_ob.select_set(True)
     bpy.ops.object.mode_set(mode='EDIT')
 
     blender_bones = []
+    non_deform_bone_indices = get_non_deform_bone_indices(mod)
+
     for i, bone in enumerate(mod.bones_array): # add counter to the array
         blender_bone = armature.edit_bones.new(str(i))
-        blender_bones.append(blender_bone)
+
+        if i in non_deform_bone_indices:
+            blender_bone.use_deform = False
         parents = get_bone_parents_from_mod(bone, mod.bones_array)
         if not parents:
             blender_bone.head = Vector((bone.location_x / 100,
                                         bone.location_z * -1 / 100,
                                         bone.location_y / 100))
-            continue
-        chain = [i] + parents
-        wtm = Matrix.Translation((0, 0, 0))
-        for bi in reversed(chain):
-            b = mod.bones_array[bi]
-            wtm = wtm @ Matrix.Translation((b.location_x / 100, b.location_z / 100 * -1, b.location_y / 100))
-            #wtm = wtm * Matrix.Translation((b.location_x / 100, b.location_z / 100 * -1, b.location_y / 100)) # deprecated * was replaced with @
-        blender_bone.head = wtm.to_translation()
-        blender_bone.parent = blender_bones[bone.parent_index]
+            blender_bone.tail = Vector((blender_bone.head[0], blender_bone.head[1], blender_bone.head[2] + 0.01))
+        else:
+            chain = [i] + parents
+            wtm = Matrix.Translation((0, 0, 0))
+            for bi in reversed(chain):
+                b = mod.bones_array[bi]
+                wtm = wtm @ Matrix.Translation((b.location_x / 100, b.location_z / 100 * -1, b.location_y / 100))
+            blender_bone.head = wtm.to_translation()
+            blender_bone.parent = blender_bones[bone.parent_index]
+
+        blender_bone.tail = Vector((blender_bone.head[0], blender_bone.head[1], blender_bone.head[2] + 0.01))
+        blender_bones.append(blender_bone)
+
 
     assert len(blender_bones) == len(mod.bones_array)
 
-    non_deform_bone_indices = get_non_deform_bone_indices(mod)
-    # set tails of bone to their children or make them small if they have none
-    for i, bone in enumerate(blender_bones):
-        if i in non_deform_bone_indices:
-            bone.use_deform = False
-        children = bone.children_recursive
-        non_mirror_children = [b for b in children
-                               if mod.bones_array[int(b.name)].mirror_index == int(b.name)]
-        mirror_children = [b for b in children
-                           if mod.bones_array[int(b.name)].mirror_index != int(b.name)]
-        if mod.bones_array[i].mirror_index == i and non_mirror_children:
-            bone.tail = non_mirror_children[0].head
-        elif mod.bones_array[i].mirror_index != i and mirror_children:
-            bone.tail = mirror_children[0].head
-        else:
-            bone.length = 0.01
-        # Some very small numbers won't be equal without rounding, but blender will
-        # later treat them as equal, so using rounding here
-        if round(bone.tail[0], 10) == round(bone.head[0], 10):
-            bone.tail[0] += 0.01
-        if round(bone.tail[1], 10) == round(bone.head[1], 10):
-            bone.tail[1] += 0.01
-        if round(bone.tail[2], 10) == round(bone.head[2], 10):
-            bone.tail[2] += 0.01
 
     bpy.ops.object.mode_set(mode='OBJECT')
     assert len(armature.bones) == len(mod.bones_array)
