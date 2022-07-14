@@ -78,21 +78,17 @@ class ALBAM_PT_CustomTextureOptions(bpy.types.Panel):
     bl_region_type = 'WINDOW'
     bl_context = "texture"
 
-    def draw(self, context):  # pragma: no cover
-        tex = context.texture #bpy.data.textures['00pl0200_01Face_BM']
+    def draw(self, context):
+        tex = context.texture
         layout = self.layout
-            
         if not tex:
                 return
         for prop_name, _, _ in blender_registry.bpy_props.get('texture', []): # prop_name :'unk_byte_1', _:1 -value
             layout.prop(tex, prop_name)
 
-        @classmethod
-        def poll(cls, context):  # pragma: no cover #function is optional, used to check if the operator can run.
-            #if not hasattr(context, "texture_slot"): # useless code detect Texture slot for textures in a Material datablock
-                #print("material data has attribute")
-            #    return False
-            return context.texture
+    @classmethod
+    def poll(cls, context):  # pragma: no cover #function is optional, used to check if the operator can run.
+        return bool(context.texture)
 
 
 class ALBAM_PT_CustomMeshOptions(bpy.types.Panel):
