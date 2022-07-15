@@ -48,20 +48,12 @@ def split_UV_seams_operator(selected_meshes):
         # otherwise, the result won't be seen,
         # see https://blender.stackexchange.com/questions/43127 for info
         bpy.ops.object.mode_set(mode = 'OBJECT')
-
-        # now we check all the edges
-        for edge in me.edges:
-            if edge.use_seam: # if the edge uses seam
-                edge.select = True # select it
-            
-        # as we did all selection in the OBJECT mode,
-        # now we set to EDIT to see results
-        bpy.ops.object.mode_set(mode = 'EDIT')
         show_message_box(message="The fix is complete")
 
 def select_invalid_meshes_operator(scene_meshes):
     bpy.ops.object.select_all(action='DESELECT')
     invalid_meshes = []
+    invalid_vertex_groups = []
     for mesh in scene_meshes:
         armature = mesh.parent
         if armature:
@@ -71,6 +63,9 @@ def select_invalid_meshes_operator(scene_meshes):
                 bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
             except:
                 print(mesh.name)
+                invalid_vertex_groups.append(mesh)
+                bone_indices = {}
+
             if len(bone_indices)>32:
                 invalid_meshes.append(mesh)
         else:
