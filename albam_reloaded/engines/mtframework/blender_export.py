@@ -401,7 +401,7 @@ def _get_shadow_method(blender_material):
 
 
 
-def calculate_weight_bound(blender_mesh, armature, vertex_group):
+def calculate_vertex_group_weight_bound(blender_mesh, armature, vertex_group):
     vertices_in_group = []
 
     bone_index = armature.pose.bones.find(vertex_group.name)
@@ -495,6 +495,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         blender_mesh = blender_mesh_ob.data
         vertices_array = _export_vertices(blender_mesh_ob, mesh_index, bone_palette, model_bounding_box_export)
         vertex_buffer.extend(vertices_array)
+        is_skeletal = bool(blender_mesh_ob.parent.type == "ARMATURE")
 
         # TODO: is all this format conversion necessary?
         triangle_strips_python = triangles_list_to_triangles_strip(blender_mesh)
@@ -526,26 +527,86 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         m156.face_count = index_count
         m156.face_offset = 0
         m156.vertex_index_start_2 = vertex_position
-        m156.vertex_group_count = len(blender_mesh_ob.vertex_groups)
+        m156.vertex_group_count = len(blender_mesh_ob.vertex_groups) if is_skeletal else 1
         m156.bone_palette_index = bone_palette_index
         #m156.use_cast_shadows = int(blender_material.use_cast_shadows)
         m156.use_cast_shadows = int(_get_shadow_method(blender_material))
         vertex_position += vertex_count
         face_position += index_count
 
-        # TODO: handle models with no bones
-        armature = blender_mesh_ob.parent
-        unsorted_weight_bounds = []
-        for vg in blender_mesh_ob.vertex_groups:
-            weight_bound = calculate_weight_bound(blender_mesh, armature, vg)
-            unsorted_weight_bounds.append(weight_bound)
-        weight_bounds_list.extend(sorted(unsorted_weight_bounds, key=lambda x: x.bone_id))
+        if is_skeletal:
+            weight_bounds = _calculate_weight_bounds_skeletal_mesh(blender_mesh_ob, blender_mesh_ob.parent)
+            weight_bounds_list.extend(weight_bounds)
+        else:
+            weight_bound = _calculate_bound_static_mesh(blender_mesh_ob)
+            weight_bounds_list.append(weight_bound)
 
     weight_bounds = (WeightBound * len(weight_bounds_list))(*weight_bounds_list)
     vertex_buffer = (ctypes.c_ubyte * len(vertex_buffer)).from_buffer(vertex_buffer)
     index_buffer = (ctypes.c_ushort * (len(index_buffer) // 2)).from_buffer(index_buffer)
     return ExportedMeshes(meshes_156, vertex_buffer, index_buffer, weight_bounds)
 
+
+def _calculate_bound_static_mesh(blender_mesh_ob):
+
+    bl_mesh = blender_mesh_ob.data
+
+    # TODO: optimize
+    min_x = min((v.co[0] for v in bl_mesh.vertices))
+    min_y = min((v.co[1] for v in bl_mesh.vertices))
+    min_z = min((v.co[2] for v in bl_mesh.vertices))
+    max_x = max((v.co[0] for v in bl_mesh.vertices))
+    max_y = max((v.co[1] for v in bl_mesh.vertices))
+    max_z = max((v.co[2] for v in bl_mesh.vertices))
+
+    length_x = (max_x - min_x) / 2
+    length_y = (max_y - min_y) / 2
+    length_z = (max_z - min_z) / 2
+
+    center_x = (min_x + max_x) / 2
+    center_y = (min_y + max_y) / 2
+    center_z = (min_z + max_z) / 2
+    center = (center_x, center_y, center_z)
+    radius = max(map(lambda vertex: math.dist(center, vertex.co[:]), bl_mesh.vertices))
+    bsphere_export = (center_x * 100, center_z * 100, -center_y * 100, radius * 100)
+
+    bbox_min_export = (min_x * 100, min_z * 100, -max_y * 100, 0.0)
+    bbox_max_export = (max_x * 100, max_z * 100, -min_y * 100, 0.0)
+
+    # TODO: calculate oabb
+    # I spotted disappearing meshes (e.g. hands) in some cut-scenes (re5-> "The Wetlands")
+    # References:
+    # - https://github.com/patmo141/object_bounding_box
+    # - https://github.com/AsteriskAmpersand/Mod3-MHW-Importer/tree/master/boundingbox
+    # thanks to AsteriskAmpersand for math help
+    oabb_export = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        bsphere_export[0], bsphere_export[1], bsphere_export[2], 1
+    ]
+
+    oabb_dimension = (length_x * 100, length_z * 100, length_y * 100, 0.0)
+
+    weight_bound = WeightBound(
+            bone_id=255,
+            unk_01=(ctypes.c_float * 3)(-431602080, -431602080, -431602080),
+            bsphere=(ctypes.c_float * 4)(*bsphere_export),
+            bbox_min=(ctypes.c_float * 4)(*bbox_min_export),
+            bbox_max=(ctypes.c_float * 4)(*bbox_max_export),
+            oabb_matrix=(ctypes.c_float * 16)(*oabb_export),
+            oabb_dimension=(ctypes.c_float * 4)(*oabb_dimension),
+    )
+
+    return weight_bound
+
+
+def _calculate_weight_bounds_skeletal_mesh(blender_mesh_ob, armature):
+    unsorted_weight_bounds = []
+    for vg in blender_mesh_ob.vertex_groups:
+        weight_bound = calculate_vertex_group_weight_bound(blender_mesh_ob.data, armature, vg)
+        unsorted_weight_bounds.append(weight_bound)
+    return sorted(unsorted_weight_bounds, key=lambda x: x.bone_id)
 
 def _export_textures_and_materials(blender_objects, saved_mod):
     '''blender_objects : bpy.data.objects['Pl0200.mod_0000_LOD_1']
