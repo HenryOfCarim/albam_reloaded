@@ -6,6 +6,9 @@ import zlib
 from .mappers import FILE_ID_TO_EXTENSION, EXTENSION_TO_FILE_ID
 from ...lib.structure import DynamicStructure
 
+PADDING_SIZE = 32768
+
+
 class FileEntry(Structure):
     MAX_FILE_PATH = 64
 
@@ -18,11 +21,12 @@ class FileEntry(Structure):
                 )
 
 
-def get_padding(tmp_struct):
-    padding = 32768 - sizeof(tmp_struct)
-    if padding < 0:
-        padding += 32768
-    return padding
+def get_padding(size):
+    return (PADDING_SIZE - size % PADDING_SIZE) % PADDING_SIZE
+
+
+def get_padding_from_struct(tmp_struct):
+    return get_padding(sizeof(tmp_struct))
 
 
 def get_data_length(tmp_struct, file_path=None):
@@ -44,7 +48,7 @@ class Arc(DynamicStructure):
                 ('version', c_short),
                 ('files_count', c_short),
                 ('file_entries', lambda s: FileEntry * s.files_count),
-                ('padding', lambda s: c_ubyte * get_padding(s)),
+                ('padding', lambda s: c_ubyte * get_padding_from_struct(s)),
                 ('data', lambda s, f: c_ubyte * get_data_length(s, f)),
                 )
 
@@ -68,7 +72,9 @@ class Arc(DynamicStructure):
                       for f in files}
         files_count = len(file_paths)
         file_entries = (FileEntry * files_count)()
-        current_offset = 32768
+        size_so_far = 8 + sizeof(file_entries)
+        padding = get_padding(size_so_far)
+        current_offset = size_so_far + padding
         data = bytearray()
         for i, file_path in enumerate(sorted(file_paths)):
             with open(file_path, 'rb') as f:
@@ -83,8 +89,13 @@ class Arc(DynamicStructure):
             current_offset += len(chunk)
 
         data = (c_ubyte * len(data)).from_buffer(data)
-        return cls(id_magic=cls.ID_MAGIC, version=7, files_count=files_count,
-                   file_entries=file_entries, data=data)
+        return cls(
+            id_magic=cls.ID_MAGIC,
+            version=7,
+            files_count=files_count,
+            file_entries=file_entries,
+            data=data
+        )
 
     @staticmethod
     def _get_path(file_path, file_type_id, output_path):
