@@ -282,7 +282,7 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
                 # This means the conversion failed before
                 # TODO: logging
                 continue
-            if texture_code == 3 or texture_code == 4 or texture_code == 5 or texture_code == 6:
+            if texture_code == 6:
                 print('texture_code not supported', texture_code)
                 continue
             slot = blender_material.node_tree.nodes.new('ShaderNodeTexImage') 
