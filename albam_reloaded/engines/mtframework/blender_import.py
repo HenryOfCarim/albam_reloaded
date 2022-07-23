@@ -2,14 +2,16 @@ from itertools import chain
 import ntpath
 import os
 
+
 try:
     import bpy
+    import addon_utils
     from mathutils import Matrix, Vector
 except ImportError:
     pass
 
-from ...exceptions import BuildMeshError, TextureError #my lines IDK where they originally imported
 
+from ...exceptions import BuildMeshError, TextureError #my lines IDK where they originally imported
 from ...engines.mtframework import Arc, Mod156, Tex112, KNOWN_ARC_BLENDER_CRASH, CORRUPTED_ARCS
 from ...engines.mtframework.utils import (
     get_vertices_array,
@@ -195,6 +197,14 @@ def _import_vertices_mod156(mod, mesh):
             'weights_per_bone': _get_weights_per_bone(mod, mesh, vertices_array)
             }
 
+def _get_path_to_albam():
+    for mod in addon_utils.modules():
+        if mod.bl_info['name'] == "Albam Reloaded":
+            filepath = mod.__file__
+            path = os.path.split(filepath)[0]
+            return (path)
+        else:
+            pass
 
 def _create_blender_textures_from_mod(mod, base_dir):
     textures = [None]  # materials refer to textures in index-1
@@ -208,6 +218,17 @@ def _create_blender_textures_from_mod(mod, base_dir):
         if not os.path.isfile(path):
             # TODO: log warnings, figure out 'rtex' format
             print('path {} does not exist'.format(path))
+            texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
+            texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
+            texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE')
+            texture.use_fake_user = True
+            
+            image_path = _get_path_to_albam()
+            image_path = os.path.join(image_path, "resourses", "missed_texture.dds")
+            dummy_image = image = bpy.data.images.load(image_path)
+
+            texture.image = dummy_image
+            textures.append(texture) 
             continue
         tex = Tex112(path)
         try:
@@ -224,10 +245,8 @@ def _create_blender_textures_from_mod(mod, base_dir):
         texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
         texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
         texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE') # bpy.data.textures['00pl0200_09AllHair_BM']
-        texture.use_fake_user = True # TEST
+        texture.use_fake_user = True # Set facke user for texture container
         texture.image = image 
-        #print(dir(texture))
-        #print(texure)
         textures.append(texture) #create a list with bpy.data.textures
 
         # saving meta data for export
@@ -252,12 +271,6 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
 
         principled_node = blender_material.node_tree.nodes.get("Principled BSDF")
         principled_node.inputs['Specular'].default_value = 0.2 # change specular
-
-        ''' Old code
-        #blender_material.use_transparency = True 
-        #blender_material.alpha = 0.0
-        #blender_material.specular_intensity = 0.2  # would be nice to get this info from the mod
-        '''
 
         # unknown data for export, registered already
         # TODO: do this with a util function
@@ -287,6 +300,7 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
                 continue
             slot = blender_material.node_tree.nodes.new('ShaderNodeTexImage') 
             texture_code_to_blender_texture(texture_code, slot, blender_material)
+            texture_name = texture_target.name
             slot.image = texture_target.image # set bpy.data.textures[].image as a texures for ShaderNodeTexImage
             if  texture_code  == 1 or texture_code  == 7: # change color settings for normal and detail maps
                 slot.image.colorspace_settings.name = 'Non-Color'
