@@ -24,9 +24,9 @@ CORRUPTED_ARCS = {
 
 # Probably due to bad indices, needs investigation
 KNOWN_ARC_BLENDER_CRASH = {
-    #'ev108_10.arc',
+    'ev108_10.arc',
     'ev612_00.arc',
-    #'ev204_00.arc',
+    'ev204_00.arc',
     'ev606_00.arc',
     'ev613_00.arc',
     'ev614_00.arc',
@@ -35,8 +35,8 @@ KNOWN_ARC_BLENDER_CRASH = {
     'ev617_00.arc',
     'ev618_00.arc',
     'uOm09882.arc',
-    #'s109.arc',
-    #'s119.arc',
+    's109.arc',
+    's119.arc',
     's300.arc',
     's301.arc',
     's303.arc',

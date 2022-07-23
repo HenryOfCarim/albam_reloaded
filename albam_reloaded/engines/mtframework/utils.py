@@ -176,9 +176,8 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
 
     elif texture_code == 4:
         # Emissive mask _CM ?
-        blender_texture_node.location = (600, -200)
+        blender_texture_node.location = (600, -300)
         blender_texture_node.interpolation = 'Cubic'
-        print("Cached! code 4")
 
     elif texture_code == 5:
         # Alpha mask _AM
@@ -232,7 +231,7 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
             link(dt_normal_n.outputs['Normal'], principled_node.inputs['Normal'])
     else:
         print('texture_code not supported', texture_code)
-        # TODO: 6,
+        # TODO: 3, 4, 5, 6,
 
 
 def blender_texture_to_texture_code(blender_texture_image_node):
