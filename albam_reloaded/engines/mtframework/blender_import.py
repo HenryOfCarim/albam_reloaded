@@ -4,6 +4,7 @@ import os
 
 try:
     import bpy
+    import addon_utils
     from mathutils import Matrix, Vector
 except ImportError:
     pass
@@ -196,6 +197,16 @@ def _import_vertices_mod156(mod, mesh):
             }
 
 
+def _get_path_to_albam():
+    for mod in addon_utils.modules():
+        if mod.bl_info['name'] == "Albam Reloaded":
+            filepath = mod.__file__
+            path = os.path.split(filepath)[0]
+            return (path)
+        else:
+            pass
+
+
 def _create_blender_textures_from_mod(mod, base_dir):
     textures = [None]  # materials refer to textures in index-1
     # TODO: check why in Arc.header.file_entries[n].file_path it returns a bytes, and
@@ -208,6 +219,17 @@ def _create_blender_textures_from_mod(mod, base_dir):
         if not os.path.isfile(path):
             # TODO: log warnings, figure out 'rtex' format
             print('path {} does not exist'.format(path))
+            texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
+            texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
+            texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE')
+            texture.use_fake_user = True
+
+            image_path = _get_path_to_albam()
+            image_path = os.path.join(image_path, "resourses", "missed_texture.dds")
+            dummy_image = image = bpy.data.images.load(image_path)
+
+            texture.image = dummy_image
+            textures.append(texture) 
             continue
         tex = Tex112(path)
         try:
@@ -224,10 +246,8 @@ def _create_blender_textures_from_mod(mod, base_dir):
         texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
         texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
         texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE') # bpy.data.textures['00pl0200_09AllHair_BM']
-        texture.use_fake_user = True # TEST
+        texture.use_fake_user = True # Set fake user to prevent removing after saving to .blend
         texture.image = image 
-        #print(dir(texture))
-        #print(texure)
         textures.append(texture) #create a list with bpy.data.textures
 
         # saving meta data for export
