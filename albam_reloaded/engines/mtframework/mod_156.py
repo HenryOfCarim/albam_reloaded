@@ -4,7 +4,7 @@ from ctypes import (
     c_uint, c_uint8, c_uint16, c_float, c_char, c_short, c_ushort, c_byte, c_ubyte,
 )
 
-from ...engines.mtframework.defaults import DEFAULT_MATERIAL
+from ...engines.mtframework.defaults import DEFAULT_MATERIAL, DEFAULT_MESH
 from ...lib.structure import DynamicStructure
 from ...registry import blender_registry
 
@@ -149,7 +149,7 @@ class MaterialData(Structure):
                 ('unk_flag_10', c_uint16, 1),
                 ('unk_flag_11', c_uint16, 1),
                 # Always set to zero since 8 bones is not yet supported
-                ('flag_8_bones_vertex', c_uint16, 1),
+                ('unk_flag_8_bones_vertex', c_uint16, 1),
                 ('unk_flag_12', c_uint16, 1),
                 ('unk_flag_13', c_uint16, 1),
                 ('unk_flag_14', c_uint16, 1),
@@ -207,6 +207,7 @@ class WeightBound(Structure):
 
 @blender_registry.register_bpy_prop('mesh', 'unk_')
 class Mesh156(LittleEndianStructure):
+    _defaults_ = DEFAULT_MESH
     _fields_ = (('unk_render_group_index', c_ushort),
                 ('material_index', c_ushort),
                 ('constant', c_ubyte),  # always 1

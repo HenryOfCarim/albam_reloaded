@@ -80,3 +80,25 @@ DEFAULT_MATERIAL = {
     "unk_36": 0.0,
     "unk_37": 0.0
 }
+
+
+DEFAULT_MESH = {
+    "unk_render_group_index": 0.0,
+    "unk_01": 0,
+    "unk_02": 0,
+    "unk_03": 0, # Messes up meshes with any value>0
+    "unk_flag_01": 0,
+    "unk_flag_02": 0,
+    "unk_flag_03": 0,
+    "unk_flag_04": 0,
+    "unk_flag_05": 0,
+    "unk_flag_06": 1, # High brightness with 0
+    "unk_flag_07": 0,
+    "unk_05": 0,
+    "unk_06": 0,
+    "unk_07": 0,
+    "unk_08": 0,
+    "unk_09": 0,
+    "unk_10": 0,
+    "unk_11": 0
+}
