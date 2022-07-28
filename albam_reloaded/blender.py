@@ -111,14 +111,12 @@ class ALBAM_PT_CustomMeshOptions(bpy.types.Panel):
         return bool(context.mesh)
 
 
-class ALBAM_PT_View3DPanel:
-    '''Parent UI Panel class'''
+
+class ALBAM_PT_ImportExportPanel(bpy.types.Panel):
+    '''UI Albam subpanel in 3D view'''
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Albam"
-
-class ALBAM_PT_ImportExportPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
-    '''UI Albam subpanel in 3D view'''
     bl_idname = "ALBAM_PT_UI_Panel"
     bl_label = "Albam"
 
@@ -132,8 +130,12 @@ class ALBAM_PT_ImportExportPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
         layout.operator('albam_export.item', text='Export')
         layout.prop(export_settings, "export_visible_bool", text="Export visible meshes only ")
 
-class ALBAM_PT_ToolsPanel(ALBAM_PT_View3DPanel, bpy.types.Panel):
+
+class ALBAM_PT_ToolsPanel(bpy.types.Panel):
     '''UI Tool subpanel in 3D view'''
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Albam"
     bl_idname = "ALBAM_PT_TOOLS_Panel"
     bl_label = "Tools"
     bl_options = {'DEFAULT_CLOSED'}
