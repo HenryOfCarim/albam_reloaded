@@ -108,11 +108,12 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     vertex_locations = imported_vertices['locations']
     vertex_normals = imported_vertices['normals']
     uvs_per_vertex = imported_vertices['uvs']
+    uvs_per_vertex_2 = imported_vertices['uvs2']
+    uvs_per_vertex_3 = imported_vertices['uvs3']
     weights_per_bone = imported_vertices['weights_per_bone']
     indices = get_indices_array(mod, mesh)
     indices = strip_triangles_to_triangles_list(indices)
     faces = chunks(indices, 3)
-    uvs_per_vertex = imported_vertices['uvs']
     weights_per_bone = imported_vertices['weights_per_bone']
 
     assert min(indices) >= 0, "Bad face indices"  # Blender crashes if not
@@ -145,15 +146,28 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
             vg.add((vertex_index,), weight_value, 'ADD')
 
     if uvs_per_vertex:
-        #me_ob.uv_textures.new(name) # deprecated
-        #print(dir(me_ob))
-        me_ob.uv_layers.new(name=name)
-        uv_layer = me_ob.uv_layers[-1].data
+        uv_layer = me_ob.uv_layers.new(name=name)
         per_loop_list = []
         for loop in me_ob.loops:
             offset = loop.vertex_index * 2
             per_loop_list.extend((uvs_per_vertex[offset], uvs_per_vertex[offset + 1]))
-        uv_layer.foreach_set('uv', per_loop_list)
+        uv_layer.data.foreach_set('uv', per_loop_list)
+
+    # Checking material until we find a better way. Taken from max script
+    has_light_map = mod.materials_data_array[mesh.material_index].texture_indices[3] > 0
+    has_normal_map = mod.materials_data_array[mesh.material_index].texture_indices[1] > 0
+    if has_light_map:
+        if has_normal_map:
+            source_uvs = uvs_per_vertex_3
+        else:
+            source_uvs = uvs_per_vertex_2
+        uv_layer = me_ob.uv_layers.new(name=name + "_2")
+        per_loop_list = []
+        for loop in me_ob.loops:
+            offset = loop.vertex_index * 2
+            per_loop_list.extend((source_uvs[offset], source_uvs[offset + 1]))
+        uv_layer.data.foreach_set('uv', per_loop_list)
+
 
     # Saving unknown metadata for export
     # TODO: use a util function
@@ -188,11 +202,22 @@ def _import_vertices_mod156(mod, mesh):
     # y up to z up
     normals = map(lambda n: (n[0], n[2] * -1, n[1]), normals)
 
-    list_of_tuples = [(unpack_half_float(v.uv_x), unpack_half_float(v.uv_y) * -1) for v in vertices_array]
+    uvs = [(unpack_half_float(v.uv_x), unpack_half_float(v.uv_y) * -1) for v in vertices_array]
+    # XXX: normalmap has uvs as well? and then this should be uv3?
+    if mesh.vertex_format == 0:
+        uvs2 = [(unpack_half_float(v.uv2_x), unpack_half_float(v.uv2_y) * -1) for v in vertices_array]
+        uvs3 = [(unpack_half_float(v.uv3_x), unpack_half_float(v.uv3_y) * -1) for v in vertices_array]
+    else:
+        uvs2 = []
+        uvs3 = []
+
+
     return {'locations': list(locations),
             'normals': list(normals),
             # TODO: investigate why uvs don't appear above the image in the UV editor
-            'uvs': list(chain.from_iterable(list_of_tuples)),
+            'uvs': list(chain.from_iterable(uvs)),
+            'uvs2': list(chain.from_iterable(uvs2)),
+            'uvs3': list(chain.from_iterable(uvs3)),
             'weights_per_bone': _get_weights_per_bone(mod, mesh, vertices_array)
             }
 
