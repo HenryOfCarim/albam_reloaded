@@ -270,8 +270,11 @@ def _create_shader_node_group():
     # Create group inputs
     shader_group.inputs.new('NodeSocketColor',"Diffuse BM")
     shader_group.inputs.new('NodeSocketFloat', "Alpha BM")
-    shader_group.inputs.new('NodeSocketColor','Normal NM')
+    shader_group.inputs["Alpha BM"].default_value = 1
+    shader_group.inputs.new('NodeSocketColor',"Normal NM")
+    shader_group.inputs["Normal NM"].default_value = (1, 1, 1, 1)
     shader_group.inputs.new('NodeSocketFloat',"Alpha NM")
+    shader_group.inputs["Alpha NM"].default_value = 1
     shader_group.inputs.new('NodeSocketColor',"Specular MM")
     shader_group.inputs.new('NodeSocketColor',"Lightmap LM")
     shader_group.inputs.new('NodeSocketInt',"Use Lightmap")
@@ -283,7 +286,9 @@ def _create_shader_node_group():
     shader_group.inputs["Use Alpha Mask"].max_value = 1
     shader_group.inputs.new('NodeSocketColor',"Environment CM")
     shader_group.inputs.new('NodeSocketColor',"Detail NM")
-    shader_group.inputs.new('NodeSocketFloat',"Alpha NM")
+    shader_group.inputs["Detail NM"].default_value = (1, 1, 1, 1)
+    shader_group.inputs.new('NodeSocketFloat',"Alpha DNM")
+    shader_group.inputs["Alpha DNM"].default_value = 1
     shader_group.inputs.new('NodeSocketInt',"Use Detail Map")
     shader_group.inputs["Use Detail Map"].min_value = 0
     shader_group.inputs["Use Detail Map"].max_value = 1
@@ -434,6 +439,7 @@ def _create_shader_node_group():
     link(normalize_normals.outputs[0],use_detail_map.inputs[2])
     link(use_detail_map.outputs[0], normal_map.inputs[1])
     link(normal_map.outputs[0], bsdf_shader.inputs[22])
+    link(group_inputs.outputs[12], use_detail_map.inputs[0])
 
     return shader_group
 
@@ -449,8 +455,16 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
         blender_material.use_nodes = True
         blender_material.blend_method = 'CLIP' # set transparency method 'OPAQUE', 'CLIP', 'HASHED', 'BLEND'
 
-        principled_node = blender_material.node_tree.nodes.get("Principled BSDF")
-        principled_node.inputs['Specular'].default_value = 0.2 # change specular
+        node_to_delete = blender_material.node_tree.nodes.get("Principled BSDF")
+        blender_material.node_tree.nodes.remove( node_to_delete )
+        #principled_node.inputs['Specular'].default_value = 0.2 # change specular
+        shader_node_group = blender_material.node_tree.nodes.new('ShaderNodeGroup')
+        shader_node_group.node_tree = bpy.data.node_groups["MT Framework shader"]
+        shader_node_group.name = "MTFrameworkGroup"
+        material_output = blender_material.node_tree.nodes.get("Material Output")
+
+        link = blender_material.node_tree.links.new
+        link(shader_node_group.outputs[0], material_output.inputs[0])
 
         # unknown data for export, registered already
         # TODO: do this with a util function
@@ -478,11 +492,11 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
             if texture_code == 6:
                 print('texture_code not supported', texture_code)
                 continue
-            slot = blender_material.node_tree.nodes.new('ShaderNodeTexImage') 
-            texture_code_to_blender_texture(texture_code, slot, blender_material)
-            slot.image = texture_target.image # set bpy.data.textures[].image as a texures for ShaderNodeTexImage
+            texture_node = blender_material.node_tree.nodes.new('ShaderNodeTexImage') 
+            texture_code_to_blender_texture(texture_code, texture_node, blender_material)
+            texture_node.image = texture_target.image # set bpy.data.textures[].image as a texures for ShaderNodeTexImage
             if  texture_code  == 1 or texture_code  == 7: # change color settings for normal and detail maps
-                slot.image.colorspace_settings.name = 'Non-Color'
+                texture_node.image.colorspace_settings.name = 'Non-Color'
 
     return materials
 
