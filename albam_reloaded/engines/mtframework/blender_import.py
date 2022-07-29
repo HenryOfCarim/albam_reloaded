@@ -461,7 +461,9 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
         shader_node_group = blender_material.node_tree.nodes.new('ShaderNodeGroup')
         shader_node_group.node_tree = bpy.data.node_groups["MT Framework shader"]
         shader_node_group.name = "MTFrameworkGroup"
+        shader_node_group.width = 300
         material_output = blender_material.node_tree.nodes.get("Material Output")
+        material_output.location = (400, 0)
 
         link = blender_material.node_tree.links.new
         link(shader_node_group.outputs[0], material_output.inputs[0])

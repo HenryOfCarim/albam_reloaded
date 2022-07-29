@@ -143,7 +143,11 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
     elif texture_code == 3:
         # Lightmap _LM
         blender_texture_node.location = (-300, -700)
-        link(blender_texture_node.outputs['Color'], principled_node.inputs[6])
+        uv_map_node = blender_material.node_tree.nodes.new('ShaderNodeUVMap')
+        uv_map_node.location = (-400, -700)
+        #uv_map_node.uv_map = [0]
+        link(blender_texture_node.outputs['Color'], principled_node.inputs[5])
+        principled_node.inputs[6].default_value = 1
 
     elif texture_code == 4:
         # Emissive mask ?
@@ -153,13 +157,32 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
         # Alpha mask _AM
         blender_texture_node.location = (-300, -1400)
         link(blender_texture_node.outputs['Color'], principled_node.inputs[7])
+        principled_node.inputs[8].default_value = 1
 
     elif texture_code == 7:
         #Detail normal map
         blender_texture_node.location = (-300, -1750)
+        tex_coord_node = blender_material.node_tree.nodes.new('ShaderNodeTexCoord') 
+        tex_coord_node.location = (-700, -1750)
+        mapping_node = blender_material.node_tree.nodes.new('ShaderNodeMapping')
+        mapping_node.location = (-500, -1750)
+
+        link(tex_coord_node.outputs[2], mapping_node.inputs[0])
+        link(mapping_node.outputs[0], blender_texture_node.inputs[0])
         link(blender_texture_node.outputs['Color'], principled_node.inputs[10])
         link(blender_texture_node.outputs['Alpha'], principled_node.inputs[11])
 
+        principled_node.inputs[12].default_value = 1
+        #TODO move it to function
+        #Link the material properites value
+        for x in range(3):
+            d = mapping_node.inputs[3].driver_add("default_value", x)
+            var1 = d.driver.variables.new()
+            var1.name = "detail_multiplier"
+            var1.targets[0].id_type = 'MATERIAL'
+            var1.targets[0].id = blender_material
+            var1.targets[0].data_path = '["unk_detail_factor"]'
+            d.driver.expression = var1.name
     else:
         print('texture_code not supported', texture_code)
         # TODO: 6 CM cubemap
