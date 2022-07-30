@@ -161,7 +161,7 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
             source_uvs = uvs_per_vertex_3
         else:
             source_uvs = uvs_per_vertex_2
-        uv_layer = me_ob.uv_layers.new(name=name + "_2")
+        uv_layer = me_ob.uv_layers.new(name="lightmap")
         per_loop_list = []
         for loop in me_ob.loops:
             offset = loop.vertex_index * 2
