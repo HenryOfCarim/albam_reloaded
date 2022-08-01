@@ -285,8 +285,8 @@ def _create_shader_node_group():
     shader_group.inputs["Use Alpha Mask"].min_value = 0
     shader_group.inputs["Use Alpha Mask"].max_value = 1
     shader_group.inputs.new('NodeSocketColor',"Environment CM")
-    shader_group.inputs.new('NodeSocketColor',"Detail NM")
-    shader_group.inputs["Detail NM"].default_value = (1, 1, 1, 1)
+    shader_group.inputs.new('NodeSocketColor',"Detail DNM")
+    shader_group.inputs["Detail DNM"].default_value = (1, 1, 1, 1)
     shader_group.inputs.new('NodeSocketFloat',"Alpha DNM")
     shader_group.inputs["Alpha DNM"].default_value = 1
     shader_group.inputs.new('NodeSocketInt',"Use Detail Map")
@@ -454,6 +454,7 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
         blender_material = bpy.data.materials.new('{}_{}'.format(model_name, str(i).zfill(2)))
         blender_material.use_nodes = True
         blender_material.blend_method = 'CLIP' # set transparency method 'OPAQUE', 'CLIP', 'HASHED', 'BLEND'
+        #blender_material.alpha_treshhold = 0.33
 
         node_to_delete = blender_material.node_tree.nodes.get("Principled BSDF")
         blender_material.node_tree.nodes.remove( node_to_delete )

@@ -120,34 +120,35 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
         blender_material : shader material
     '''
     #blender_texture_node.use_map_alpha = True
-    principled_node = blender_material.node_tree.nodes.get("MTFrameworkGroup")
+    shader_node_grp = blender_material.node_tree.nodes.get("MTFrameworkGroup")
     link = blender_material.node_tree.links.new
 
     if texture_code == 0:
         # Diffuse _BM
-        link(blender_texture_node.outputs['Color'], principled_node.inputs[0])
-        link(blender_texture_node.outputs['Alpha'], principled_node.inputs[1])
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[0])
+        link(blender_texture_node.outputs['Alpha'], shader_node_grp.inputs[1])
         blender_texture_node.location =(-300, 350)
         #blender_texture_node.use_map_color_diffuse = True
     elif texture_code == 1:
         # Normal _NM
         blender_texture_node.location = (-300, 0)
-        link(blender_texture_node.outputs['Color'], principled_node.inputs[2])
-        link(blender_texture_node.outputs['Alpha'], principled_node.inputs[3])
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[2])
+        link(blender_texture_node.outputs['Alpha'], shader_node_grp.inputs[3])
 
     elif texture_code == 2:
         # Specular _MM
         blender_texture_node.location = (-300, -350)
-        link(blender_texture_node.outputs['Color'], principled_node.inputs[4])
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[4])
    
     elif texture_code == 3:
         # Lightmap _LM
         blender_texture_node.location = (-300, -700)
         uv_map_node = blender_material.node_tree.nodes.new('ShaderNodeUVMap')
-        uv_map_node.location = (-400, -700)
-        #uv_map_node.uv_map = [0]
-        link(blender_texture_node.outputs['Color'], principled_node.inputs[5])
-        principled_node.inputs[6].default_value = 1
+        uv_map_node.location = (-500, -700)
+        uv_map_node.uv_map = "lightmap"
+        link(uv_map_node.outputs[0],blender_texture_node.inputs[0])
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[5])
+        shader_node_grp.inputs[6].default_value = 1
 
     elif texture_code == 4:
         # Emissive mask ?
@@ -156,8 +157,8 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
     elif texture_code == 5:
         # Alpha mask _AM
         blender_texture_node.location = (-300, -1400)
-        link(blender_texture_node.outputs['Color'], principled_node.inputs[7])
-        principled_node.inputs[8].default_value = 1
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[7])
+        shader_node_grp.inputs[8].default_value = 1
 
     elif texture_code == 7:
         #Detail normal map
@@ -169,10 +170,10 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
 
         link(tex_coord_node.outputs[2], mapping_node.inputs[0])
         link(mapping_node.outputs[0], blender_texture_node.inputs[0])
-        link(blender_texture_node.outputs['Color'], principled_node.inputs[10])
-        link(blender_texture_node.outputs['Alpha'], principled_node.inputs[11])
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[10])
+        link(blender_texture_node.outputs['Alpha'], shader_node_grp.inputs[11])
 
-        principled_node.inputs[12].default_value = 1
+        shader_node_grp.inputs[12].default_value = 1
         #TODO move it to function
         #Link the material properites value
         for x in range(3):
@@ -193,50 +194,39 @@ def blender_texture_to_texture_code(blender_texture_image_node):
         blender_texture_image_node : bpy.types.ShaderNodeTexImage
     '''
     texture_code = 0
-    color_out = blender_texture_image_node.outputs['Color'] 
-    alpha_out = blender_texture_image_node.outputs['Alpha']
-    vector_in = blender_texture_image_node.inputs['Vector']
-
-    color_socket = None
-    alpha_socket = None
-    vector_socket = None
-
-    if color_out.links:
-        color_socket = (color_out.links[0].to_node.name)
-    else:
-        texture_option = blender_texture_image_node.interpolation
-        if texture_option == 'Closest':
-            texture_code = 3
-
-        elif texture_option == 'Cubic':
-            texture_code = 4
-
-        elif texture_option == 'Smart':
-            texture_code = 5
-        
-        return texture_code
-
-    if alpha_out.links:
-        alpha_socket = (alpha_out.links[0].to_node.name)
-
-    if vector_in.links:
-        vector_socket =(vector_in.links[0].from_node.name)
+    color_out = blender_texture_image_node.outputs['Color']
+    try:
+        socket_name = color_out.links[0].to_socket.name
+    except:
+        print("the texture has no connections")
+    #socket_name = (color_out.links[0].to_node.from_socket.name)
 
     # Diffuse
-    if color_socket and alpha_socket == "Principled BSDF":
+    if socket_name == "Diffuse BM":
         texture_code = 0
 
     # Normal
-    elif (not vector_socket and
-         alpha_socket == "Combine RGB"):
+    elif socket_name == "Normal NM":
         texture_code = 1
 
     # Specular
-    elif color_socket == "Invert":
+    elif socket_name == "Specular MM":
         texture_code = 2
 
+    # Lightmap
+    elif socket_name == "Lightmap LM":
+        texture_code = 3
+    
+    # Alpha Mask
+    elif socket_name == "Alpha Mask AM":
+        texture_code = 5
+
+    # Alpha Mask
+    elif socket_name == "Environment CM":
+        texture_code = 6
+
     # Detail normal map
-    elif (vector_socket == 'Mapping'):
+    elif socket_name == 'Detail DNM':
         texture_code = 7
 
     return texture_code
