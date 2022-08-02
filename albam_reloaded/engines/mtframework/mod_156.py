@@ -149,7 +149,7 @@ class MaterialData(Structure):
                 ('unk_flag_10', c_uint16, 1),
                 ('unk_flag_11', c_uint16, 1),
                 # Always set to zero since 8 bones is not yet supported
-                ('unk_flag_8_bones_vertex', c_uint16, 1),
+                ('flag_8_bones_vertex', c_uint16, 1),
                 ('unk_flag_12', c_uint16, 1),
                 ('unk_flag_13', c_uint16, 1),
                 ('unk_flag_14', c_uint16, 1),
