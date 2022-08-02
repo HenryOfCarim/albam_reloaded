@@ -120,170 +120,100 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
         blender_material : shader material
     '''
     #blender_texture_node.use_map_alpha = True
-    principled_node = blender_material.node_tree.nodes.get('Principled BSDF')
+    shader_node_grp = blender_material.node_tree.nodes.get("MTFrameworkGroup")
     link = blender_material.node_tree.links.new
 
     if texture_code == 0:
         # Diffuse _BM
-        link(blender_texture_node.outputs['Color'], principled_node.inputs['Base Color'])
-        link(blender_texture_node.outputs['Alpha'], principled_node.inputs['Alpha'])
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[0])
+        link(blender_texture_node.outputs['Alpha'], shader_node_grp.inputs[1])
         blender_texture_node.location =(-300, 350)
         #blender_texture_node.use_map_color_diffuse = True
     elif texture_code == 1:
         # Normal _NM
-        # Since normal maps have offset channels, they need to be rearranged for Blender
-        nm_separateRGB_n = blender_material.node_tree.nodes.new('ShaderNodeSeparateRGB')
-        nm_separateRGB_n.location =(-860, -550)
-        nm_combineRGB_n = blender_material.node_tree.nodes.new('ShaderNodeCombineRGB')
-        nm_combineRGB_n.location = (-670, -500)
-
-        blender_texture_node.location = (-1150, -450)
-        link(blender_texture_node.outputs['Color'], nm_separateRGB_n.inputs['Image'])
-        link(blender_texture_node.outputs['Alpha'], nm_combineRGB_n.inputs['R']) # set normal node to shader socket
-        link(nm_separateRGB_n.outputs['G'], nm_combineRGB_n.inputs['G'])
-        link(nm_separateRGB_n.outputs['B'], nm_combineRGB_n.inputs['B'])
-
-        dt_normal_n = blender_material.node_tree.nodes.get('Normal Map')
-        #If a detail map was created before normal map
-        if dt_normal_n:
-            print("see normal node from a detail map(?) on the normal creation")
-            dt_combineRGB_n = dt_normal_n.inputs['Color'].links[0].from_node
-            dt_mixRGB = blender_material.node_tree.nodes.new('ShaderNodeMixRGB')
-            dt_mixRGB.location = (-470, -250)
-            link(dt_combineRGB_n.outputs['Image'],dt_mixRGB.inputs['Color1'])
-            link(nm_combineRGB_n.outputs['Image'],dt_mixRGB.inputs['Color2'])
-            link(dt_mixRGB.outputs['Color'],dt_normal_n.inputs['Color'])
-        else:
-            normal_map_node = blender_material.node_tree.nodes.new("ShaderNodeNormalMap")
-            normal_map_node.location = (-200, -260)
-            link(nm_combineRGB_n.outputs['Image'], normal_map_node.inputs['Color'])
-
-        link(normal_map_node.outputs['Normal'], principled_node.inputs['Normal']) # set normal node to shader socket
+        blender_texture_node.location = (-300, 0)
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[2])
+        link(blender_texture_node.outputs['Alpha'], shader_node_grp.inputs[3])
 
     elif texture_code == 2:
         # Specular _MM
-        blender_texture_node.location = (-600, 60)
-        invert_spec_node = blender_material.node_tree.nodes.new('ShaderNodeInvert')
-        invert_spec_node.location = (-330, 60)
-
-        link(blender_texture_node.outputs['Color'], invert_spec_node.inputs['Color'])
-        link(invert_spec_node.outputs['Color'], principled_node.inputs['Roughness'])
-
+        blender_texture_node.location = (-300, -350)
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[4])
+   
     elif texture_code == 3:
         # Lightmap _LM
-        blender_texture_node.location = (600, 100)
-        blender_texture_node.interpolation = 'Closest'
+        blender_texture_node.location = (-300, -700)
+        uv_map_node = blender_material.node_tree.nodes.new('ShaderNodeUVMap')
+        uv_map_node.location = (-500, -700)
+        uv_map_node.uv_map = "lightmap"
+        link(uv_map_node.outputs[0],blender_texture_node.inputs[0])
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[5])
+        shader_node_grp.inputs[6].default_value = 1
 
     elif texture_code == 4:
-        # Emissive mask _CM ?
-        blender_texture_node.location = (600, -300)
-        blender_texture_node.interpolation = 'Cubic'
+        # Emissive mask ?
+        blender_texture_node.location = (-300, -1050)
 
     elif texture_code == 5:
         # Alpha mask _AM
-        blender_texture_node.location = (600, -500)
-        blender_texture_node.interpolation = 'Smart'
+        blender_texture_node.location = (-300, -1400)
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[7])
+        shader_node_grp.inputs[8].default_value = 1
 
     elif texture_code == 7:
         #Detail normal map
-        blender_texture_node.location =(-1150, -130)
-        dt_tex_coord_n = blender_material.node_tree.nodes.new('ShaderNodeTexCoord') 
-        dt_tex_coord_n.location = (-1550, -340)
-        dt_mapping_n = blender_material.node_tree.nodes.new('ShaderNodeMapping')
-        dt_mapping_n.location = (-1350, -340)
+        blender_texture_node.location = (-300, -1750)
+        tex_coord_node = blender_material.node_tree.nodes.new('ShaderNodeTexCoord') 
+        tex_coord_node.location = (-700, -1750)
+        mapping_node = blender_material.node_tree.nodes.new('ShaderNodeMapping')
+        mapping_node.location = (-500, -1750)
 
-        # link detail map multiplier to the custom material property
+        link(tex_coord_node.outputs[2], mapping_node.inputs[0])
+        link(mapping_node.outputs[0], blender_texture_node.inputs[0])
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[10])
+        link(blender_texture_node.outputs['Alpha'], shader_node_grp.inputs[11])
+
+        shader_node_grp.inputs[12].default_value = 1
+        #TODO move it to function
+        #Link the material properites value
         for x in range(3):
-            d = dt_mapping_n.inputs[3].driver_add("default_value", x)
+            d = mapping_node.inputs[3].driver_add("default_value", x)
             var1 = d.driver.variables.new()
             var1.name = "detail_multiplier"
             var1.targets[0].id_type = 'MATERIAL'
             var1.targets[0].id = blender_material
             var1.targets[0].data_path = '["unk_detail_factor"]'
             d.driver.expression = var1.name
-
-        
-        dt_separateRGB_n = blender_material.node_tree.nodes.new('ShaderNodeSeparateRGB')
-        dt_separateRGB_n.location = (-860, -260)
-        dt_combineRGB_n = blender_material.node_tree.nodes.new('ShaderNodeCombineRGB')
-        dt_combineRGB_n.location =(-670, -220)
-
-        link(dt_tex_coord_n.outputs['UV'], dt_mapping_n.inputs['Vector'])
-        link(dt_mapping_n.outputs['Vector'], blender_texture_node.inputs['Vector'])
-        
-        link(blender_texture_node.outputs['Color'], dt_separateRGB_n.inputs['Image'])
-        link(blender_texture_node.outputs['Alpha'], dt_combineRGB_n.inputs['R'])
-        link(dt_separateRGB_n.outputs['G'], dt_combineRGB_n.inputs['G'])
-        link(dt_separateRGB_n.outputs['B'], dt_combineRGB_n.inputs['B'])
-
-        nm_normal_n = blender_material.node_tree.nodes.get('Normal Map') # check if normal node is already exist
-        if nm_normal_n: # in case the normal map was created before a detail map
-            dt_mixRGB = blender_material.node_tree.nodes.new('ShaderNodeMixRGB')
-            dt_mixRGB.location = (-470, -250)
-            link(dt_combineRGB_n.outputs['Image'],dt_mixRGB.inputs['Color1'])
-            nm_combineRGB_n = nm_normal_n.inputs['Color'].links[0].from_node # get combine RGB link from the normal map inputs
-            link(dt_mixRGB.outputs['Color'],nm_normal_n.inputs['Color'])
-            link(nm_combineRGB_n.outputs['Image'], dt_mixRGB.inputs['Color2'])
-        else: 
-            dt_normal_n = blender_material.node_tree.nodes.new("ShaderNodeNormalMap") # create a new normal map node
-            dt_normal_n.location = (-200, -130)
-            link(dt_combineRGB_n.outputs['Image'], dt_normal_n.inputs['Color'])
-            link(dt_normal_n.outputs['Normal'], principled_node.inputs['Normal'])
     else:
         print('texture_code not supported', texture_code)
-        # TODO: 3, 4, 5, 6,
+        # TODO: 6 CM cubemap
 
 
 def blender_texture_to_texture_code(blender_texture_image_node):
     '''This function return a type ID of the image texture node dependind of node connetion
         blender_texture_image_node : bpy.types.ShaderNodeTexImage
     '''
-    texture_code = 0
-    color_out = blender_texture_image_node.outputs['Color'] 
-    alpha_out = blender_texture_image_node.outputs['Alpha']
-    vector_in = blender_texture_image_node.inputs['Vector']
+    texture_code = None
+    color_out = blender_texture_image_node.outputs['Color']
+    try:
+        socket_name = color_out.links[0].to_socket.name
+    except:
+        print("the texture has no connections")
+        return None
 
-    color_socket = None
-    alpha_socket = None
-    vector_socket = None
+    tex_codes_mapper = {
+    'Diffuse BM': 0,
+    'Normal NM': 1,
+    'Specular MM': 2,
+    'Lightmap LM': 3,
+    'Alpha Mask AM': 5,
+    'Environment CM': 6,
+    'Detail DNM': 7
+    }
 
-    if color_out.links:
-        color_socket = (color_out.links[0].to_node.name)
-    else:
-        texture_option = blender_texture_image_node.interpolation
-        if texture_option == 'Closest':
-            texture_code = 3
-
-        elif texture_option == 'Cubic':
-            texture_code = 4
-
-        elif texture_option == 'Smart':
-            texture_code = 5
-        
-        return texture_code
-
-    if alpha_out.links:
-        alpha_socket = (alpha_out.links[0].to_node.name)
-
-    if vector_in.links:
-        vector_socket =(vector_in.links[0].from_node.name)
-
-    # Diffuse
-    if color_socket and alpha_socket == "Principled BSDF":
-        texture_code = 0
-
-    # Normal
-    elif (not vector_socket and
-         alpha_socket == "Combine RGB"):
-        texture_code = 1
-
-    # Specular
-    elif color_socket == "Invert":
-        texture_code = 2
-
-    # Detail normal map
-    elif (vector_socket == 'Mapping'):
-        texture_code = 7
+    texture_code = tex_codes_mapper.get(socket_name)
+    if texture_code is None:
+        return None
 
     return texture_code
 
