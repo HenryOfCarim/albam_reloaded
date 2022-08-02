@@ -695,6 +695,8 @@ def _export_textures_and_materials(blender_objects, saved_mod):
                 raise ExportError("No texture data container linked with {} texture was found. Please create it before the export ".format(texture))
 
             texture_code = blender_texture_to_texture_code(texture_node)
+            if texture_code is None:
+                continue
             material_data.texture_indices[texture_code] = texture_index
         materials_data_array[mat_index] = material_data
         materials_mapping[mat.name] = mat_index

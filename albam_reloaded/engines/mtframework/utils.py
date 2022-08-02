@@ -193,41 +193,27 @@ def blender_texture_to_texture_code(blender_texture_image_node):
     '''This function return a type ID of the image texture node dependind of node connetion
         blender_texture_image_node : bpy.types.ShaderNodeTexImage
     '''
-    texture_code = 0
+    texture_code = None
     color_out = blender_texture_image_node.outputs['Color']
     try:
         socket_name = color_out.links[0].to_socket.name
     except:
         print("the texture has no connections")
-    #socket_name = (color_out.links[0].to_node.from_socket.name)
+        return None
 
-    # Diffuse
-    if socket_name == "Diffuse BM":
-        texture_code = 0
+    tex_codes_mapper = {
+    'Diffuse BM': 0,
+    'Normal NM': 1,
+    'Specular MM': 2,
+    'Lightmap LM': 3,
+    'Alpha Mask AM': 5,
+    'Environment CM': 6,
+    'Detail DNM': 7
+    }
 
-    # Normal
-    elif socket_name == "Normal NM":
-        texture_code = 1
-
-    # Specular
-    elif socket_name == "Specular MM":
-        texture_code = 2
-
-    # Lightmap
-    elif socket_name == "Lightmap LM":
-        texture_code = 3
-    
-    # Alpha Mask
-    elif socket_name == "Alpha Mask AM":
-        texture_code = 5
-
-    # Alpha Mask
-    elif socket_name == "Environment CM":
-        texture_code = 6
-
-    # Detail normal map
-    elif socket_name == 'Detail DNM':
-        texture_code = 7
+    texture_code = tex_codes_mapper.get(socket_name)
+    if texture_code is None:
+        return None
 
     return texture_code
 
