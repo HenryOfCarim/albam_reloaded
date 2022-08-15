@@ -4,7 +4,7 @@ from ctypes import (
     c_uint, c_uint8, c_uint16, c_float, c_char, c_short, c_ushort, c_byte, c_ubyte,
 )
 
-from ...engines.mtframework.defaults import DEFAULT_MATERIAL
+from ...engines.mtframework.defaults import DEFAULT_MATERIAL, DEFAULT_MESH
 from ...lib.structure import DynamicStructure
 from ...registry import blender_registry
 
@@ -154,8 +154,23 @@ class MaterialData(Structure):
                 ('unk_flag_13', c_uint16, 1),
                 ('unk_flag_14', c_uint16, 1),
                 ('unk_flag_15', c_uint16, 1),
-                ('unk_02', c_ushort),
-                ('unk_03', c_short),
+                ('unk_02_flag_01',  c_uint16, 1),#'unk_02', c_short
+                ('unk_02_flag_02',  c_uint16, 1),
+                ('unk_02_flag_03',  c_uint16, 1),
+                ('unk_02_flag_04',  c_uint16, 1),
+                ('unk_02_flag_05',  c_uint16, 1),
+                ('unk_02_flag_06',  c_uint16, 1),
+                ('unk_02_flag_07',  c_uint16, 1),
+                ('unk_02_flag_08',  c_uint16, 1),
+                ('unk_02_flag_09',  c_uint16, 1),
+                ('unk_02_flag_10',  c_uint16, 1),
+                ('unk_02_not_use_detail_map',  c_uint16, 1),
+                ('unk_02_use_detail_map',  c_uint16, 1),
+                ('unk_02_flag_13',  c_uint16, 1),
+                ('unk_02_flag_14',  c_uint16, 1),
+                ('unk_02_flag_15',  c_uint16, 1),
+                ('unk_02_flag_16',  c_uint16, 1),
+                ('unk_03', c_short), 
                 ('unk_04', c_ushort),
                 ('unk_05', c_ushort),
                 ('unk_06', c_ushort),
@@ -207,6 +222,7 @@ class WeightBound(Structure):
 
 @blender_registry.register_bpy_prop('mesh', 'unk_')
 class Mesh156(LittleEndianStructure):
+    _defaults_ = DEFAULT_MESH
     _fields_ = (('unk_render_group_index', c_ushort),
                 ('material_index', c_ushort),
                 ('constant', c_ubyte),  # always 1

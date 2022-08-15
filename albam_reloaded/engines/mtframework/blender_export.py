@@ -8,6 +8,7 @@ import os
 import re
 import struct
 import tempfile
+
 try:
     import bpy
     import mathutils
@@ -306,6 +307,7 @@ def _get_tangents_per_vertex(blender_mesh):
 def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_bounding_box):
     blender_mesh = blender_mesh_object.data
     vertex_count = len(blender_mesh.vertices)
+
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
@@ -508,12 +510,35 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         index_count = len(triangle_strips_python)
 
         m156 = meshes_156[mesh_index]
+        #for field in m156._fields_:
+        #    attr_name = field[0]
+        #    if not attr_name.startswith('unk_'):
+        #        continue
+        #    setattr(m156, attr_name, getattr(blender_mesh, attr_name))
+
         try:
             blender_material = blender_mesh.materials[0]
             m156.material_index = materials_mapping[blender_material.name]
         except IndexError:
             # TODO: insert an empty generic material in this case
             raise ExportError('Mesh {} has no materials'.format(blender_mesh.name))
+        m156.unk_01 = blender_mesh.unk_01
+        m156.unk_02 = blender_mesh.unk_02
+        m156.unk_03 = 0 # makes meshes semi transparent with an orginal value
+        m156.unk_flag_01 = blender_mesh.unk_flag_01
+        m156.unk_flag_02 = blender_mesh.unk_flag_02
+        m156.unk_flag_03 = blender_mesh.unk_flag_03
+        m156.unk_flag_04 = blender_mesh.unk_flag_04
+        m156.unk_flag_05 = blender_mesh.unk_flag_05
+        m156.unk_flag_06 = blender_mesh.unk_flag_06 #high brightness
+        m156.unk_flag_07 = blender_mesh.unk_flag_07
+        m156.unk_05 = blender_mesh.unk_05
+        m156.unk_06 = blender_mesh.unk_06
+        m156.unk_07 = blender_mesh.unk_07
+        m156.unk_08 = blender_mesh.unk_08
+        m156.unk_09 = blender_mesh.unk_09
+        m156.unk_10 = blender_mesh.unk_10
+        m156.unk_11 = blender_mesh.unk_11
         m156.constant = 1
         m156.unk_render_group_index = blender_mesh.unk_render_group_index
         m156.level_of_detail = EXPORT_LEVEL_OF_DETAIL
@@ -652,15 +677,13 @@ def _export_textures_and_materials(blender_objects, saved_mod):
                 continue
             setattr(material_data, attr_name, getattr(mat, attr_name))
 
-        ''' Old code    
-        for texture_slot in mat.texture_slots:
-            if not texture_slot or not texture_slot.texture:
-                continue
-            texture = texture_slot.texture
-            # texture_indices expects index-1 based
-            texture_index = textures.index(texture) + 1'''
+        #shader_node = mat.node_tree.nodes.get("MTFrameworkGroup")
+        #socket_name = shader_node.inputs[0].name
+        #is_linked = shader_node.inputs['Diffuse BM'].is_linked
+        #node_connected = shader_node.inputs['Diffuse BM'].node
 
         mat_tex = get_textures_from_the_material(mat) # get list with all ImageTexture nodes of the material
+        
         for texture_node in mat_tex:
             if not texture_node or not texture_node.image:
                 continue
@@ -672,6 +695,8 @@ def _export_textures_and_materials(blender_objects, saved_mod):
                 raise ExportError("No texture data container linked with {} texture was found. Please create it before the export ".format(texture))
 
             texture_code = blender_texture_to_texture_code(texture_node)
+            if texture_code is None:
+                continue
             material_data.texture_indices[texture_code] = texture_index
         materials_data_array[mat_index] = material_data
         materials_mapping[mat.name] = mat_index

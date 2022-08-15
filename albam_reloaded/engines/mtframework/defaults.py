@@ -43,7 +43,22 @@ DEFAULT_MATERIAL = {
     "unk_flag_13": 0,
     "unk_flag_14": 0,
     "unk_flag_15": 1,
-    "unk_02": 18563,
+    "unk_02_flag_01": 1, #"unk_02": 18563,
+    "unk_02_flag_02": 1,
+    "unk_02_flag_03": 0,
+    "unk_02_flag_04": 0,
+    "unk_02_flag_05": 0,
+    "unk_02_flag_06": 0,
+    "unk_02_flag_07": 0,
+    "unk_02_flag_08": 1,
+    "unk_02_flag_09": 0,
+    "unk_02_flag_10": 0,
+    "unk_02_not_use_detail_map": 1,
+    "unk_02_use_detail_map'": 0,
+    "unk_02_flag_13": 0,
+    "unk_02_flag_14": 0,
+    "unk_02_flag_15": 1,
+    "unk_02_flag_16": 0,
     "unk_03": 0,
     "unk_04": 58886,
     "unk_05": 34599,
@@ -79,4 +94,26 @@ DEFAULT_MATERIAL = {
     "unk_35": 1.1210387714598537e-44,
     "unk_36": 0.0,
     "unk_37": 0.0
+}
+
+
+DEFAULT_MESH = {
+    "unk_render_group_index": 0.0,
+    "unk_01": 0,
+    "unk_02": 0,
+    "unk_03": 0, # Messes up meshes with any value>0
+    "unk_flag_01": 0,
+    "unk_flag_02": 0,
+    "unk_flag_03": 0,
+    "unk_flag_04": 0,
+    "unk_flag_05": 0,
+    "unk_flag_06": 1, # High brightness with 0
+    "unk_flag_07": 0,
+    "unk_05": 0,
+    "unk_06": 0,
+    "unk_07": 0,
+    "unk_08": 0,
+    "unk_09": 0,
+    "unk_10": 0,
+    "unk_11": 0
 }
