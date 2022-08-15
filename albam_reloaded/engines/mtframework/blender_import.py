@@ -225,10 +225,12 @@ def _create_blender_textures_from_mod(mod, base_dir):
             texture.use_fake_user = True
 
             image_path = _get_path_to_albam()
-            image_path = os.path.join(image_path, "resourses", "missed_texture.dds")
-            dummy_image = image = bpy.data.images.load(image_path)
+            image_path = os.path.join(image_path, "resourses", "missing texture.dds")
+            dummy_image = bpy.data.images.load(image_path)
 
             texture.image = dummy_image
+            texture_node_name = texture_name_no_extension + ".dds"
+            texture.image.name = texture_node_name
             textures.append(texture) 
             continue
         tex = Tex112(path)
@@ -242,12 +244,15 @@ def _create_blender_textures_from_mod(mod, base_dir):
         dds_path = path.replace('.tex', '.dds') # change extension in the full path
         with open(dds_path, 'wb') as w: #write bynary
             w.write(dds)
-        image = bpy.data.images.load(dds_path)
+        image = bpy.data.images.load(dds_path, check_existing=True)
         texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
         texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
-        texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE') # bpy.data.textures['00pl0200_09AllHair_BM']
-        texture.use_fake_user = True # Set fake user to prevent removing after saving to .blend
-        texture.image = image 
+        texture = bpy.data.textures.get(texture_name_no_extension)
+        # Create a texture data block if not exist
+        if not texture:
+            texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE') # bpy.data.textures['00pl0200_09AllHair_BM']
+            texture.use_fake_user = True # Set fake user to prevent removing after saving to .blend
+            texture.image = image 
         textures.append(texture) #create a list with bpy.data.textures
 
         # saving meta data for export
@@ -447,6 +452,7 @@ def _create_shader_node_group():
 def _create_blender_materials_from_mod(mod, model_name, textures):
     '''textures: bpy.data.textures'''
     materials = []
+    existed_textures = []
     if not bpy.data.node_groups.get("MT Framework shader"):
         shader_node = _create_shader_node_group()
 
