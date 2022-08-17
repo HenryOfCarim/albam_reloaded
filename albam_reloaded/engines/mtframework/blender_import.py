@@ -244,6 +244,7 @@ def _create_blender_textures_from_mod(mod, base_dir):
         if not os.path.isfile(path):
             # TODO: log warnings, figure out 'rtex' format
             print('path {} does not exist'.format(path))
+            # add a placeholder instead of the missing texure
             texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
             texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
             texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE')
@@ -292,8 +293,9 @@ def _create_blender_textures_from_mod(mod, base_dir):
     return textures
 
 def _create_shader_node_group():
-    shader_group = bpy.data.node_groups.new("MT Framework shader", 'ShaderNodeTree')
+    '''Creates shader node group to hide all nodes from users under the hood'''
 
+    shader_group = bpy.data.node_groups.new("MT Framework shader", 'ShaderNodeTree')
     group_inputs = shader_group.nodes.new('NodeGroupInput')
     group_inputs.location = (-2000,-200)
 
@@ -337,6 +339,7 @@ def _create_shader_node_group():
     multiply_diff_light.name = "mult_diff_and_light"
     multiply_diff_light.label = "Multiply with Lightmap"
     multiply_diff_light.blend_type = 'MULTIPLY'
+    multiply_diff_light.inputs[0].default_value = 0.8
     multiply_diff_light.location = (-450, -100)
 
     # RGB nodes
@@ -375,6 +378,14 @@ def _create_shader_node_group():
     combine_all_normals.label = "Combine All Normals"
     combine_all_normals.location = (-750, -1150)
 
+    # Curve RGB for correct normal map display in blender
+    invert_green = shader_group.nodes.new('ShaderNodeRGBCurve')
+    invert_green.location = (-250, -1000)
+    curve_g = invert_green.mapping.curves[1]
+    curve_g.points[0].location = (1, 0)
+    curve_g.points[1].location = (0, 1)
+    invert_green.mapping.update()
+
     # Normalize normals nodes
     normalize_normals = shader_group.nodes.new('ShaderNodeVectorMath')
     normalize_normals.operation = 'NORMALIZE'
@@ -407,6 +418,7 @@ def _create_shader_node_group():
 
     # Normal node
     normal_map =  shader_group.nodes.new('ShaderNodeNormalMap') # create normal map node
+    normal_map.inputs[0].default_value = 1.5
     normal_map.location = (-200, -720)
 
     # Logic gates
@@ -467,7 +479,8 @@ def _create_shader_node_group():
 
     link(combine_all_normals.outputs[0],normalize_normals.inputs[0])
     link(normalize_normals.outputs[0],use_detail_map.inputs[2])
-    link(use_detail_map.outputs[0], normal_map.inputs[1])
+    link(use_detail_map.outputs[0], invert_green.inputs[1])
+    link(invert_green.outputs[0], normal_map.inputs[1])
     link(normal_map.outputs[0], bsdf_shader.inputs[22])
     link(group_inputs.outputs[12], use_detail_map.inputs[0])
 
