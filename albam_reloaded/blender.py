@@ -176,7 +176,7 @@ class AlbamImportOperator(bpy.types.Operator):
             with open(file_path, 'rb') as f: #read file as a binary
                 data = f.read() # store file to data var
             id_magic = data[:4] # get first 4 bytes(?)
-
+             
             func = blender_registry.import_registry.get(id_magic) # find header in dictionary
             if not func:
                 raise TypeError('File not supported for import. Id magic: {}'.format(id_magic))
@@ -189,7 +189,6 @@ class AlbamImportOperator(bpy.types.Operator):
             
             # TODO: proper logging/raising and rollback if failure
             results_dict = func(blender_object=obj, **kwargs)
-            #bpy.context.scene.objects.link(obj) #old
             bpy.context.collection.objects.link(obj)
 
             is_exportable = bool(blender_registry.export_registry.get(id_magic))

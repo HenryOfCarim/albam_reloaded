@@ -52,8 +52,15 @@ def import_arc(blender_object, file_path, **kwargs):
     arc.unpack(out)
 
     mod_files = [os.path.join(root, f) for root, _, files in os.walk(out)
-                 for f in files if f.endswith('.mod')]
+                 for f in files if f.endswith(('.mod'))]
+    #hacky code for testing individual animations
+    animation_files = [os.path.join(root, f) for root, _, files in os.walk(out)
+                 for f in files if f.endswith(('lmt'))]
+    if len(animation_files):
+        mod_files.append(animation_files[1])
+
     mod_folders = [os.path.dirname(mod_file.split(out)[-1]) for mod_file in mod_files]
+
 
     return {'files': mod_files,
             'kwargs': {'parent': blender_object,
@@ -146,10 +153,16 @@ def _create_ik_bone(armature, bone_index):
     if bpy.context.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
     # deselect all objects
+    #for i in bpy.context.scene.objects:
+    #    i.select = False
+    #bpy.ops.object.select_all(action='DESELECT')
     for i in bpy.context.scene.objects:
-        i.select = False
-    bpy.context.scene.objects.active = armature
-    armature.select = True
+        i.select_set(False)
+    #bpy.context.scene.objects.active = armature
+    bpy.context.view_layer.objects.active = armature
+
+    #armature.select = True
+    armature.select_set(True)
     bpy.ops.object.mode_set(mode='EDIT')
 
     bone_name = 'target_' + str(bone_index)

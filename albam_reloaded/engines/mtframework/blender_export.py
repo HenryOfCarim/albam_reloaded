@@ -703,3 +703,8 @@ def _export_textures_and_materials(blender_objects, saved_mod):
 
     return ExportedMaterials(textures_array, materials_data_array, materials_mapping, textures,
                              texture_dirs)
+
+
+#@blender_registry.register_function('export', b'LMT\x00')
+#def export_lmt(blender_object, file_path):
+#    print("ololo 2")

@@ -9,7 +9,8 @@ def get_block_info_array(structure):
     return AnimBlockInfo * len(non_null_offsets)
 
 
-def get_frames_buffer(structure, file_path, buff):
+def get_frames_buffer(structure, file_path):
+    buff = open(file_path, 'rb')
     size = 0
     buff.seek(structure.block_info_array[0].offset)
     initial_pos = buff.tell()
@@ -105,6 +106,7 @@ class AnimBlockInfo(Structure):
 
 
 class LMT(DynamicStructure):
+    ID_MAGIC = b'LMT'
 
     _fields_ = (('ID', c_uint,),
                 ('version', c_ushort),
