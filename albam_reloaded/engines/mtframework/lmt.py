@@ -106,7 +106,7 @@ class AnimBlockInfo(Structure):
 
 
 class LMT(DynamicStructure):
-    ID_MAGIC = b'LMT'
+    #ID_MAGIC = b'LMT'
 
     _fields_ = (('ID', c_uint,),
                 ('version', c_ushort),

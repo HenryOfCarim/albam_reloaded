@@ -57,7 +57,11 @@ def import_arc(blender_object, file_path, **kwargs):
     animation_files = [os.path.join(root, f) for root, _, files in os.walk(out)
                  for f in files if f.endswith(('lmt'))]
     if len(animation_files):
-        mod_files.append(animation_files[1])
+        for anim in animation_files:
+            #skip face animations it takes 30 minutes to load
+            if anim.endswith(('face.lmt')):
+                continue
+            mod_files.append(anim)
 
     mod_folders = [os.path.dirname(mod_file.split(out)[-1]) for mod_file in mod_files]
 
@@ -87,6 +91,8 @@ def import_lmt(blender_object, file_path, **kwargs):
     for i, anim_block in enumerate(anim_data):
         name = base_name + str(i)
         _import_animation(name, armature, mapping, anim_block)
+        #bpy.context.area.ui_type = 'NLA_EDITOR'
+        #bpy.ops.nla.actionclip_add(action=name)
 
 
 def _import_animation(name, armature, mapping, anim_dict):
@@ -153,11 +159,9 @@ def _create_ik_bone(armature, bone_index):
     if bpy.context.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
     # deselect all objects
+    bpy.ops.object.select_all(action='DESELECT')
     #for i in bpy.context.scene.objects:
-    #    i.select = False
-    #bpy.ops.object.select_all(action='DESELECT')
-    for i in bpy.context.scene.objects:
-        i.select_set(False)
+    #    i.select_set(False)
     #bpy.context.scene.objects.active = armature
     bpy.context.view_layer.objects.active = armature
 
@@ -166,16 +170,21 @@ def _create_ik_bone(armature, bone_index):
     bpy.ops.object.mode_set(mode='EDIT')
 
     bone_name = 'target_' + str(bone_index)
-    blender_bone = armature.data.edit_bones.new(bone_name)
-    blender_bone.tail[2] += 0.01
+    blender_bone = armature.data.edit_bones.get(bone_name)
+    if not blender_bone :
+        blender_bone = armature.data.edit_bones.new(bone_name)
+        blender_bone.tail[2] += 0.01
+
     bpy.ops.object.mode_set(mode='OBJECT')
 
     pose_bone = armature.pose.bones[str(bone_index)]
-    constraint = pose_bone.constraints.new('IK')
-    constraint.target = armature
-    constraint.subtarget = bone_name
-    constraint.chain_count = 3
-    constraint.use_rotation = True
+    constraint = pose_bone.constraints.get('IK')
+    if not constraint:
+        constraint = pose_bone.constraints.new('IK')
+        constraint.target = armature
+        constraint.subtarget = bone_name
+        constraint.chain_count = 3
+        constraint.use_rotation = True
 
     return bone_name
 
