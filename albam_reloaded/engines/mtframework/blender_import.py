@@ -304,10 +304,11 @@ def _create_shader_node_group():
     shader_group.inputs.new('NodeSocketFloat', "Alpha BM")
     shader_group.inputs["Alpha BM"].default_value = 1
     shader_group.inputs.new('NodeSocketColor',"Normal NM")
-    shader_group.inputs["Normal NM"].default_value = (1, 1, 1, 1)
+    shader_group.inputs["Normal NM"].default_value = (1, 0.5, 1, 1)
     shader_group.inputs.new('NodeSocketFloat',"Alpha NM")
-    shader_group.inputs["Alpha NM"].default_value = 1
+    shader_group.inputs["Alpha NM"].default_value = 0.5
     shader_group.inputs.new('NodeSocketColor',"Specular MM")
+    #shader_group.inputs["Specular MM"].default_value = 1
     shader_group.inputs.new('NodeSocketColor',"Lightmap LM")
     shader_group.inputs.new('NodeSocketInt',"Use Lightmap")
     shader_group.inputs["Use Lightmap"].min_value = 0
@@ -318,9 +319,9 @@ def _create_shader_node_group():
     shader_group.inputs["Use Alpha Mask"].max_value = 1
     shader_group.inputs.new('NodeSocketColor',"Environment CM")
     shader_group.inputs.new('NodeSocketColor',"Detail DNM")
-    shader_group.inputs["Detail DNM"].default_value = (1, 1, 1, 1)
+    shader_group.inputs["Detail DNM"].default_value = (1, 0.5, 1, 1)
     shader_group.inputs.new('NodeSocketFloat',"Alpha DNM")
-    shader_group.inputs["Alpha DNM"].default_value = 1
+    shader_group.inputs["Alpha DNM"].default_value = 0.5
     shader_group.inputs.new('NodeSocketInt',"Use Detail Map")
     shader_group.inputs["Use Detail Map"].min_value = 0
     shader_group.inputs["Use Detail Map"].max_value = 1
