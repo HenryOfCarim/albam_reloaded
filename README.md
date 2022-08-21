@@ -22,5 +22,6 @@ If you are willing to help in development or get quick help you can visit our  [
 
 AsteriskAmpersand for helping in understanding visibility generation algorithms
 
-https://user-images.githubusercontent.com/18252816/153188742-fceef27d-1c27-42c9-b977-9e65b6eb4041.mp4
 
+
+[installing.webm](https://user-images.githubusercontent.com/18252816/185800911-1225b8c8-c03c-4747-8e1d-035425172094.webm)
