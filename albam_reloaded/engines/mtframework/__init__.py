@@ -1,5 +1,6 @@
 from .arc import Arc
 from .mod_156 import Mod156
+from .sbc_1 import SBC1
 from ...engines.mtframework.tex import Tex112
 from .mappers import FILE_ID_TO_EXTENSION, EXTENSION_TO_FILE_ID
 
@@ -7,6 +8,7 @@ from .mappers import FILE_ID_TO_EXTENSION, EXTENSION_TO_FILE_ID
 __all__ = (
     'Arc',
     'Mod156',
+    'SBC1',
     'Tex112',
     'FILE_ID_TO_EXTENSION',
     'EXTENSION_TO_FILE_ID',

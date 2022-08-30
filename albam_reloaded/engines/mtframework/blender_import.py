@@ -11,7 +11,7 @@ except ImportError:
 
 from ...exceptions import BuildMeshError, TextureError #my lines IDK where they originally imported
 
-from ...engines.mtframework import Arc, Mod156, Tex112, KNOWN_ARC_BLENDER_CRASH, CORRUPTED_ARCS
+from ...engines.mtframework import Arc, Mod156, SBC1, Tex112, KNOWN_ARC_BLENDER_CRASH, CORRUPTED_ARCS
 from ...engines.mtframework.utils import (
     get_vertices_array,
     get_indices_array,
@@ -52,7 +52,12 @@ def import_arc(blender_object, file_path, **kwargs):
 
     mod_files = [os.path.join(root, f) for root, _, files in os.walk(out)
                  for f in files if f.endswith('.mod')]
+   
+    sbc_files = [os.path.join(root, f) for root, _, files in os.walk(out)
+                 for f in files if f.endswith('.sbc')]
+
     mod_folders = [os.path.dirname(mod_file.split(out)[-1]) for mod_file in mod_files]
+    mod_files.append(sbc_files[1])
 
     return {'files': mod_files,
             'kwargs': {'parent': blender_object,
@@ -60,6 +65,14 @@ def import_arc(blender_object, file_path, **kwargs):
                        'base_dir': out,
                        },
             }
+
+
+@blender_registry.register_function('import', identifier=b'SBC1\x00')
+def import_sbc(blender_object, file_path, **kwargs):
+    base_dir = kwargs.get('base_dir') # full path to _extracted folder
+
+    sbc = SBC1(file_path=file_path)
+    print("it works somwhow")
 
 
 @blender_registry.register_function('import', identifier=b'MOD\x00')
