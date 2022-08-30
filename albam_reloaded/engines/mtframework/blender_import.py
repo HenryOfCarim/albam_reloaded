@@ -67,11 +67,12 @@ def import_arc(blender_object, file_path, **kwargs):
             }
 
 
-@blender_registry.register_function('import', identifier=b'SBC1\x00')
+@blender_registry.register_function('import', identifier=b'SBC1')
 def import_sbc(blender_object, file_path, **kwargs):
     base_dir = kwargs.get('base_dir') # full path to _extracted folder
 
     sbc = SBC1(file_path=file_path)
+    boxes = [q for q in sbc.boxes]
     print("it works somwhow")
 
 
