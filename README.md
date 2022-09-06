@@ -16,12 +16,12 @@ Go to `Edit>Preference>Add-ons>Install`, select downloaded zip archive and press
 Turn it on after installing
 
 # Contacts
-If you are willing to help in development or get quick help you can visit our  [discord server](https://discord.gg/cQmrSaaW)
+If you are willing to help in development or get quick help you can visit our discord server https://discord.gg/69sphky9UX
 
 # Thanks
 
 AsteriskAmpersand for helping in understanding visibility generation algorithms
 
-
+Codeman02Fr for reversing SBC structure
 
 [installing.webm](https://user-images.githubusercontent.com/18252816/185800911-1225b8c8-c03c-4747-8e1d-035425172094.webm)
