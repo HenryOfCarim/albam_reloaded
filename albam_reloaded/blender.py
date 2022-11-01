@@ -216,6 +216,7 @@ class AlbamExportOperator(bpy.types.Operator):
         return True
 
     def invoke(self, context, event):  # pragma: no cover
+        self.filepath = context.scene.albam_item_to_export # set a name to arc file
         wm = context.window_manager
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
