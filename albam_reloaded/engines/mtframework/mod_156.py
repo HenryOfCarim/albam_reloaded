@@ -177,14 +177,14 @@ class MaterialData(Structure):
                 ('unk_07', c_ushort),
                 ('unk_08', c_ushort),
                 ('unk_09', c_ushort),
-                ('unk_10', c_ushort),
-                ('unk_11', c_ushort),
+                ('unk_10', c_ushort), # 0 or 65535
+                ('unk_11', c_ushort), # 0 or 65535
                 ('texture_indices', c_uint * 8),
                 ('unk_12', c_float),
                 ('unk_13', c_float),
-                ('unk_14', c_float),
-                ('unk_15', c_float), # glossnes level maybe
-                ('unk_16', c_float), # specular contrast ? set 1.0 to see
+                ('unk_14', c_float), # specular power ? 0.0 - 0.04
+                ('unk_15', c_float), # glossnes level ?
+                ('unk_16', c_float), # specular contrast ? 1.0 - 250
                 ('unk_17', c_float),
                 ('unk_18', c_float),
                 ('unk_19', c_float),
@@ -200,7 +200,7 @@ class MaterialData(Structure):
                 ('unk_29', c_float),
                 ('unk_30', c_float),
                 ('unk_31', c_float),
-                ('unk_32', c_float),
+                ('unk_normalmap_green_channel', c_float), # -1 or 1
                 ('unk_33', c_float),
                 ('unk_34', c_float),
                 ('unk_35', c_float),
