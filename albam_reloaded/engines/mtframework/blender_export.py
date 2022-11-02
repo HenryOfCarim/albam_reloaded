@@ -44,6 +44,7 @@ from ...lib.blender import (
     get_vertex_count_from_blender_objects,
     get_bone_indices_and_weights_per_vertex,
     get_uvs_per_vertex,
+    get_lmap_uvs_per_vertex,
     BoundingBox,
     get_model_bounding_box,
     get_model_bounding_sphere,
@@ -136,7 +137,6 @@ def export_mod156(parent_blender_object):
     if (bpy.context.scene.albam_export_settings.export_visible_bool == True):
         visible_meshes = [mesh for mesh in blender_meshes if mesh.visible_get()]
         blender_meshes = visible_meshes
-
 
     # only going one level deeper
     if not blender_meshes:
@@ -309,6 +309,7 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
     vertex_count = len(blender_mesh.vertices)
 
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
+    uvs_lmap_per_vertex = get_lmap_uvs_per_vertex(blender_mesh_object)
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
     max_bones_per_vertex = max({len(data) for data in weights_per_vertex.values()}, default=0)
@@ -323,6 +324,13 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
         uv_x = pack_half_float(uv_x)
         uv_y = pack_half_float(uv_y)
         uvs_per_vertex[vertex_index] = (uv_x, uv_y)
+
+    for vertex_index, (uv_x, uv_y) in uvs_lmap_per_vertex.items():
+        # flipping for dds textures
+        uv_y *= -1
+        uv_x = pack_half_float(uv_x)
+        uv_y = pack_half_float(uv_y)
+        uvs_lmap_per_vertex[vertex_index] = (uv_x, uv_y)
 
     vertices_array = (VF * vertex_count)()
     has_bones = hasattr(VF, 'bone_indices')
@@ -360,6 +368,8 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
             print('Missing normal in vertex {}, mesh {}'.format(vertex_index, mesh_index))
         vertex_struct.uv_x = uvs_per_vertex.get(vertex_index, (0, 0))[0] if uvs_per_vertex else 0
         vertex_struct.uv_y = uvs_per_vertex.get(vertex_index, (0, 0))[1] if uvs_per_vertex else 0
+        vertex_struct.uv2_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 0
+        vertex_struct.uv2_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 0
     return vertices_array
 
 
@@ -372,7 +382,10 @@ def _create_bone_palettes(blender_mesh_objects):
         armature = mesh.parent
         vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
         vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
-        bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
+        try:
+            bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
+        except:
+            print("Can't find vertex group in the armature")
 
         msg = "Mesh {} is influenced by more than 32 bones, which is not supported".format(mesh.name)
         assert len(bone_indices) <= MAX_BONE_PALETTE_SIZE, msg
