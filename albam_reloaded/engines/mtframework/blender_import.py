@@ -133,9 +133,6 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     me_ob.use_auto_smooth = True
 
     mesh_material = materials[mesh.material_index]
-    '''Old code
-    if not mesh.use_cast_shadows and mesh_material.use_cast_shadows:
-        mesh_material.use_cast_shadows = False'''
     if not mesh.use_cast_shadows and mesh_material.shadow_method: # code gets .use_cast_shadows from mesh's custom props
         mesh_material.shadow_method = 'NONE' # if use_cast_shadows is false and a material shadows is enabled, set it to NONE
     me_ob.materials.append(mesh_material)
@@ -157,16 +154,26 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     has_light_map = mod.materials_data_array[mesh.material_index].texture_indices[3] > 0
     has_normal_map = mod.materials_data_array[mesh.material_index].texture_indices[1] > 0
     if has_light_map:
-        if has_normal_map:
+        '''if has_normal_map:
             source_uvs = uvs_per_vertex_3
-        else:
-            source_uvs = uvs_per_vertex_2
+        else:'''
+        source_uvs = uvs_per_vertex_2
         uv_layer = me_ob.uv_layers.new(name="lightmap")
         per_loop_list = []
         for loop in me_ob.loops:
             offset = loop.vertex_index * 2
             per_loop_list.extend((source_uvs[offset], source_uvs[offset + 1]))
         uv_layer.data.foreach_set('uv', per_loop_list)
+    
+    if mesh_material["unk_flag_8_bones_vertex"]:
+        source_uvs = uvs_per_vertex_3       
+        uv_layer = me_ob.uv_layers.new(name="unknown_data")
+        per_loop_list = []
+        for loop in me_ob.loops:
+            offset = loop.vertex_index * 2
+            per_loop_list.extend((source_uvs[offset], source_uvs[offset + 1]))
+        uv_layer.data.foreach_set('uv', per_loop_list)
+
 
 
     # Saving unknown metadata for export

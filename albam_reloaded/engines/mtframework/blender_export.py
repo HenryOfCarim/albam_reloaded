@@ -45,6 +45,7 @@ from ...lib.blender import (
     get_bone_indices_and_weights_per_vertex,
     get_uvs_per_vertex,
     get_lmap_uvs_per_vertex,
+    get_data_uvs_per_vertex,
     BoundingBox,
     get_model_bounding_box,
     get_model_bounding_sphere,
@@ -310,6 +311,7 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
 
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
     uvs_lmap_per_vertex = get_lmap_uvs_per_vertex(blender_mesh_object)
+    uvs_data_per_vertex = {} # get_data_uvs_per_vertex(blender_mesh_object)
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
     max_bones_per_vertex = max({len(data) for data in weights_per_vertex.values()}, default=0)
@@ -331,6 +333,13 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
         uv_x = pack_half_float(uv_x)
         uv_y = pack_half_float(uv_y)
         uvs_lmap_per_vertex[vertex_index] = (uv_x, uv_y)
+
+    for vertex_index, (uv_x, uv_y) in uvs_data_per_vertex.items():
+        # flipping for dds textures
+        uv_y *= -1
+        uv_x = pack_half_float(uv_x)
+        uv_y = pack_half_float(uv_y)
+        uvs_data_per_vertex[vertex_index] = (uv_x, uv_y)
 
     vertices_array = (VF * vertex_count)()
     has_bones = hasattr(VF, 'bone_indices')
@@ -368,8 +377,10 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
             print('Missing normal in vertex {}, mesh {}'.format(vertex_index, mesh_index))
         vertex_struct.uv_x = uvs_per_vertex.get(vertex_index, (0, 0))[0] if uvs_per_vertex else 0
         vertex_struct.uv_y = uvs_per_vertex.get(vertex_index, (0, 0))[1] if uvs_per_vertex else 0
-        vertex_struct.uv2_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 0
-        vertex_struct.uv2_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 0
+        vertex_struct.uv2_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 65535
+        vertex_struct.uv2_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 65535
+        vertex_struct.uv3_x = uvs_data_per_vertex.get(vertex_index, (0, 0))[0] if uvs_data_per_vertex else 10021
+        vertex_struct.uv3_y = uvs_data_per_vertex.get(vertex_index, (0, 0))[1] if uvs_data_per_vertex else 65323
     return vertices_array
 
 

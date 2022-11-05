@@ -149,11 +149,11 @@ class MaterialData(Structure):
                 ('unk_flag_10', c_uint16, 1),
                 ('unk_flag_11', c_uint16, 1),
                 # Always set to zero since 8 bones is not yet supported
-                ('flag_8_bones_vertex', c_uint16, 1),
-                ('unk_flag_12', c_uint16, 1),
+                ('unk_flag_8_bones_vertex', c_uint16, 1),
                 ('unk_flag_13', c_uint16, 1),
                 ('unk_flag_14', c_uint16, 1),
                 ('unk_flag_15', c_uint16, 1),
+                ('unk_flag_16', c_uint16, 1),
                 ('unk_02_flag_01',  c_uint16, 1),#'unk_02', c_short
                 ('unk_02_flag_02',  c_uint16, 1),
                 ('unk_02_flag_03',  c_uint16, 1),
@@ -177,35 +177,35 @@ class MaterialData(Structure):
                 ('unk_07', c_ushort),
                 ('unk_08', c_ushort),
                 ('unk_09', c_ushort),
-                ('unk_10', c_ushort),
-                ('unk_11', c_ushort),
+                ('unk_10', c_ushort), # 0 or 65535
+                ('unk_11', c_ushort), # 0 or 65535
                 ('texture_indices', c_uint * 8),
-                ('unk_12', c_float),
-                ('unk_13', c_float),
-                ('unk_14', c_float),
-                ('unk_15', c_float), # glossnes level maybe
-                ('unk_16', c_float), # specular contrast ? set 1.0 to see
-                ('unk_17', c_float),
-                ('unk_18', c_float),
-                ('unk_19', c_float),
-                ('unk_20', c_float),
-                ('unk_21', c_float),
-                ('unk_22', c_float),
+                ('unk_f00', c_float),
+                ('unk_f01', c_float),
+                ('unk_f02', c_float), # specular power ? 0.0 - 0.04
+                ('unk_f03', c_float), # glossnes level ?
+                ('unk_f04', c_float), # specular contrast ? 1.0 - 250
+                ('unk_f05', c_float),
+                ('unk_f06', c_float),
+                ('unk_f07', c_float),
+                ('unk_f08', c_float),
+                ('unk_f09', c_float),
+                ('unk_f10', c_float),
                 ('unk_detail_factor', c_float),
-                ('unk_24', c_float),
-                ('unk_25', c_float),
-                ('unk_26', c_float),
-                ('unk_27', c_float),
-                ('unk_28', c_float),
-                ('unk_29', c_float),
-                ('unk_30', c_float),
-                ('unk_31', c_float),
-                ('unk_32', c_float),
-                ('unk_33', c_float),
-                ('unk_34', c_float),
-                ('unk_35', c_float),
-                ('unk_36', c_float),
-                ('unk_37', c_float),)
+                ('unk_f12', c_float),
+                ('unk_f13', c_float),
+                ('unk_f14', c_float),
+                ('unk_f15', c_float),
+                ('unk_f16', c_float),
+                ('unk_f17', c_float),
+                ('unk_f18', c_float),
+                ('unk_f19', c_float),
+                ('unk_normalmap_green_channel', c_float), # -1 or 1
+                ('unk_f21', c_float),
+                ('unk_f22', c_float),
+                ('unk_f23', c_float),
+                ('unk_f24', c_float),
+                ('unk_f25', c_float),)
 
 
 class WeightBound(Structure):
