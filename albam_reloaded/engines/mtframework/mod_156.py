@@ -276,8 +276,12 @@ class VertexFormat0(Structure):
                 ('uv_y', c_ushort),  # half float
                 ('uv2_x', c_ushort),  # half float
                 ('uv2_y', c_ushort),  # half float
-                ('uv3_x', c_ushort),  # half float
-                ('uv3_y', c_ushort),  # half float
+                #('uv3_x', c_ushort),  # half float argb vertex color for static meshes
+                #('uv3_y', c_ushort),  # half float argb vertex color for static meshes
+                ('vertex_color_r', c_ubyte),
+                ('vertex_color_g', c_ubyte),
+                ('vertex_color_b', c_ubyte),
+                ('vertex_color_a', c_ubyte),
                 )
 
 

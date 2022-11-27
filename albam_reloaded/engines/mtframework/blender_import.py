@@ -109,7 +109,8 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     vertex_normals = imported_vertices['normals']
     uvs_per_vertex = imported_vertices['uvs']
     uvs_per_vertex_2 = imported_vertices['uvs2']
-    uvs_per_vertex_3 = imported_vertices['uvs3']
+    #uvs_per_vertex_3 = imported_vertices['uvs3']
+    vertex_colors = imported_vertices['vertex_colors']
     weights_per_bone = imported_vertices['weights_per_bone']
     indices = get_indices_array(mod, mesh)
     indices = strip_triangles_to_triangles_list(indices)
@@ -154,9 +155,6 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     has_light_map = mod.materials_data_array[mesh.material_index].texture_indices[3] > 0
     has_normal_map = mod.materials_data_array[mesh.material_index].texture_indices[1] > 0
     if has_light_map:
-        '''if has_normal_map:
-            source_uvs = uvs_per_vertex_3
-        else:'''
         source_uvs = uvs_per_vertex_2
         uv_layer = me_ob.uv_layers.new(name="lightmap")
         per_loop_list = []
@@ -165,14 +163,27 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
             per_loop_list.extend((source_uvs[offset], source_uvs[offset + 1]))
         uv_layer.data.foreach_set('uv', per_loop_list)
     
-    if mesh_material["unk_flag_8_bones_vertex"]:
+    # vertex colors import   
+    if mesh_material.unk_flag_8_bones_vertex:
+        me_ob.vertex_colors.new(name="imported_colors")
+    
+        color_layer = me_ob.vertex_colors["imported_colors"]
+        for v in range(len(vertex_locations)):
+            i = v*4
+            r = vertex_colors[i]
+            g = vertex_colors[(i+1)]
+            b = vertex_colors[(i+2)]
+            a = vertex_colors[(i+3)]
+            color_layer.data[v].color = (r, g, b, a)
+
+        '''
         source_uvs = uvs_per_vertex_3       
         uv_layer = me_ob.uv_layers.new(name="unknown_data")
         per_loop_list = []
         for loop in me_ob.loops:
             offset = loop.vertex_index * 2
             per_loop_list.extend((source_uvs[offset], source_uvs[offset + 1]))
-        uv_layer.data.foreach_set('uv', per_loop_list)
+        uv_layer.data.foreach_set('uv', per_loop_list)'''
 
 
 
@@ -213,10 +224,14 @@ def _import_vertices_mod156(mod, mesh):
     # XXX: normalmap has uvs as well? and then this should be uv3?
     if mesh.vertex_format == 0:
         uvs2 = [(unpack_half_float(v.uv2_x), unpack_half_float(v.uv2_y) * -1) for v in vertices_array]
-        uvs3 = [(unpack_half_float(v.uv3_x), unpack_half_float(v.uv3_y) * -1) for v in vertices_array]
+        # from [0, 255] to [0.0, 1]
+        vertex_colors = map(lambda v: ((v.vertex_color_r / 255),
+                                       (v.vertex_color_g / 255),
+                                       (v.vertex_color_b / 255),
+                                       (v.vertex_color_a / 255)), vertices_array)
     else:
         uvs2 = []
-        uvs3 = []
+        vertex_colors = []
 
 
     return {'locations': list(locations),
@@ -224,7 +239,7 @@ def _import_vertices_mod156(mod, mesh):
             # TODO: investigate why uvs don't appear above the image in the UV editor
             'uvs': list(chain.from_iterable(uvs)),
             'uvs2': list(chain.from_iterable(uvs2)),
-            'uvs3': list(chain.from_iterable(uvs3)),
+            'vertex_colors': list(chain.from_iterable(vertex_colors)),
             'weights_per_bone': _get_weights_per_bone(mod, mesh, vertices_array)
             }
 
