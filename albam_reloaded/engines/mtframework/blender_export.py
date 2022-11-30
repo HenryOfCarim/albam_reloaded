@@ -322,6 +322,16 @@ def _get_tangents_per_vertex(blender_mesh):
         tangents.setdefault(loop.vertex_index, loop.tangent)
     return tangents
 
+def _pack_uv(uv_array):
+    packed_uv = uv_array
+    for vertex_index, (uv_x, uv_y) in uv_array.items():
+        # flipping for dds textures
+        uv_y *= -1
+        uv_x = pack_half_float(uv_x)
+        uv_y = pack_half_float(uv_y)
+        packed_uv[vertex_index] = (uv_x, uv_y)
+    return packed_uv
+
 
 def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_bounding_box):
     blender_mesh = blender_mesh_object.data
@@ -337,6 +347,10 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
 
     VF = VERTEX_FORMATS_TO_CLASSES[max_bones_per_vertex]
 
+    uvs_per_vertex = _pack_uv(uvs_per_vertex)
+    uvs_lmap_per_vertex = _pack_uv(uvs_lmap_per_vertex)
+
+    '''
     for vertex_index, (uv_x, uv_y) in uvs_per_vertex.items():
         # flipping for dds textures
         uv_y *= -1
@@ -350,7 +364,7 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
         uv_x = pack_half_float(uv_x)
         uv_y = pack_half_float(uv_y)
         uvs_lmap_per_vertex[vertex_index] = (uv_x, uv_y)
-
+    '''
     vertices_array = (VF * vertex_count)()
     has_bones = hasattr(VF, 'bone_indices')
 

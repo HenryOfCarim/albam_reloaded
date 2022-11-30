@@ -113,6 +113,7 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     vertex_colors = imported_vertices['vertex_colors']
     weights_per_bone = imported_vertices['weights_per_bone']
     indices = get_indices_array(mod, mesh)
+    _test_indices = indices
     indices = strip_triangles_to_triangles_list(indices)
     faces = chunks(indices, 3)
     weights_per_bone = imported_vertices['weights_per_bone']
@@ -168,7 +169,7 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
         me_ob.vertex_colors.new(name="imported_colors")
     
         color_layer = me_ob.vertex_colors["imported_colors"]
-        for v in range(len(vertex_locations)):
+        for v in indices:
             i = v*4
             r = vertex_colors[i]
             g = vertex_colors[(i+1)]
