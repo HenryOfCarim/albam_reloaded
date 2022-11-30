@@ -163,8 +163,8 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
             per_loop_list.extend((source_uvs[offset], source_uvs[offset + 1]))
         uv_layer.data.foreach_set('uv', per_loop_list)
     
-    # vertex colors import   
-    if mesh_material.unk_flag_8_bones_vertex:
+    # vertex colors import for static meshes 
+    if mesh.vertex_format == 0 and mesh_material.unk_flag_8_bones_vertex:
         me_ob.vertex_colors.new(name="imported_colors")
     
         color_layer = me_ob.vertex_colors["imported_colors"]

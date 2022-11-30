@@ -240,6 +240,24 @@ def export_mod156(parent_blender_object):
 
     return ExportedMod(mod, exported_materials)
 
+def _get_vertex_colours(blender_mesh):
+    mesh = blender_mesh.data
+    colors = []
+    try:
+        color_layer = mesh.vertex_colors["imported_colors"]
+    except:
+        return colors
+
+    i = 0
+    for poly in mesh.polygons:
+        for idx in poly.loop_indices:
+            r = color_layer.data[idx].color[0]
+            g = color_layer.data[idx].color[1]
+            b = color_layer.data[idx].color[2]
+            a = color_layer.data[idx].color[3]
+            #print(color_layer.data[idx].color[3])
+            colors.append((r,g,b,a))
+    return colors
 
 def _process_weights(weights_per_vertex, max_bones_per_vertex=4):
     """
@@ -308,10 +326,9 @@ def _get_tangents_per_vertex(blender_mesh):
 def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_bounding_box):
     blender_mesh = blender_mesh_object.data
     vertex_count = len(blender_mesh.vertices)
-
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
     uvs_lmap_per_vertex = get_lmap_uvs_per_vertex(blender_mesh_object)
-    colors_per_vertex = {} 
+    colors_per_vertex = _get_vertex_colours(blender_mesh_object) 
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
     max_bones_per_vertex = max({len(data) for data in weights_per_vertex.values()}, default=0)
