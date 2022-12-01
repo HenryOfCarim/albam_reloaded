@@ -332,6 +332,13 @@ def _pack_uv(uv_array):
         packed_uv[vertex_index] = (uv_x, uv_y)
     return packed_uv
 
+def _pack_colors(vertex_colors):
+    packed_colors = vertex_colors
+    i = 0 
+    for c in vertex_colors:
+        packed_colors[i] = (round(c[0]*255),round(c[1]*255),round(c[2]*255),round(c[3]*255))
+        i = i+1
+    return packed_colors
 
 def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_bounding_box):
     blender_mesh = blender_mesh_object.data
@@ -339,6 +346,7 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
     uvs_lmap_per_vertex = get_lmap_uvs_per_vertex(blender_mesh_object)
     colors_per_vertex = _get_vertex_colours(blender_mesh_object) 
+    colors_per_vertex = _pack_colors(colors_per_vertex )
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
     max_bones_per_vertex = max({len(data) for data in weights_per_vertex.values()}, default=0)
@@ -349,7 +357,7 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
 
     uvs_per_vertex = _pack_uv(uvs_per_vertex)
     uvs_lmap_per_vertex = _pack_uv(uvs_lmap_per_vertex)
-
+    
     '''
     for vertex_index, (uv_x, uv_y) in uvs_per_vertex.items():
         # flipping for dds textures

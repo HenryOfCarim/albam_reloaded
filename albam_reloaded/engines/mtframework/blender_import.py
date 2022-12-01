@@ -113,7 +113,6 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     vertex_colors = imported_vertices['vertex_colors']
     weights_per_bone = imported_vertices['weights_per_bone']
     indices = get_indices_array(mod, mesh)
-    _test_indices = indices
     indices = strip_triangles_to_triangles_list(indices)
     faces = chunks(indices, 3)
     weights_per_bone = imported_vertices['weights_per_bone']
@@ -156,6 +155,11 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     has_light_map = mod.materials_data_array[mesh.material_index].texture_indices[3] > 0
     has_normal_map = mod.materials_data_array[mesh.material_index].texture_indices[1] > 0
     if has_light_map:
+        '''
+        if has_normal_map:
+            source_uvs = uvs_per_vertex_3
+        else:
+        '''
         source_uvs = uvs_per_vertex_2
         uv_layer = me_ob.uv_layers.new(name="lightmap")
         per_loop_list = []
@@ -184,8 +188,8 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
         for loop in me_ob.loops:
             offset = loop.vertex_index * 2
             per_loop_list.extend((source_uvs[offset], source_uvs[offset + 1]))
-        uv_layer.data.foreach_set('uv', per_loop_list)'''
-
+        uv_layer.data.foreach_set('uv', per_loop_list)
+        '''
 
 
     # Saving unknown metadata for export
