@@ -111,7 +111,6 @@ class ALBAM_PT_CustomMeshOptions(bpy.types.Panel):
         return bool(context.mesh)
 
 
-
 class ALBAM_PT_ImportExportPanel(bpy.types.Panel):
     '''UI Albam subpanel in 3D view'''
     bl_space_type = 'VIEW_3D'
@@ -128,7 +127,7 @@ class ALBAM_PT_ImportExportPanel(bpy.types.Panel):
         layout.operator('albam_import.item', text='Import')
         layout.prop_search(scn, 'albam_item_to_export', scn, 'albam_items_imported', text='select')
         layout.operator('albam_export.item', text='Export')
-        layout.prop(export_settings, "export_visible_bool", text="Export visible meshes only ")
+        layout.prop(export_settings, "export_visible_bool", text="Export visible meshes only")
 
 
 class ALBAM_PT_ToolsPanel(bpy.types.Panel):
@@ -141,11 +140,15 @@ class ALBAM_PT_ToolsPanel(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
+        scn = context.scene
         layout = self.layout
         layout.operator('albam_tools.fix_leaked_texures', text="Fix leaked textures")
         layout.operator('albam_tools.select_invalid_meshes', text="Select invalid meshes")
         layout.operator('albam_tools.remove_empty_vertex_groups', text="Remove empty vertex groups")
-
+        layout.operator('albam_tools.transfer_normals', text="Transfer normals")
+        #layout.prop_search(scn, 'albam_item_to_export', scn, 'albam_items_imported', text='select')
+        layout.prop(scn, "albam_scene_meshes", text="from")
+        #layout.prop_search(scn, 'albam_scene_meshes', bpy.data, 'meshes', text='from')
 
 class AlbamImportOperator(bpy.types.Operator):
     '''Import button operator'''
@@ -257,6 +260,7 @@ class AlbamFixLeakedTexuresOperator(bpy.types.Operator):
             show_message_box(message="There is no mesh in the selection")
         return {'FINISHED'}
 
+
 class AlbamSelectInvalidMeshesOperator(bpy.types.Operator):
     '''Select meshes with more than 32 influences'''
     bl_idname = "albam_tools.select_invalid_meshes"
@@ -277,6 +281,7 @@ class AlbamSelectInvalidMeshesOperator(bpy.types.Operator):
         
         
 class AlbamRemoveEmptyVertexGroupsOperator(bpy.types.Operator):
+    '''Remove vertex groups with 0 skin weighs'''
     bl_idname = "albam_tools.remove_empty_vertex_groups"
     bl_label = "remove empty vertex groups"
     
@@ -303,3 +308,35 @@ class AlbamRemoveEmptyVertexGroupsOperator(bpy.types.Operator):
                     ob.vertex_groups.remove(ob.vertex_groups[i])
         show_message_box(message="Removing complete")
         return {'FINISHED'}
+
+
+class AlbamTransferNormalsOperator(bpy.types.Operator):
+    '''Transfer normals from a unified mesh to its parts'''
+    bl_idname = "albam_tools.transfer_normals"
+    bl_label = "transfer normals"
+
+    @classmethod
+    def poll(self, context):  # pragma: no cover
+        source_obj = context.scene.albam_scene_meshes
+        #if not bpy.context.selected_objects or source_obj.type == 'MESH':
+        if source_obj == None or not bpy.context.selected_objects:
+            return False
+        if source_obj.type != 'MESH':
+            return False
+        return True
+    
+    def execute(self, context):
+        selection = bpy.context.selected_objects
+        source_obj = context.scene.albam_scene_meshes
+        #for obj in bpy.data.objects:
+        #     if obj.type == 'MESH':
+        #        if obj.data == source_obj:
+        #            source_obj = obj
+
+        target_objs = [obj for obj in selection if obj.type == 'MESH']
+        if target_objs  and source_obj:
+            transfer_normals(source_obj, target_objs)
+        else:
+            show_message_box(message="There is no mesh in selection")
+        return {'FINISHED'}
+        

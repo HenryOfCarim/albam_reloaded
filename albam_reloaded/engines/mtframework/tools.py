@@ -80,3 +80,14 @@ def select_invalid_meshes_operator(scene_meshes):
         show_message_box(message="Meshes with more than 32 bone influences selected")
     else:
         show_message_box(message="There is no invalid mesh")
+
+
+def transfer_normals(source_obj, target_objs):
+    for obj in target_objs:
+        if obj != source_obj:
+            modifier = obj.modifiers.new(name="Transfer Normals", type='DATA_TRANSFER')
+            modifier.use_loop_data = True
+            modifier.data_types_loops = {'CUSTOM_NORMAL'}
+            modifier.object = source_obj
+            bpy.context.view_layer.objects.active  = obj
+            bpy.ops.object.modifier_apply(modifier=modifier.name)
