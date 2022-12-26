@@ -180,32 +180,32 @@ class MaterialData(Structure):
                 ('unk_10', c_ushort), # 0 or 65535
                 ('unk_11', c_ushort), # 0 or 65535
                 ('texture_indices', c_uint * 8),
-                ('unk_12', c_float),
-                ('unk_13', c_float),
-                ('unk_14', c_float), # specular power ? 0.0 - 0.04
-                ('unk_15', c_float), # glossnes level ?
-                ('unk_16', c_float), # specular contrast ? 1.0 - 250
-                ('unk_17', c_float),
-                ('unk_18', c_float),
-                ('unk_19', c_float),
-                ('unk_20', c_float),
-                ('unk_21', c_float),
-                ('unk_22', c_float),
+                ('unk_f_01', c_float),
+                ('unk_f_02', c_float),
+                ('unk_f_03', c_float), # specular power ? 0.0 - 0.04
+                ('unk_f_04', c_float), # glossnes level ?
+                ('unk_f_05', c_float), # specular contrast ? 1.0 - 250
+                ('unk_f_06', c_float),
+                ('unk_f_07', c_float),
+                ('unk_f_08', c_float),
+                ('unk_f_09', c_float),
+                ('unk_f_10', c_float),
+                ('unk_f_11', c_float),
                 ('unk_detail_factor', c_float),
-                ('unk_24', c_float),
-                ('unk_25', c_float),
-                ('unk_26', c_float),
-                ('unk_27', c_float),
-                ('unk_28', c_float),
-                ('unk_29', c_float),
-                ('unk_30', c_float),
-                ('unk_31', c_float),
+                ('unk_f_13', c_float),
+                ('unk_f_14', c_float),
+                ('unk_f_15', c_float),
+                ('unk_f_16', c_float),
+                ('unk_f_17', c_float),
+                ('unk_f_18', c_float),
+                ('unk_f_19', c_float),
+                ('unk_f_20', c_float),
                 ('unk_normalmap_green_channel', c_float), # -1 or 1
-                ('unk_33', c_float),
-                ('unk_34', c_float),
-                ('unk_35', c_float),
-                ('unk_36', c_float),
-                ('unk_37', c_float),)
+                ('unk_f_22', c_float),
+                ('unk_f_23', c_float),
+                ('unk_f_24', c_float),
+                ('unk_f_25', c_float),
+                ('unk_f_26', c_float),)
 
 
 class WeightBound(Structure):
