@@ -55,10 +55,10 @@ class RE5triangle(Structure):
                 )
 
 class RE5vertices(Structure):
-    _fields_ = (('position_x', c_short),
-                ('position_y', c_short),
-                ('position_z', c_short),
-                ('position_w', c_short),
+    _fields_ = (('position_x', c_float),
+                ('position_y', c_float),
+                ('position_z', c_float),
+                ('position_w', c_float),
                 )
 
 class SBC1(DynamicStructure):
@@ -70,7 +70,7 @@ class SBC1(DynamicStructure):
                 ('mvtc', c_uint),
                 ('facecount', c_uint),
                 ('ncount', c_uint),
-                ('bbox', c_uint * 12),
+                ('bbox', c_float * 6),
                 ('boxes', lambda s: RE5v4quad * s.mvtc),
                 ('groups', lambda s: SBCgroup * s.boxcount),
                 ('triangles', lambda s: RE5triangle * s.facecount),

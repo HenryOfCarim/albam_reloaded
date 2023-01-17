@@ -57,7 +57,7 @@ def import_arc(blender_object, file_path, **kwargs):
                  for f in files if f.endswith('.sbc')]
 
     mod_folders = [os.path.dirname(mod_file.split(out)[-1]) for mod_file in mod_files]
-    mod_files.append(sbc_files[1])
+    mod_files.append(sbc_files[1]) # testing 
 
     return {'files': mod_files,
             'kwargs': {'parent': blender_object,
@@ -72,7 +72,10 @@ def import_sbc(blender_object, file_path, **kwargs):
     base_dir = kwargs.get('base_dir') # full path to _extracted folder
 
     sbc = SBC1(file_path=file_path)
-    boxes = [q for q in sbc.boxes]
+    bbox = [f for f in sbc.bbox]
+    boxes = [ b for b in sbc.boxes]
+    faces = [t for t in sbc.triangles]
+    vertices = [v for v in sbc.vertices ]
     print("it works somwhow")
 
 
