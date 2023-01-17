@@ -74,7 +74,8 @@ def import_sbc(blender_object, file_path, **kwargs):
     sbc = SBC1(file_path=file_path)
     bbox = [f for f in sbc.bbox]
     boxes = [ b for b in sbc.boxes]
-    faces = [t for t in sbc.triangles]
+    groups = [g for g in sbc.groups]
+    triangles = [t for t in sbc.triangles]
     vertices = [v for v in sbc.vertices ]
     print("it works somwhow")
 

@@ -30,9 +30,9 @@ class SBCgroup(Structure):
                 ('offset_b', c_uint),
                 ('vstart', c_uint),
                 ('group_id', c_uint),
-                ('box_a', c_float * 8),
-                ('box_b', c_float* 8),
-                ('box_c', c_float * 8),
+                ('box_a', c_float * 6),
+                ('box_b', c_float* 6),
+                ('box_c', c_float * 6),
                 ('id_a', c_ushort),
                 ('id_b', c_ushort),
                 )
@@ -74,6 +74,6 @@ class SBC1(DynamicStructure):
                 ('boxes', lambda s: RE5v4quad * s.mvtc),
                 ('groups', lambda s: SBCgroup * s.boxcount),
                 ('triangles', lambda s: RE5triangle * s.facecount),
-                ('vertices', lambda s: RE5vertices * s.ncount)
+                ('vertices', lambda s: RE5vertices * s.ncount),
                 )
 
