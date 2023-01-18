@@ -86,6 +86,7 @@ def unregister():
     del bpy.types.Scene.albam_items_imported
     del bpy.types.Object.albam_imported_item
     del bpy.types.Scene.albam_export_settings
+    del bpy.types.Scene.albam_scene_meshes
 
 if __name__ == "__main__":
     register()
