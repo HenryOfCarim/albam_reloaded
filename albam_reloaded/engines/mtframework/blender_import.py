@@ -74,10 +74,30 @@ def import_sbc(blender_object, file_path, **kwargs):
     sbc = SBC1(file_path=file_path)
     bbox = [f for f in sbc.bbox]
     boxes = [ b for b in sbc.boxes]
+    indices = []
+    vers = []
     groups = [g for g in sbc.groups]
     triangles = [t for t in sbc.triangles]
-    vertices = [v for v in sbc.vertices ]
-    print("it works somwhow")
+    for i in range(len(triangles)):
+        f = (triangles[i].a, triangles[i].b, triangles[i].c)
+        indices.append(f)
+    #indices = strip_triangles_to_triangles_list(indices)
+    #faces = chunks(indices, 3)
+    vertices = [v for v in sbc.vertices]
+    for v in vertices:
+        ver = (v.position_x/100, v.position_z/-100, v.position_y/100) # change scale and orientation for blender
+        vers.append(ver)
+
+    # create a mesh data
+    mesh_data = bpy.data.meshes.new("sbs_data_test")
+    mesh_data.from_pydata(vers, [], indices)
+
+    # create an object
+    mesh_obj = bpy.data.objects.new("sbc_object", mesh_data)
+
+    # link the object with a scene
+    bpy.context.collection.objects.link(mesh_obj)
+    print("it works somehow")
 
 
 @blender_registry.register_function('import', identifier=b'MOD\x00')
