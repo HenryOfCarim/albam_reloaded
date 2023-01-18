@@ -7,7 +7,8 @@ except ImportError:
     bpy = Mock()
 
 from .registry import blender_registry
-from .engines.mtframework.tools import *
+from .tools.tools import *
+from .tools.rename_bones import rename_bones
 
 class AlbamImportedItemName(bpy.types.PropertyGroup): #
     '''Class for  bpy.types.Scene.albam_items_imported __init__.py registration
@@ -145,8 +146,8 @@ class ALBAM_PT_ToolsPanel(bpy.types.Panel):
         layout.operator('albam_tools.fix_leaked_texures', text="Fix leaked textures")
         layout.operator('albam_tools.select_invalid_meshes', text="Select invalid meshes")
         layout.operator('albam_tools.remove_empty_vertex_groups', text="Remove empty vertex groups")
+        layout.operator('albam_tools.rename_bones', text="Rename bones")
         layout.operator('albam_tools.transfer_normals', text="Transfer normals")
-        #layout.prop_search(scn, 'albam_item_to_export', scn, 'albam_items_imported', text='select')
         layout.prop(scn, "albam_scene_meshes", text="from")
         #layout.prop_search(scn, 'albam_scene_meshes', bpy.data, 'meshes', text='from')
 
@@ -227,9 +228,6 @@ class AlbamExportOperator(bpy.types.Operator):
     def execute(self, context):
         object_name = context.scene.albam_item_to_export # '_exported_archive_name_.arc'
         obj = bpy.data.objects[object_name] 
-        #print("export obj is {}".format(obj))
-        #for objs in bpy.data.objects:
-        #    print(objs.name)
         id_magic = obj.albam_imported_item['data'][:4]
         func = blender_registry.export_registry.get(id_magic)
         if not func:
@@ -308,6 +306,28 @@ class AlbamRemoveEmptyVertexGroupsOperator(bpy.types.Operator):
                     ob.vertex_groups.remove(ob.vertex_groups[i])
         show_message_box(message="Removing complete")
         return {'FINISHED'}
+
+
+class AlbamRenameBonesOperator(bpy.types.Operator):
+    '''Rename bones in the characters armature'''
+    bl_idname = "albam_tools.rename_bones"
+    bl_label = "rename character bones"
+
+    @classmethod
+    def poll(self, context):
+        selection = bpy.context.selected_objects
+        armature = [obj for obj in selection if obj.type == 'ARMATURE']
+        if not armature:
+            return False
+        return True
+    
+    def execute(self, context):
+        selection = bpy.context.selected_objects
+        armature = [obj for obj in selection if obj.type == 'ARMATURE']
+        #bones = armature[0].data.bones
+        #print(bones)
+        rename_bones(armature[0])
+        return{'FINISHED'}
 
 
 class AlbamTransferNormalsOperator(bpy.types.Operator):

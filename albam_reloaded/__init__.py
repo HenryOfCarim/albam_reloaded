@@ -35,6 +35,7 @@ classes = ( AlbamImportedItem,
             AlbamFixLeakedTexuresOperator,
             AlbamSelectInvalidMeshesOperator,
             AlbamRemoveEmptyVertexGroupsOperator,
+            AlbamRenameBonesOperator,
             AlbamTransferNormalsOperator,
            )
 

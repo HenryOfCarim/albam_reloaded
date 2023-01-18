@@ -559,7 +559,7 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
         bpy.ops.object.mode_set(mode='OBJECT')
     # deselect all objects
     for i in bpy.context.scene.objects:
-        i.select_set(False) # my change
+        i.select_set(False)
     bpy.context.collection.objects.link(armature_ob)
     bpy.context.view_layer.objects.active = armature_ob
     armature_ob.select_set(True)
@@ -589,6 +589,7 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
             blender_bone.parent = blender_bones[bone.parent_index]
 
         blender_bone.tail = Vector((blender_bone.head[0], blender_bone.head[1], blender_bone.head[2] + 0.01))
+        blender_bone['mirror index'] = bone.mirror_index
         blender_bones.append(blender_bone)
 
 

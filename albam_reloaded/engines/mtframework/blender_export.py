@@ -5,8 +5,8 @@ from itertools import chain
 import math
 import ntpath
 import os
-import re
-import struct
+#import re
+#import struct
 import tempfile
 
 try:
@@ -136,7 +136,6 @@ def export_mod156(parent_blender_object):
     if (bpy.context.scene.albam_export_settings.export_visible_bool == True):
         visible_meshes = [mesh for mesh in blender_meshes if mesh.visible_get()]
         blender_meshes = visible_meshes
-
 
     # only going one level deeper
     if not blender_meshes:
