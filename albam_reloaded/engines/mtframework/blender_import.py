@@ -81,6 +81,10 @@ def _unpack_bbox (min, max):
     ]
     return unpack_bbox
 
+def _scale_bbox(box):
+    scaled = []
+    scaled = (box[0]/100, box[2]/-100, box[1]/100)
+    return scaled
 
 @blender_registry.register_function('import', identifier=b'SBC1')
 def import_sbc(blender_object, file_path, **kwargs):
@@ -90,21 +94,34 @@ def import_sbc(blender_object, file_path, **kwargs):
 
     #boxes
     boxes = [b for b in sbc.boxes]
-    box_verts =[]
-    box_indices = [(0, 1, 2, 3),
-                    (7, 6, 5, 4),
-                    (7, 4, 3, 2),
-                    (1, 0, 5, 6),
-                    (6, 7, 2, 1),
-                    (0, 3, 4, 5),
+    box_indices = [(3, 2, 1, 0),
+                    (4, 5, 6, 7),
+                    (2, 3, 4, 7),
+                    (6, 5, 0, 1),
+                    (1, 2, 7, 6),
+                    (5, 4, 3, 0),
                     ]
     test_box = boxes[0]
     i = 0
     for b in boxes:
-        box_verices = _unpack_bbox(b.a_min , b.a_max)
+        name = _create_mesh_name(i, file_path)
+        #ba_min = (b.a_min[0]/100, b.a_min[2]/-100, b.a_min[1]/100)
+        #ba_max = (b.a_max[0]/100, b.a_max[2]/-100, b.a_max[1]/100)
+        ba_min = _scale_bbox(b.a_min)
+        ba_max = _scale_bbox(b.a_max)
+        bb_min = _scale_bbox(b.b_min)
+        bb_max = _scale_bbox(b.b_max)
+
+        box_verices_a = _unpack_bbox(ba_min , ba_max)
+        box_verices_b = _unpack_bbox(bb_min , bb_max)
         b_mesh_data = bpy.data.meshes.new("sbs_boxes_test" + str(i))
-        b_mesh_data.from_pydata(box_verices, [], box_indices)
-        b_mesh_obj = bpy.data.objects.new(("sbc_boxes"+ str(i)), b_mesh_data)
+        b_mesh_data.from_pydata(box_verices_a, [], box_indices)
+        b_mesh_obj = bpy.data.objects.new(name + '_a' , b_mesh_data)
+        bpy.context.collection.objects.link(b_mesh_obj)
+
+        b_mesh_data = bpy.data.meshes.new("sbs_boxes_test" + str(i))
+        b_mesh_data.from_pydata(box_verices_b, [], box_indices)
+        b_mesh_obj = bpy.data.objects.new(name + '_b' , b_mesh_data)
         bpy.context.collection.objects.link(b_mesh_obj)
         i = i + 1
 
@@ -112,6 +129,7 @@ def import_sbc(blender_object, file_path, **kwargs):
     indices = []
     vers = []
     groups = [g for g in sbc.groups]
+
     triangles = [t for t in sbc.triangles]
     for i in range(len(triangles)):
         f = (triangles[i].a, triangles[i].b, triangles[i].c)
