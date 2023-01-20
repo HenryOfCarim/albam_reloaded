@@ -66,14 +66,49 @@ def import_arc(blender_object, file_path, **kwargs):
                        },
             }
 
+def _unpack_bbox (min, max):
+    min_x, min_y, min_z = min[0], min[1], min[2]
+    max_x, max_y, max_z = max[0], max[1], max[2]
+    unpack_bbox = [
+                    (max_x, max_y, max_z),
+                    (min_x, max_y, max_z),
+                    (min_x, min_y, max_z),
+                    (max_x, min_y, max_z),
+                    (max_x, min_y, min_z),
+                    (max_x, max_y, min_z),
+                    (min_x, max_y, min_z),
+                    (min_x, min_y, min_z),
+    ]
+    return unpack_bbox
+
 
 @blender_registry.register_function('import', identifier=b'SBC1')
 def import_sbc(blender_object, file_path, **kwargs):
     base_dir = kwargs.get('base_dir') # full path to _extracted folder
-
     sbc = SBC1(file_path=file_path)
     bbox = [f for f in sbc.bbox]
-    boxes = [ b for b in sbc.boxes]
+
+    #boxes
+    boxes = [b for b in sbc.boxes]
+    box_verts =[]
+    box_indices = [(0, 1, 2, 3),
+                    (7, 6, 5, 4),
+                    (7, 4, 3, 2),
+                    (1, 0, 5, 6),
+                    (6, 7, 2, 1),
+                    (0, 3, 4, 5),
+                    ]
+    test_box = boxes[0]
+    i = 0
+    for b in boxes:
+        box_verices = _unpack_bbox(b.a_min , b.a_max)
+        b_mesh_data = bpy.data.meshes.new("sbs_boxes_test" + str(i))
+        b_mesh_data.from_pydata(box_verices, [], box_indices)
+        b_mesh_obj = bpy.data.objects.new(("sbc_boxes"+ str(i)), b_mesh_data)
+        bpy.context.collection.objects.link(b_mesh_obj)
+        i = i + 1
+
+    #triangles
     indices = []
     vers = []
     groups = [g for g in sbc.groups]
@@ -88,11 +123,11 @@ def import_sbc(blender_object, file_path, **kwargs):
         ver = (v.position_x/100, v.position_z/-100, v.position_y/100) # change scale and orientation for blender
         vers.append(ver)
 
-    # create a mesh data
+    # create a mesh data for triangles
     mesh_data = bpy.data.meshes.new("sbs_data_test")
     mesh_data.from_pydata(vers, [], indices)
 
-    # create an object
+    # create an object for triangles
     mesh_obj = bpy.data.objects.new("sbc_object", mesh_data)
 
     # link the object with a scene

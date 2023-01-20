@@ -9,10 +9,10 @@ from ...lib.structure import DynamicStructure
 from ...registry import blender_registry
 
 class RE5v4quad(Structure):
-    _fields_ = (('a',c_float * 4),
-                ('b',c_float * 4),
-                ('c',c_float * 4),
-                ('d',c_float * 4),
+    _fields_ = (('a_min',c_float * 4),
+                ('a_max',c_float * 4),
+                ('b_min',c_float * 4),
+                ('b_max',c_float * 4),
                 ('id_a',c_ubyte),
                 ('id_b',c_ubyte),
                 ('id_c',c_ubyte),
