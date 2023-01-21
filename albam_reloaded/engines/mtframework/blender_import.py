@@ -86,6 +86,13 @@ def _scale_bbox(box):
     scaled = (box[0]/100, box[2]/-100, box[1]/100)
     return scaled
 
+def _transform_coordinates(verts):
+    transformed = []
+    for v in verts:
+        vert = (v.position_x/100, v.position_z/-100, v.position_y/100)
+        transformed.append(vert)
+    return transformed
+
 @blender_registry.register_function('import', identifier=b'SBC1')
 def import_sbc(blender_object, file_path, **kwargs):
     base_dir = kwargs.get('base_dir') # full path to _extracted folder
@@ -93,6 +100,7 @@ def import_sbc(blender_object, file_path, **kwargs):
     bbox = [f for f in sbc.bbox]
 
     #boxes
+    '''
     boxes = [b for b in sbc.boxes]
     box_indices = [(3, 2, 1, 0),
                     (4, 5, 6, 7),
@@ -101,7 +109,6 @@ def import_sbc(blender_object, file_path, **kwargs):
                     (1, 2, 7, 6),
                     (5, 4, 3, 0),
                     ]
-    test_box = boxes[0]
     i = 0
     for b in boxes:
         name = _create_mesh_name(i, file_path)
@@ -124,26 +131,56 @@ def import_sbc(blender_object, file_path, **kwargs):
         b_mesh_obj = bpy.data.objects.new(name + '_b' , b_mesh_data)
         bpy.context.collection.objects.link(b_mesh_obj)
         i = i + 1
-
+    '''
     #triangles
     indices = []
     vers = []
     groups = [g for g in sbc.groups]
-
     triangles = [t for t in sbc.triangles]
+    
     for i in range(len(triangles)):
         f = (triangles[i].a, triangles[i].b, triangles[i].c)
         indices.append(f)
-    #indices = strip_triangles_to_triangles_list(indices)
-    #faces = chunks(indices, 3)
+
+    # vertices index offset for each collision mesh
+    ofs_verts = []
+    for g in groups:
+        ofs_verts.append(g.vstart)
+    
+    # triangles index offset for each collision mehs
+    ofs_ga =[]
+    for g in groups:
+        ofs_ga.append(g.offset_a)
+    
+    cur_triag = []
+    cur_verts = []
+    counter = 0
     vertices = [v for v in sbc.vertices]
-    for v in vertices:
-        ver = (v.position_x/100, v.position_z/-100, v.position_y/100) # change scale and orientation for blender
-        vers.append(ver)
+    vers = _transform_coordinates(vertices)
+    for gi in range(len(groups)-1):
+        ofc = ofs_verts[gi]
+        for i in range(ofs_ga[gi], ofs_ga[gi + 1]):
+            cur_idx = indices[i]
+            ofc_triangle = ()
+            ofc_triangle = (cur_idx[0] + ofc, cur_idx[1] + ofc, cur_idx[2] + ofc)
+            cur_triag.append(ofc_triangle)
+    '''            
+    for i in range(13, 336): # offset a[0] - a[1]
+        ofc = ofs_verts[0]
+        cur_ind  = indices[i]
+        end_ind = cur_ind 
+        #end_ind = (cur_ind[0] + ofc, cur_ind[1] + ofc, cur_ind[2] + ofc)
+        cur_triag.append(end_ind)
+    cur_verts = vers[14:]
+    '''
+
+    #for v in vertices:
+    #   ver = (v.position_x/100, v.position_z/-100, v.position_y/100) # change scale and orientation for blender
+    #    vers.append(ver)
 
     # create a mesh data for triangles
     mesh_data = bpy.data.meshes.new("sbs_data_test")
-    mesh_data.from_pydata(vers, [], indices)
+    mesh_data.from_pydata(vers, [], cur_triag)
 
     # create an object for triangles
     mesh_obj = bpy.data.objects.new("sbc_object", mesh_data)
