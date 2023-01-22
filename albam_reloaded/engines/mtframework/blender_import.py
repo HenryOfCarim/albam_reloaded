@@ -158,8 +158,6 @@ def import_sbc(blender_object, file_path, **kwargs):
     vers = _transform_coordinates(vertices)
     for gi in range(len(groups)):
         ofc = ofs_verts[gi]
-        #last_a = ofs_ga[gi + 1]
-        
         if gi == (len(groups)-1):
             last_a = sbc.facecount
         else:
@@ -172,11 +170,12 @@ def import_sbc(blender_object, file_path, **kwargs):
             cur_triag.append(ofc_triangle)
             
     # create a mesh data for triangles
-    mesh_data = bpy.data.meshes.new("sbs_data_test")
+    name = os.path.basename(file_path)
+    mesh_data = bpy.data.meshes.new(name + "_mesh")
     mesh_data.from_pydata(vers, [], cur_triag)
 
     # create an object for triangles
-    mesh_obj = bpy.data.objects.new("sbc_object", mesh_data)
+    mesh_obj = bpy.data.objects.new(name, mesh_data)
 
     # link the object with a scene
     bpy.context.collection.objects.link(mesh_obj)
