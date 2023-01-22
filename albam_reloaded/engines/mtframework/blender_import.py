@@ -57,8 +57,8 @@ def import_arc(blender_object, file_path, **kwargs):
                  for f in files if f.endswith('.sbc')]
 
     mod_folders = [os.path.dirname(mod_file.split(out)[-1]) for mod_file in mod_files]
-    mod_files.append(sbc_files[1]) # testing 
-
+    mod_files.extend(sbc_files)
+    #mod_files.append(sbc_files[1])
     return {'files': mod_files,
             'kwargs': {'parent': blender_object,
                        'mod_folder': mod_folders[0],  # XXX will break if mods are in different folders
@@ -154,30 +154,23 @@ def import_sbc(blender_object, file_path, **kwargs):
     
     cur_triag = []
     cur_verts = []
-    counter = 0
     vertices = [v for v in sbc.vertices]
     vers = _transform_coordinates(vertices)
-    for gi in range(len(groups)-1):
+    for gi in range(len(groups)):
         ofc = ofs_verts[gi]
-        for i in range(ofs_ga[gi], ofs_ga[gi + 1]):
+        #last_a = ofs_ga[gi + 1]
+        
+        if gi == (len(groups)-1):
+            last_a = sbc.facecount
+        else:
+            last_a = ofs_ga[gi + 1]
+        
+        for i in range(ofs_ga[gi], last_a):
             cur_idx = indices[i]
             ofc_triangle = ()
             ofc_triangle = (cur_idx[0] + ofc, cur_idx[1] + ofc, cur_idx[2] + ofc)
             cur_triag.append(ofc_triangle)
-    '''            
-    for i in range(13, 336): # offset a[0] - a[1]
-        ofc = ofs_verts[0]
-        cur_ind  = indices[i]
-        end_ind = cur_ind 
-        #end_ind = (cur_ind[0] + ofc, cur_ind[1] + ofc, cur_ind[2] + ofc)
-        cur_triag.append(end_ind)
-    cur_verts = vers[14:]
-    '''
-
-    #for v in vertices:
-    #   ver = (v.position_x/100, v.position_z/-100, v.position_y/100) # change scale and orientation for blender
-    #    vers.append(ver)
-
+            
     # create a mesh data for triangles
     mesh_data = bpy.data.meshes.new("sbs_data_test")
     mesh_data.from_pydata(vers, [], cur_triag)
