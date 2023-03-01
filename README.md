@@ -15,6 +15,10 @@ Run Blender
 Go to `Edit>Preference>Add-ons>Install`, select downloaded zip archive and press `Install Add-on`
 Turn it on after installing
 
+Basic overview of the addon and its limitation you can find on the [wiki page](https://github.com/HenryOfCarim/albam_reloaded/wiki)
+
+Basic demonstration of modding process is here [youtube playlist link](https://www.youtube.com/playlist?list=PLylhrXLaRiau0Q27cBihqJIkgxQr-CEUh)
+
 # Contacts
 If you are willing to help in development or get quick help you can visit our discord server https://discord.gg/69sphky9UX
 
