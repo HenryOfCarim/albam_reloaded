@@ -41,6 +41,7 @@ from ...lib.blender import (
     get_textures_from_the_material,
     get_textures_from_blender_objects,
     get_materials_from_blender_objects,
+    get_vertices_data,
     get_vertex_count_from_blender_objects,
     get_bone_indices_and_weights_per_vertex,
     get_uvs_per_vertex,
@@ -240,10 +241,10 @@ def export_mod156(parent_blender_object):
     return ExportedMod(mod, exported_materials)
 
 
-def _process_weights(weights_per_vertex, max_bones_per_vertex=4):
+def _process_weights(influence_list, max_bones_per_vertex=4):
+    #Given a dict `weights_per_vertex` with vertex_indices as keys and
     """
-    Given a dict `weights_per_vertex` with vertex_indices as keys and
-    a list of tuples (bone_index, weight_value), iterate over values
+    Given an influence iterable (bone_index, weight_value), iterate over values
     and process them to make them mtframework friendly:
     1) Limit bone weights: keep only up to `max_bones` elements, discarding the pairs that have the
        lowest influence. This is actually a limitation in albam for lack of
@@ -252,90 +253,83 @@ def _process_weights(weights_per_vertex, max_bones_per_vertex=4):
     3) float to byte: convert the (-1.0, 1.0) to (0, 255)
     """
     # TODO: move to mtframework.utils
-    new_weights_per_vertex = {}
+    # new_weights_per_vertex = {}
     limit = max_bones_per_vertex
-    for vertex_index, influence_list in weights_per_vertex.items():
-        # limit max bones
-        if len(influence_list) > limit:
-            influence_list = sorted(influence_list, key=lambda t: t[1])[-limit:]
+    #for vertex_index, influence_list in weights_per_vertex.items():
+    # limit max bones
+    if len(influence_list) > limit:
+        influence_list = sorted(influence_list, key=lambda t: t[1])[-limit:]
 
-        # normalize
-        weights = [t[1] for t in influence_list]
-        bone_indices = [t[0] for t in influence_list]
-        total_weight = sum(weights)
-        if total_weight:
-            weights = [(w / total_weight) for w in weights]
+    # normalize
+    weights = [t[1] for t in influence_list]
+    bone_indices = [t[0] for t in influence_list]
+    total_weight = sum(weights)
+    if total_weight:
+        weights = [(w / total_weight) for w in weights]
 
-        # float to byte
-        weights = [round(w * 255) or 1 for w in weights]  # can't have zero values
-        # correct precision
-        excess = sum(weights) - 255
-        if excess:
-            max_index, _ = max(enumerate(weights), key=lambda p: p[1])
-            weights[max_index] -= excess
+    # float to byte
+    weights = [round(w * 255) or 1 for w in weights]  # can't have zero values
+    # correct precision
+    excess = sum(weights) - 255
+    if excess:
+        max_index, _ = max(enumerate(weights), key=lambda p: p[1])
+        weights[max_index] -= excess
 
-        new_weights_per_vertex[vertex_index] = list(zip(bone_indices, weights))
+    #new_weights_per_vertex[vertex_index] = list(zip(bone_indices, weights))
+    #return new_weights_per_vertex
+    return list(zip(bone_indices, weights))
 
-    return new_weights_per_vertex
-
-
-def _get_normals_per_vertex(blender_mesh):
-    normals = {}
-
-    if blender_mesh.has_custom_normals:
-        blender_mesh.calc_normals_split()
-        for loop in blender_mesh.loops:
-            normals.setdefault(loop.vertex_index, loop.normal)
-    else:
-        for vertex in blender_mesh.vertices:
-            normals[vertex.index] = vertex.normal
-    return normals
-
-
-def _get_tangents_per_vertex(blender_mesh):
-    tangents = {}
-    try:
-        uv_name = blender_mesh.uv_layers[0].name
-    except IndexError:
-        uv_name = ''
-    blender_mesh.calc_tangents(uvmap=uv_name)
-    for loop in blender_mesh.loops:
-        tangents.setdefault(loop.vertex_index, loop.tangent)
-    return tangents
 
 
 def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_bounding_box):
-    blender_mesh = blender_mesh_object.data
-    vertex_count = len(blender_mesh.vertices)
 
-    uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
-    weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
-    weights_per_vertex = _process_weights(weights_per_vertex)
-    max_bones_per_vertex = max({len(data) for data in weights_per_vertex.values()}, default=0)
-    normals = _get_normals_per_vertex(blender_mesh)
-    tangents = _get_tangents_per_vertex(blender_mesh)
+    #weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
+    #weights_per_vertex = _process_weights(weights_per_vertex)
 
-    VF = VERTEX_FORMATS_TO_CLASSES[max_bones_per_vertex]
 
-    for vertex_index, (uv_x, uv_y) in uvs_per_vertex.items():
-        # flipping for dds textures
-        uv_y *= -1
-        uv_x = pack_half_float(uv_x)
-        uv_y = pack_half_float(uv_y)
-        uvs_per_vertex[vertex_index] = (uv_x, uv_y)
+    #uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
+    #normals = _get_normals_per_vertex(blender_mesh)
+    #tangents = _get_tangents_per_vertex(blender_mesh)
 
-    vertices_array = (VF * vertex_count)()
-    has_bones = hasattr(VF, 'bone_indices')
 
-    for vertex_index, vertex in enumerate(blender_mesh.vertices):
-        vertex_struct = vertices_array[vertex_index]
-
+    """
+    locations_and_uvs = []
+    # For now only treating different uvs as a new vertex.
+    # more than one normal not supported
+    for vi, bl_vertex in blender_mesh.vertices:
+        uvs = uvs_per_vertex.get(vi)
         xyz = (vertex.co[0] * 100, vertex.co[1] * 100, vertex.co[2] * 100)
         xyz = z_up_to_y_up(xyz)
         if has_bones:
             # applying bounding box constraints
             xyz = vertices_export_locations(xyz, model_bounding_box)
-            weights_data = weights_per_vertex.get(vertex_index, [])
+        if not uvs:
+            location_and_uvs.append((xyx, ()))
+            continue
+        for uv_x, uv_y in uvs:
+            # flipping for dds textures
+            uv_y *= -1
+            uv_x = pack_half_float(uv_x)
+            uv_y = pack_half_float(uv_y)
+            location_and_uvs.append((xyz, (uv_x, uv_y)))
+    """
+
+    vertices_data = get_vertices_data(blender_mesh_object)
+    max_bones_per_vertex = max({len(weight_data) for vd in vertices_data for weight_data in vd['weights']}, default=0)
+    VF = VERTEX_FORMATS_TO_CLASSES[max_bones_per_vertex]
+    vertices_array = (VF * len(vertices_data))()
+    has_bones = hasattr(VF, 'bone_indices')
+
+    for vertex_index, vertex_data in enumerate(vertices_data):
+        vertex_struct = vertices_array[vertex_index]
+
+        l = vertex_data['location']
+        xyz = z_up_to_y_up((l[0] * 100, l[1] * 100, l[2] * 100))
+        if has_bones:
+            # applying bounding box constraints
+            xyz = vertices_export_locations(xyz, model_bounding_box)
+            #weights_data = weights_per_vertex.get(vertex_index, [])
+            weights_data = _process_weights(vertex_data['weights'])
             weight_values = [w for _, w in weights_data]
             bone_indices = [bone_palette.index(bone_index) for bone_index, _ in weights_data]
             array_size = ctypes.sizeof(vertex_struct.bone_indices)
@@ -347,19 +341,21 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
         vertex_struct.position_w = 32767
         try:
             # TODO: use a function with a good name (range conversion + y_up_to_z_up?)
-            vertex_struct.normal_x = round(((normals[vertex_index][0] * 0.5) + 0.5) * 255)
-            vertex_struct.normal_y = round(((normals[vertex_index][2] * 0.5) + 0.5) * 255)
-            vertex_struct.normal_z = round(((normals[vertex_index][1] * -0.5) + 0.5) * 255)
+            vertex_struct.normal_x = round(((vertex_data['normal'][0] * 0.5) + 0.5) * 255)
+            vertex_struct.normal_y = round(((vertex_data['normal'][2] * 0.5) + 0.5) * 255)
+            vertex_struct.normal_z = round(((vertex_data['normal'][1] * -0.5) + 0.5) * 255)
             vertex_struct.normal_w = 255
-            vertex_struct.tangent_x = round(((tangents[vertex_index][0] * 0.5) + 0.5) * 255)
-            vertex_struct.tangent_y = round(((tangents[vertex_index][2] * 0.5) + 0.5) * 255)
-            vertex_struct.tangent_z = round(((tangents[vertex_index][1] * -0.5) + 0.5) * 255)
+            vertex_struct.tangent_x = round(((vertex_data['tangent'][0] * 0.5) + 0.5) * 255)
+            vertex_struct.tangent_y = round(((vertex_data['tangent'][2] * 0.5) + 0.5) * 255)
+            vertex_struct.tangent_z = round(((vertex_data['tangent'][1] * -0.5) + 0.5) * 255)
             vertex_struct.tangent_w = 255
-        except KeyError:
+        except KeyError as err:
             # should not happen. TODO: investigate cases where it did happen
-            print('Missing normal in vertex {}, mesh {}'.format(vertex_index, mesh_index))
-        vertex_struct.uv_x = uvs_per_vertex.get(vertex_index, (0, 0))[0] if uvs_per_vertex else 0
-        vertex_struct.uv_y = uvs_per_vertex.get(vertex_index, (0, 0))[1] if uvs_per_vertex else 0
+            print(f'{err} -- Missing normal in vertex {vertex_index}, mesh {mesh_index}')
+
+        uv_x, uv_y = vertex_data['uvs']
+        vertex_struct.uv_x = pack_half_float(uv_x)
+        vertex_struct.uv_y = pack_half_float(-uv_y) # flipping for dds textures
     return vertices_array
 
 
@@ -506,7 +502,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         triangle_strips_ctypes = (ctypes.c_ushort * len(triangle_strips_python))(*triangle_strips_python)
         index_buffer.extend(triangle_strips_ctypes)
 
-        vertex_count = len(blender_mesh.vertices)
+        vertex_count = len(vertices_array)
         index_count = len(triangle_strips_python)
 
         m156 = meshes_156[mesh_index]

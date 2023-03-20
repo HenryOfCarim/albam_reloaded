@@ -2,7 +2,7 @@ try:
     import bpy
 except ImportError:
     pass
-from collections import deque, namedtuple
+from collections import deque, defaultdict, namedtuple
 import math
 import os
 
@@ -11,6 +11,34 @@ BoundingBox = namedtuple('bounding_box', (
     'min_x', 'min_y', 'min_z',
     'max_x', 'max_y', 'max_z',
 ))
+
+
+def get_vertices_data(blender_mesh_object):
+    vertices = []
+
+    normals = get_normals_per_vertex(blender_mesh_object)
+    tangents = get_tangents_per_vertex(blender_mesh_object)
+    uvs = get_uvs_per_vertex(blender_mesh_object)
+    weights = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
+    print('yes sir')
+
+    for vertex in blender_mesh_object.data.vertices:
+        vi = vertex.index
+        v_uvs = uvs.get(vi, [(0, 0)])
+        v_normal = normals.get(vi)
+        v_tangent = tangents.get(vi)
+        v_weights = weights.get(vi)
+
+        # TODO: different uvs make different vertices
+        # Need to figure out how to deal with tri-strips
+        vertices.append({
+            'location': vertex.co,
+            'normal': v_normal,
+            'tangent': v_tangent,
+            'weights': v_weights,
+            'uvs': v_uvs[0],  # Only using first uvs, causing problems
+        })
+        return vertices
 
 
 def get_model_bounding_box(blender_objects):
@@ -246,7 +274,7 @@ def get_bone_indices_and_weights_per_vertex(blender_object):
 
 
 def get_uvs_per_vertex(blender_mesh_object):
-    vertices = {}  # vertex_index: (uv_x, uv_y)
+    vertices = defaultdict(list)  # TODO: set of tuples
     try:
         uv_layer = blender_mesh_object.data.uv_layers[0]
     except IndexError:
@@ -254,9 +282,32 @@ def get_uvs_per_vertex(blender_mesh_object):
     uvs_per_loop = uv_layer.data
     for i, loop in enumerate(blender_mesh_object.data.loops):
         vertex_index = loop.vertex_index
-        if vertex_index in vertices:
-            continue
-        else:
-            uvs = uvs_per_loop[i].uv
-            vertices[vertex_index] = (uvs[0], uvs[1])
+        uvs = uvs_per_loop[i].uv
+        vertices[vertex_index].append((uvs[0], uvs[1]))
     return vertices
+
+
+def get_normals_per_vertex(blender_mesh_object):
+    normals = {}
+
+    if blender_mesh_object.data.has_custom_normals:
+        blender_mesh_object.data.calc_normals_split()
+        for loop in blender_mesh_object.data.loops:
+            normals.setdefault(loop.vertex_index, loop.normal)
+    else:
+        for vertex in blender_mesh.vertices:
+            normals[vertex.index] = vertex.normal
+    return normals
+
+
+def get_tangents_per_vertex(blender_mesh_object):
+    tangents = {}
+    try:
+        uv_name = blender_mesh_object.data.uv_layers[0].name
+    except IndexError:
+        return tangents
+
+    blender_mesh_object.data.calc_tangents(uvmap=uv_name)
+    for loop in blender_mesh_object.data.loops:
+        tangents.setdefault(loop.vertex_index, loop.tangent)
+    return tangents
