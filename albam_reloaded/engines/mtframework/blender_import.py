@@ -171,15 +171,20 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     # vertex colors import for static meshes 
     if mesh.vertex_format == 0 and mesh_material.unk_flag_8_bones_vertex:
         me_ob.vertex_colors.new(name="imported_colors")
-    
         color_layer = me_ob.vertex_colors["imported_colors"]
-        for v in indices:
-            i = v*4
-            r = vertex_colors[i]
-            g = vertex_colors[(i+1)]
-            b = vertex_colors[(i+2)]
-            a = vertex_colors[(i+3)]
-            color_layer.data[v].color = (r, g, b, a)
+
+        for poly in me_ob.polygons:
+            # loop through all loops in the polygon
+            for loop_index in poly.loop_indices:
+                #print("loop index is {}".format(loop_index))
+                # get the loop object
+                loop = me_ob.loops[loop_index]
+                # check if the loop's vertex index matches the desired one
+                if vertex_colors [loop.vertex_index]:
+                    # set the color of the loop to red
+                    #color_layer.data[loop_index].color = (0.0, 1.0, 0.0, 1.0)
+                    color_layer.data[loop_index].color = vertex_colors [loop.vertex_index]
+
 
         '''
         source_uvs = uvs_per_vertex_3       
@@ -209,7 +214,7 @@ def _import_vertices(mod, mesh):
 
 
 def _import_vertices_mod156(mod, mesh):
-    vertices_array = get_vertices_array(mod, mesh)
+    vertices_array = get_vertices_array(mod, mesh) # get vertices according to vertex format
 
     if mesh.vertex_format != 0:
         locations = (transform_vertices_from_bbox(vf, mod)
@@ -228,23 +233,32 @@ def _import_vertices_mod156(mod, mesh):
     uvs = [(unpack_half_float(v.uv_x), unpack_half_float(v.uv_y) * -1) for v in vertices_array]
     # XXX: normalmap has uvs as well? and then this should be uv3?
     if mesh.vertex_format == 0:
+        sorted_vertex_colors = []
         uvs2 = [(unpack_half_float(v.uv2_x), unpack_half_float(v.uv2_y) * -1) for v in vertices_array]
         # from [0, 255] to [0.0, 1]
         vertex_colors = map(lambda v: ((v.vertex_color_r / 255),
                                        (v.vertex_color_g / 255),
                                        (v.vertex_color_b / 255),
                                        (v.vertex_color_a / 255)), vertices_array)
+        vertex_colors = list(chain.from_iterable(vertex_colors))
+
+        for vc in range(len(vertex_colors)//4):
+            i = vc * 4
+            r = vertex_colors[i]
+            g = vertex_colors[(i+1)]
+            b = vertex_colors[(i+2)]
+            a = vertex_colors[(i+3)]
+            sorted_vertex_colors.append((r, g, b, a))
     else:
         uvs2 = []
         vertex_colors = []
-
 
     return {'locations': list(locations),
             'normals': list(normals),
             # TODO: investigate why uvs don't appear above the image in the UV editor
             'uvs': list(chain.from_iterable(uvs)),
             'uvs2': list(chain.from_iterable(uvs2)),
-            'vertex_colors': list(chain.from_iterable(vertex_colors)),
+            'vertex_colors': list(sorted_vertex_colors),
             'weights_per_bone': _get_weights_per_bone(mod, mesh, vertices_array)
             }
 
