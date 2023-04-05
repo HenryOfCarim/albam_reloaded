@@ -180,7 +180,7 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
                 # get the loop object
                 loop = me_ob.loops[loop_index]
                 # check if the loop's vertex index matches the desired one
-                if vertex_colors [loop.vertex_index]:
+                if vertex_colors[loop.vertex_index]:
                     # set the color of the loop to red
                     #color_layer.data[loop_index].color = (0.0, 1.0, 0.0, 1.0)
                     color_layer.data[loop_index].color = vertex_colors [loop.vertex_index]

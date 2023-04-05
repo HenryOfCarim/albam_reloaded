@@ -242,21 +242,29 @@ def export_mod156(parent_blender_object):
 
 def _get_vertex_colours(blender_mesh):
     mesh = blender_mesh.data
-    colors = []
+    vertices = mesh.vertices
+    vertex_num = len(vertices)
+    colors = {}
     try:
         color_layer = mesh.vertex_colors["imported_colors"]
     except:
         return colors
 
     i = 0
+    #for vtx in vertices:
     for poly in mesh.polygons:
-        for idx in poly.loop_indices:
-            r = color_layer.data[idx].color[0]
-            g = color_layer.data[idx].color[1]
-            b = color_layer.data[idx].color[2]
-            a = color_layer.data[idx].color[3]
+        for loop_index in poly.loop_indices:
+            loop = mesh.loops[loop_index]
+            #if vertices [loop.vertex_index]:
+            r = round(color_layer.data[loop_index].color[0]*255)
+            g = round(color_layer.data[loop_index].color[1]*255)
+            b = round(color_layer.data[loop_index].color[2]*255)
+            a = round(color_layer.data[loop_index].color[3]*255)
             #print(color_layer.data[idx].color[3])
-            colors.append((r,g,b,a))
+            #colors.append((r,g,b,a))
+            colors[mesh.loops[loop_index].vertex_index] = (r,g,b,a)
+            #i = i + 1
+            #continue
     return colors
 
 def _process_weights(weights_per_vertex, max_bones_per_vertex=4):
@@ -346,7 +354,7 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
     uvs_lmap_per_vertex = get_lmap_uvs_per_vertex(blender_mesh_object)
     colors_per_vertex = _get_vertex_colours(blender_mesh_object) 
-    colors_per_vertex = _pack_colors(colors_per_vertex )
+    #colors_per_vertex = _pack_colors(colors_per_vertex)
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
     max_bones_per_vertex = max({len(data) for data in weights_per_vertex.values()}, default=0)
@@ -411,10 +419,15 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
         vertex_struct.uv_y = uvs_per_vertex.get(vertex_index, (0, 0))[1] if uvs_per_vertex else 0
         vertex_struct.uv2_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 65535
         vertex_struct.uv2_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 65535
-        vertex_struct.vertex_color_r = 80 # hadrcoded temporaly
-        vertex_struct.vertex_color_g = 80
-        vertex_struct.vertex_color_b = 80
-        vertex_struct.vertex_color_a = 255
+        try:
+            color = colors_per_vertex[vertex_index]
+        except:
+            print(blender_mesh_object)
+            color = (255, 255, 255, 255)
+        vertex_struct.vertex_color_r = color[0] 
+        vertex_struct.vertex_color_g = color[1] 
+        vertex_struct.vertex_color_b = color[2] 
+        vertex_struct.vertex_color_a = color[3] 
     return vertices_array
 
 
