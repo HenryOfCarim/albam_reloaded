@@ -350,11 +350,12 @@ def _pack_colors(vertex_colors):
 
 def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_bounding_box):
     blender_mesh = blender_mesh_object.data
+    vtx_color_flag = blender_mesh.materials[0].unk_flag_8_bones_vertex
     vertex_count = len(blender_mesh.vertices)
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
     uvs_lmap_per_vertex = get_lmap_uvs_per_vertex(blender_mesh_object)
+    uvs_3 = []
     colors_per_vertex = _get_vertex_colours(blender_mesh_object) 
-    #colors_per_vertex = _pack_colors(colors_per_vertex)
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
     max_bones_per_vertex = max({len(data) for data in weights_per_vertex.values()}, default=0)
@@ -419,15 +420,27 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
         vertex_struct.uv_y = uvs_per_vertex.get(vertex_index, (0, 0))[1] if uvs_per_vertex else 0
         vertex_struct.uv2_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 65535
         vertex_struct.uv2_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 65535
-        try:
-            color = colors_per_vertex[vertex_index]
-        except:
-            print(blender_mesh_object)
-            color = (255, 255, 255, 255)
-        vertex_struct.vertex_color_r = color[0] 
-        vertex_struct.vertex_color_g = color[1] 
-        vertex_struct.vertex_color_b = color[2] 
-        vertex_struct.vertex_color_a = color[3] 
+        #export vertex colors
+        if max_bones_per_vertex == 0:
+            if vtx_color_flag == 1 :
+                try:
+                    color = colors_per_vertex[vertex_index]
+                except:
+                    #print(blender_mesh_object)
+                    color = (255, 255, 255, 255)
+
+                _uv3_x = (color[1]<<8)|color[0] 
+                _uv3_y = (color[3]<<8)|color[2] 
+                vertex_struct.uv3_x = _uv3_x
+                vertex_struct.uv3_y = _uv3_y 
+                #vertex_struct.vertex_color_r = color[0] 
+                #vertex_struct.vertex_color_g = color[1] 
+                #vertex_struct.vertex_color_b = color[2] 
+                #vertex_struct.vertex_color_a = color[3]
+            else:
+                vertex_struct.uv3_x = uvs_3.get(vertex_index, (0, 0))[0] if uvs_3 else 65535
+                vertex_struct.uv3_y = uvs_3.get(vertex_index, (0, 0))[1] if uvs_3 else 65535
+
     return vertices_array
 
 
