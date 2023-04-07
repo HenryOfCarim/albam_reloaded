@@ -438,8 +438,8 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
                 #vertex_struct.vertex_color_b = color[2] 
                 #vertex_struct.vertex_color_a = color[3]
             else:
-                vertex_struct.uv3_x = uvs_3.get(vertex_index, (0, 0))[0] if uvs_3 else 65535
-                vertex_struct.uv3_y = uvs_3.get(vertex_index, (0, 0))[1] if uvs_3 else 65535
+                vertex_struct.uv3_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 65535
+                vertex_struct.uv3_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 65535
 
     return vertices_array
 
