@@ -224,11 +224,6 @@ def _import_vertices_mod156(mod, mesh):
         # from [0, 255] to [0.0, 1]
         if material_array[mesh.material_index].unk_flag_8_bones_vertex:
             uvs3 = []
-            #vertex_colors = map(lambda v: ((v.vertex_color_r / 255),
-            #                            (v.vertex_color_g / 255),
-            #                            (v.vertex_color_b / 255),
-            #                            (v.vertex_color_a / 255)), vertices_array)
-            # convert 4 bytes of UV3 data to 2 byte vertex colors
             vertex_colors = map (lambda v: ((v.uv3_x & 0xFF) / 255,
                                             (v.uv3_x>>8 & 0xFF) / 255,
                                             (v.uv3_y & 0xFF) / 255,
@@ -238,18 +233,16 @@ def _import_vertices_mod156(mod, mesh):
             # pack colors to a list
             for vc in range(len(vertex_colors)//4):
                 i = vc * 4
-                r = vertex_colors[i]
+                b = vertex_colors[i]
                 g = vertex_colors[(i+1)]
-                b = vertex_colors[(i+2)]
+                r = vertex_colors[(i+2)]
                 a = vertex_colors[(i+3)]
                 sorted_vertex_colors.append((r, g, b, a))
         else:
-            sorted_vertex_colors = []
             uvs3 = [(unpack_half_float(v.uv3_x), unpack_half_float(v.uv3_y) * -1) for v in vertices_array]
     else:
         uvs2 = []
         uvs3 = []
-        sorted_vertex_colors = []
 
     return {'locations': list(locations),
             'normals': list(normals),

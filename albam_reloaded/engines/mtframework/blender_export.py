@@ -242,11 +242,11 @@ def export_mod156(parent_blender_object):
 
 def _get_vertex_colours(blender_mesh):
     mesh = blender_mesh.data
-    vertices = mesh.vertices
-    vertex_num = len(vertices)
+    #vertices = mesh.vertices
+    #vertex_num = len(vertices)
     colors = {}
     try:
-        color_layer = mesh.vertex_colors["imported_colors"]
+        color_layer = mesh.vertex_colors[0]
     except:
         return colors
 
@@ -256,9 +256,9 @@ def _get_vertex_colours(blender_mesh):
         for loop_index in poly.loop_indices:
             loop = mesh.loops[loop_index]
             #if vertices [loop.vertex_index]:
-            r = round(color_layer.data[loop_index].color[0]*255)
+            b = round(color_layer.data[loop_index].color[0]*255)
             g = round(color_layer.data[loop_index].color[1]*255)
-            b = round(color_layer.data[loop_index].color[2]*255)
+            r = round(color_layer.data[loop_index].color[2]*255)
             a = round(color_layer.data[loop_index].color[3]*255)
             #print(color_layer.data[idx].color[3])
             #colors.append((r,g,b,a))
