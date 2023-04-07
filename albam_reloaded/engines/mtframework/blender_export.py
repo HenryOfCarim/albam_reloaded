@@ -44,6 +44,8 @@ from ...lib.blender import (
     get_vertex_count_from_blender_objects,
     get_bone_indices_and_weights_per_vertex,
     get_uvs_per_vertex,
+    get_lmap_uvs_per_vertex,
+    get_data_uvs_per_vertex,
     BoundingBox,
     get_model_bounding_box,
     get_model_bounding_sphere,
@@ -136,7 +138,6 @@ def export_mod156(parent_blender_object):
     if (bpy.context.scene.albam_export_settings.export_visible_bool == True):
         visible_meshes = [mesh for mesh in blender_meshes if mesh.visible_get()]
         blender_meshes = visible_meshes
-
 
     # only going one level deeper
     if not blender_meshes:
@@ -239,6 +240,32 @@ def export_mod156(parent_blender_object):
 
     return ExportedMod(mod, exported_materials)
 
+def _get_vertex_colours(blender_mesh):
+    mesh = blender_mesh.data
+    vertices = mesh.vertices
+    vertex_num = len(vertices)
+    colors = {}
+    try:
+        color_layer = mesh.vertex_colors["imported_colors"]
+    except:
+        return colors
+
+    i = 0
+    #for vtx in vertices:
+    for poly in mesh.polygons:
+        for loop_index in poly.loop_indices:
+            loop = mesh.loops[loop_index]
+            #if vertices [loop.vertex_index]:
+            r = round(color_layer.data[loop_index].color[0]*255)
+            g = round(color_layer.data[loop_index].color[1]*255)
+            b = round(color_layer.data[loop_index].color[2]*255)
+            a = round(color_layer.data[loop_index].color[3]*255)
+            #print(color_layer.data[idx].color[3])
+            #colors.append((r,g,b,a))
+            colors[mesh.loops[loop_index].vertex_index] = (r,g,b,a)
+            #i = i + 1
+            #continue
+    return colors
 
 def _process_weights(weights_per_vertex, max_bones_per_vertex=4):
     """
@@ -303,12 +330,32 @@ def _get_tangents_per_vertex(blender_mesh):
         tangents.setdefault(loop.vertex_index, loop.tangent)
     return tangents
 
+def _pack_uv(uv_array):
+    packed_uv = uv_array
+    for vertex_index, (uv_x, uv_y) in uv_array.items():
+        # flipping for dds textures
+        uv_y *= -1
+        uv_x = pack_half_float(uv_x)
+        uv_y = pack_half_float(uv_y)
+        packed_uv[vertex_index] = (uv_x, uv_y)
+    return packed_uv
+
+def _pack_colors(vertex_colors):
+    packed_colors = vertex_colors
+    i = 0 
+    for c in vertex_colors:
+        packed_colors[i] = (round(c[0]*255),round(c[1]*255),round(c[2]*255),round(c[3]*255))
+        i = i+1
+    return packed_colors
 
 def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_bounding_box):
     blender_mesh = blender_mesh_object.data
+    vtx_color_flag = blender_mesh.materials[0].unk_flag_8_bones_vertex
     vertex_count = len(blender_mesh.vertices)
-
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
+    uvs_lmap_per_vertex = get_lmap_uvs_per_vertex(blender_mesh_object)
+    uvs_3 = []
+    colors_per_vertex = _get_vertex_colours(blender_mesh_object) 
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
     max_bones_per_vertex = max({len(data) for data in weights_per_vertex.values()}, default=0)
@@ -317,6 +364,10 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
 
     VF = VERTEX_FORMATS_TO_CLASSES[max_bones_per_vertex]
 
+    uvs_per_vertex = _pack_uv(uvs_per_vertex)
+    uvs_lmap_per_vertex = _pack_uv(uvs_lmap_per_vertex)
+    
+    '''
     for vertex_index, (uv_x, uv_y) in uvs_per_vertex.items():
         # flipping for dds textures
         uv_y *= -1
@@ -324,6 +375,13 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
         uv_y = pack_half_float(uv_y)
         uvs_per_vertex[vertex_index] = (uv_x, uv_y)
 
+    for vertex_index, (uv_x, uv_y) in uvs_lmap_per_vertex.items():
+        # flipping for dds textures
+        uv_y *= -1
+        uv_x = pack_half_float(uv_x)
+        uv_y = pack_half_float(uv_y)
+        uvs_lmap_per_vertex[vertex_index] = (uv_x, uv_y)
+    '''
     vertices_array = (VF * vertex_count)()
     has_bones = hasattr(VF, 'bone_indices')
 
@@ -360,6 +418,29 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
             print('Missing normal in vertex {}, mesh {}'.format(vertex_index, mesh_index))
         vertex_struct.uv_x = uvs_per_vertex.get(vertex_index, (0, 0))[0] if uvs_per_vertex else 0
         vertex_struct.uv_y = uvs_per_vertex.get(vertex_index, (0, 0))[1] if uvs_per_vertex else 0
+        vertex_struct.uv2_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 65535
+        vertex_struct.uv2_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 65535
+        #export vertex colors
+        if max_bones_per_vertex == 0:
+            if vtx_color_flag == 1 :
+                try:
+                    color = colors_per_vertex[vertex_index]
+                except:
+                    #print(blender_mesh_object)
+                    color = (255, 255, 255, 255)
+
+                _uv3_x = (color[1]<<8)|color[0] 
+                _uv3_y = (color[3]<<8)|color[2] 
+                vertex_struct.uv3_x = _uv3_x
+                vertex_struct.uv3_y = _uv3_y 
+                #vertex_struct.vertex_color_r = color[0] 
+                #vertex_struct.vertex_color_g = color[1] 
+                #vertex_struct.vertex_color_b = color[2] 
+                #vertex_struct.vertex_color_a = color[3]
+            else:
+                vertex_struct.uv3_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 65535
+                vertex_struct.uv3_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 65535
+
     return vertices_array
 
 
@@ -372,7 +453,10 @@ def _create_bone_palettes(blender_mesh_objects):
         armature = mesh.parent
         vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
         vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
-        bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
+        try:
+            bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
+        except:
+            print("Can't find vertex group in the armature")
 
         msg = "Mesh {} is influenced by more than 32 bones, which is not supported".format(mesh.name)
         assert len(bone_indices) <= MAX_BONE_PALETTE_SIZE, msg
@@ -639,6 +723,20 @@ def _export_textures_and_materials(blender_objects, saved_mod):
     '''
     textures = get_textures_from_blender_objects(blender_objects) # get a set of ShaderNodeTexImage
     blender_materials = get_materials_from_blender_objects(blender_objects) # get a set with blender_objects.data.materials
+
+    # get skinned meshes with 8 bones per vertex flag
+    skinned_meshes = []
+    for obj in blender_objects:
+        for modifier in obj.modifiers:
+             if modifier.type == "ARMATURE":
+                 skinned_meshes .append(obj)
+                 continue
+
+    skinned_meshes  = [ob for ob in skinned_meshes if ob.type == 'MESH']
+    vtx_mats = [ob.data.materials[0] for ob in skinned_meshes  if ob.data.materials[0].unk_flag_8_bones_vertex == 1]
+    # set 0 value for all materials with a skinned meshes
+    for mat in vtx_mats:
+        mat.unk_flag_8_bones_vertex = 0
 
     textures_array = ((ctypes.c_char * 64) * len(textures))()
     materials_data_array = (MaterialData * len(blender_materials))()

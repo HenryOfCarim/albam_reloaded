@@ -246,11 +246,53 @@ def get_bone_indices_and_weights_per_vertex(blender_object):
 
 
 def get_uvs_per_vertex(blender_mesh_object):
+    '''get .mod return dictionaly with UV'''
     vertices = {}  # vertex_index: (uv_x, uv_y)
     try:
         uv_layer = blender_mesh_object.data.uv_layers[0]
     except IndexError:
         return vertices
+    uvs_per_loop = uv_layer.data
+    for i, loop in enumerate(blender_mesh_object.data.loops):
+        vertex_index = loop.vertex_index
+        if vertex_index in vertices:
+            continue
+        else:
+            uvs = uvs_per_loop[i].uv
+            vertices[vertex_index] = (uvs[0], uvs[1])
+    return vertices
+
+def get_lmap_uvs_per_vertex(blender_mesh_object):
+    '''get .mod return dictionaly with UV'''
+    vertices = {}  # vertex_index: (uv_x, uv_y)
+    try:
+        uv_layer = blender_mesh_object.data.uv_layers.get("lightmap")
+    except IndexError:
+        return vertices
+    if not uv_layer:
+        return vertices
+
+    uvs_per_loop = uv_layer.data
+    for i, loop in enumerate(blender_mesh_object.data.loops):
+        vertex_index = loop.vertex_index
+        if vertex_index in vertices:
+            continue
+        else:
+            uvs = uvs_per_loop[i].uv
+            vertices[vertex_index] = (uvs[0], uvs[1])
+    return vertices
+
+
+def get_data_uvs_per_vertex(blender_mesh_object):
+    '''get .mod return dictionaly with UV'''
+    vertices = {}  # vertex_index: (uv_x, uv_y)
+    try:
+        uv_layer = blender_mesh_object.data.uv_layers.get("unknown_data")
+    except IndexError:
+        return vertices
+    if not uv_layer:
+        return vertices
+        
     uvs_per_loop = uv_layer.data
     for i, loop in enumerate(blender_mesh_object.data.loops):
         vertex_index = loop.vertex_index
