@@ -724,6 +724,20 @@ def _export_textures_and_materials(blender_objects, saved_mod):
     textures = get_textures_from_blender_objects(blender_objects) # get a set of ShaderNodeTexImage
     blender_materials = get_materials_from_blender_objects(blender_objects) # get a set with blender_objects.data.materials
 
+    # get skinned meshes with 8 bones per vertex flag
+    skinned_meshes = []
+    for obj in blender_objects:
+        for modifier in obj.modifiers:
+             if modifier.type == "ARMATURE":
+                 skinned_meshes .append(obj)
+                 continue
+
+    skinned_meshes  = [ob for ob in skinned_meshes if ob.type == 'MESH']
+    vtx_mats = [ob.data.materials[0] for ob in skinned_meshes  if ob.data.materials[0].unk_flag_8_bones_vertex == 1]
+    # set 0 value for all materials with a skinned meshes
+    for mat in vtx_mats:
+        mat.unk_flag_8_bones_vertex = 0
+
     textures_array = ((ctypes.c_char * 64) * len(textures))()
     materials_data_array = (MaterialData * len(blender_materials))()
     materials_mapping = {}  # blender_material.name: material_id

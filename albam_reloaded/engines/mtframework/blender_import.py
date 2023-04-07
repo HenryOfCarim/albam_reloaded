@@ -181,7 +181,7 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
                     # set the color of the loop to red
                     #color_layer.data[loop_index].color = (0.0, 1.0, 0.0, 1.0)
                     color_layer.data[loop_index].color = vertex_colors [loop.vertex_index]
-                    
+
     # Saving unknown metadata for export
     # TODO: use a util function
     for field_tuple in mesh._fields_:
@@ -244,11 +244,12 @@ def _import_vertices_mod156(mod, mesh):
                 a = vertex_colors[(i+3)]
                 sorted_vertex_colors.append((r, g, b, a))
         else:
-            vertex_colors = []
+            sorted_vertex_colors = []
             uvs3 = [(unpack_half_float(v.uv3_x), unpack_half_float(v.uv3_y) * -1) for v in vertices_array]
     else:
         uvs2 = []
-        vertex_colors = []
+        uvs3 = []
+        sorted_vertex_colors = []
 
     return {'locations': list(locations),
             'normals': list(normals),
