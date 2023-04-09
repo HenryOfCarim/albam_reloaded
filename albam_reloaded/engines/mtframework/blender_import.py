@@ -215,11 +215,10 @@ def _import_vertices_mod156(mod, mesh):
                              ((v.normal_z / 255) * 2) - 1), vertices_array)
     # y up to z up
     normals = map(lambda n: (n[0], n[2] * -1, n[1]), normals)
-
     uvs = [(unpack_half_float(v.uv_x), unpack_half_float(v.uv_y) * -1) for v in vertices_array]
+    sorted_vertex_colors = []
     # XXX: normalmap has uvs as well? and then this should be uv3?
     if mesh.vertex_format == 0:
-        sorted_vertex_colors = []
         uvs2 = [(unpack_half_float(v.uv2_x), unpack_half_float(v.uv2_y) * -1) for v in vertices_array]
         # from [0, 255] to [0.0, 1]
         if material_array[mesh.material_index].unk_flag_8_bones_vertex:
@@ -243,7 +242,6 @@ def _import_vertices_mod156(mod, mesh):
     else:
         uvs2 = []
         uvs3 = []
-
     return {'locations': list(locations),
             'normals': list(normals),
             # TODO: investigate why uvs don't appear above the image in the UV editor
