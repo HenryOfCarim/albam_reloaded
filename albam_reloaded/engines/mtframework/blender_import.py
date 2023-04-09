@@ -305,7 +305,7 @@ def _create_blender_textures_from_mod(mod, base_dir):
             w.write(dds)
         image = bpy.data.images.load(dds_path, check_existing=True)
         texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
-        texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
+        #texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
         texture = bpy.data.textures.get(texture_name_no_extension)
         # Create a texture data block if not exist
         if not texture:
