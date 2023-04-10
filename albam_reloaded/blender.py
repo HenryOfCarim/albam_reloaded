@@ -36,7 +36,7 @@ class AlbamExportSettings(bpy.types.PropertyGroup):
         )
     
 class CopyCustomPropertiesMat(bpy.types.Operator):
-    """Copy Custom Properties from Active to Selected Bones"""
+    """Copy Albam material properties from the active material"""
     bl_idname = "material.custom_property_copy"
     bl_label = "Copy Properties"
     
@@ -52,7 +52,7 @@ class CopyCustomPropertiesMat(bpy.types.Operator):
       return {'FINISHED'}
     
 class PasteCustomPropertiesMat(bpy.types.Operator):
-    """Copy Custom Properties from Active to Selected Bones"""
+    """Paste Albam material properties to the active material"""
     bl_idname = "material.custom_property_paste"
     bl_label = "Paste Properties"
     
@@ -99,8 +99,9 @@ class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
         if not mat:
             return
         layout = self.layout # add layout for Albam material panel
-        layout.operator("material.custom_property_copy")
-        layout.operator("material.custom_property_paste")
+        row = layout.row()
+        row.operator("material.custom_property_copy")
+        row.operator("material.custom_property_paste")
         for prop_name, _, _ in blender_registry.bpy_props.get('material', []): # get unk_ properties for a material:'unk_01' 32835
             layout.prop(mat, prop_name) # add property for panel
 
