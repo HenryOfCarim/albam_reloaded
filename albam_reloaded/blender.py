@@ -8,6 +8,7 @@ except ImportError:
 
 from .registry import blender_registry
 from .engines.mtframework.tools import *
+from .engines.mtframework.mod_156 import MaterialData
 
 class AlbamImportedItemName(bpy.types.PropertyGroup): #
     '''Class for  bpy.types.Scene.albam_items_imported __init__.py registration
@@ -33,7 +34,50 @@ class AlbamExportSettings(bpy.types.PropertyGroup):
         description="Export visible meshes only",
         default = False
         )
+    
+class CopyCustomPropertiesMat(bpy.types.Operator):
+    """Copy Custom Properties from Active to Selected Bones"""
+    bl_idname = "material.custom_property_copy"
+    bl_label = "Copy Properties"
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
+    def execute(self, context):
+      mat = bpy.context.active_object.active_material.name
+      if mat:
+          bpy.types.Scene.albam_copypaste_buffer = mat
+          print(bpy.types.Scene.albam_copypaste_buffer )
+      return {'FINISHED'}
+    
+class PasteCustomPropertiesMat(bpy.types.Operator):
+    """Copy Custom Properties from Active to Selected Bones"""
+    bl_idname = "material.custom_property_paste"
+    bl_label = "Paste Properties"
+    
+    @classmethod
+    def poll(cls, context):
+        if not bpy.types.Scene.albam_copypaste_buffer:
+            return False
+        return True
+
+    def execute(self, context):
+        mat_name = bpy.types.Scene.albam_copypaste_buffer 
+        try:
+            copied_mat = bpy.data.materials.get(mat_name)
+        except:
+            bpy.types.Scene.albam_copypaste_buffer = ""
+        active_mat = bpy.context.active_object.active_material
+        material_data = MaterialData()
+        for field in material_data._fields_:
+            attr_name = field[0]
+            if not attr_name.startswith('unk_'):
+                continue 
+            setattr(active_mat, attr_name, getattr(copied_mat, attr_name))
+
+        return {'FINISHED'}
+    
 
 class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
     '''Custom Properies panel in the Material section'''
@@ -47,14 +91,6 @@ class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
         '''mat: bpy.data.materials'''
         # taken from blender source
         if mat is not None:
-            '''Old code
-            mat_node = mat.active_node_material # deprecated code to get material node
-            mat_node = mat
-            if mat_node:
-                return mat_node
-            else:
-                 return mat'''
-
             return mat
         return None
 
@@ -63,13 +99,15 @@ class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
         if not mat:
             return
         layout = self.layout # add layout for Albam material panel
+        layout.operator("material.custom_property_copy")
+        layout.operator("material.custom_property_paste")
         for prop_name, _, _ in blender_registry.bpy_props.get('material', []): # get unk_ properties for a material:'unk_01' 32835
             layout.prop(mat, prop_name) # add property for panel
 
     @classmethod
     def poll(cls, context):  # pragma: no cover
         return context.material
-
+    
 
 class ALBAM_PT_CustomTextureOptions(bpy.types.Panel):
     '''Custom Propertis panel for texures'''
