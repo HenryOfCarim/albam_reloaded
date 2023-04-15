@@ -675,23 +675,21 @@ def _calculate_weight_bounds_skeletal_mesh(blender_mesh_ob, armature):
     return sorted(unsorted_weight_bounds, key=lambda x: x.bone_id)
 
 def _export_textures_and_materials(blender_objects, saved_mod):
-    '''blender_objects : bpy.data.objects['Pl0200.mod_0000_LOD_1']
+    '''Get array of materials and  textures for certain .mod parent
        saved_mod : <albam_reloaded.engines.mtframework.mod_156.GenMod156 object>  
     '''
     textures = get_textures_from_blender_objects(blender_objects) # get a set of ShaderNodeTexImage
     blender_materials = get_materials_from_blender_objects(blender_objects) # get a set with blender_objects.data.materials
 
-    # get skinned meshes with 8 bones per vertex flag
+    # get skinned meshes with 8 bones per vertex flag and set it to 0
     skinned_meshes = []
     for obj in blender_objects:
         for modifier in obj.modifiers:
              if modifier.type == "ARMATURE":
                  skinned_meshes .append(obj)
                  continue
-
     skinned_meshes  = [ob for ob in skinned_meshes if ob.type == 'MESH']
     vtx_mats = [ob.data.materials[0] for ob in skinned_meshes  if ob.data.materials[0].unk_flag_8_bones_vertex == 1]
-    # set 0 value for all materials with a skinned meshes
     for mat in vtx_mats:
         mat.unk_flag_8_bones_vertex = 0
 
@@ -731,23 +729,17 @@ def _export_textures_and_materials(blender_objects, saved_mod):
             if not attr_name.startswith('unk_'):
                 continue
             setattr(material_data, attr_name, getattr(mat, attr_name))
-
-        #shader_node = mat.node_tree.nodes.get("MTFrameworkGroup")
-        #socket_name = shader_node.inputs[0].name
-        #is_linked = shader_node.inputs['Diffuse BM'].is_linked
-        #node_connected = shader_node.inputs['Diffuse BM'].node
-
         mat_tex = get_textures_from_the_material(mat) # get list with all ImageTexture nodes of the material
         
         for texture_node in mat_tex:
             if not texture_node or not texture_node.image:
                 continue
-            texture = texture_node.image.name    
+            texture_name = texture_node.image.name    
             texture_data = [td for td in textures if td.image == texture_node.image] # get a texture data linked to the imageTexture node
             try:
                 texture_index = textures.index(texture_data[0]) + 1 # get the texture data index,  texture_indices expects index-1 based
             except:
-                raise ExportError("No texture data container linked with {} texture was found. Please create it before the export ".format(texture))
+                raise ExportError("No texture data container linked with {} texture was found. Please create it before the export ".format(texture_name))
 
             texture_code = blender_texture_to_texture_code(texture_node)
             if texture_code is None:
