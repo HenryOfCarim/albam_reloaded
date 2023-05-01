@@ -5,15 +5,6 @@ try:
     import bpy
 except ImportError:
     pass
-
-
-
-left_bones = []
-middle_bones = []
-
-spine = None
-left_thigh = None
-hand = None
                 
 bone_names_spine = {
                     0:"root_ground",
@@ -90,257 +81,127 @@ bone_suffix = {
                 4:"end"
 }
 
-def _get_bones_from_group(group_name, bones):
-    group_bones = []
-    for bone in bones:
-        if bone.bone_group.name == group_name:
-            group_bones.append(bone)
-    return group_bones
-                
-def _get_group_bones_from_chain(bones_in_group, chain):
-    bones = []
-    for element in chain:
-        if element in bones_in_group:
-            bones.append(element)
-    return bones
-
-def _round_values(values):
-    list = []
-    for v in values:
-        v = round(v,3)
-        list.append(v)
-    return list
-
-def _side_filter(bone_group, *side):
-    bones = []
-    if not side:
-        for b in bone_group:
-            x, y, x = b.head 
-            if round(b.head[0], 3) == 0:
-                bones.append(b)
-            #print("middle bones {}".format(mb.name))
-    if "left" in side:
-        for b in bone_group:
-            x, y, x = b.head 
-            if round(b.head[0], 3) > 0:
-                bones.append(b)        
-    return bones
+bone_mapping = {
+                0:"root",
+                1:"lower_spine",
+                2:"upper_spine",
+                3:"neck",
+                4:"head",
+                5:"clavicle_r",
+                6:"upper_arm_r",
+                7:"arm_r",
+                8:"wrist_r",
+                9:"hand_r",
+                10:"clavicle_l",
+                11:"upper_arm_l",
+                12:"arm_l",
+                13:"wrist_l",
+                14:"hand_l",
+                15:"hips",
+                16:"upper_leg_r",
+                17:"leg_r",
+                18:"foot_r",
+                19:"toe_r",
+                20:"upper_leg_l",
+                21:"leg_l",
+                22:"foot_l",
+                23:"toe_l",
+                24:"upper_thumb_r",
+                25:"middle_thumb_r",
+                26:"lower_thumb_r",
+                27:"upper_index_r",
+                28:"middle_index_r",
+                29:"lower_index_r",
+                30:"upper_middle_r",
+                31:"middle_middle_r",
+                32:"lower_middle_r",
+                33:"palm_r",
+                34:"upper_ring_r",
+                35:"middle_ring_r",
+                36:"lower_ring_r",
+                37:"upper_pinky_r",
+                38:"middle_pinky_r",
+                39:"lower_pinly_r",
+                40:"upper_thumb_l",
+                41:"middle_thumb_l",
+                42:"lower_thumb_l",
+                43:"upper_index_l",
+                44:"middle_index_l",
+                45:"lower_index_l",
+                46:"upper_middle_l",
+                47:"middle_middle_l",
+                48:"lower_middle_l",
+                49:"palm_l",
+                50:"upper_ring_l",
+                51:"middle_ring",
+                52:"lower_ring_l",
+                53:"upper_pinky_l",
+                54:"middle_pinky_l",
+                55:"lower_pinky_l",
+                56:"eye_r",
+                57:"eye_l",
+                58:"eyelid_r",
+                59:"eyelid_l",
+                60:"jaw",
+                62:"shoulder_deform_r",
+                63:"elbow_defom_r",
+                64:"shoulder_deform_l",
+                65:"elbow_deform_l",
+                66:"butt_cheek_r",
+                67:"butt_cheel_l",
+                68:"knee_r",
+                69:"knee_l",
+                70:"upper_arm_deform_1_r",
+                71:"upper_arm_deform_2_r",
+                72:"upper_arm_deform_3_r",
+                73:"upper_arm_deform_4_r",
+                74:"arm_deform_1_r",
+                75:"arm_deform_2_r",
+                76:"upper_arm_deform_1_l",
+                77:"upper_arm_deform_2_l",
+                78:"upper_arm_deform_3_l",
+                79:"upper_arm_deform_4_l",
+                80:"arm_deform_1_l",
+                81:"arm_deform_2_l",
+                100:"thumb_r",
+                101:"thumb_l",
+                180:"inner_eyebrow_r",
+                181:"outer_eyebrow_r",
+                182:"inner_eyebrow_l",
+                183:"outer_eyebrow_l",
+                184:"lower_eyelid_r",
+                185:"lower_eyelid_l",
+                186:"upper_cheek_r",
+                187:"upper_cheek_l",
+                188:"upper_outer_cheek_r",
+                189:"upper_outer_cheek_l",
+                190:"nose_r",
+                191:"nose_l",
+                192:"outer_lip_r",
+                193:"upper_lip_r",
+                194:"upper_lip",
+                195:"upper_lip_l",
+                196:"outer_lip_l",
+                197:"outer_lower_lip_l",
+                198:"lower_lip",
+                199:"lower_lip_l",
+                200:"lower_cheek_r",
+                201:"lower_cheek_l"
+}
 
 def rename_bones(armature):
     pose_bones = armature.pose.bones
     parent_blender_object = armature.parent
     saved_mod = Mod156(file_path=BytesIO(parent_blender_object.albam_imported_item.data))
     bones_array = saved_mod.bones_array
+    i = 0
     for b in bones_array:
-        print("index is {} mirror index is {}".format(b.anim_map_index, b.mirror_index))
-
-    group_bones = _get_bones_from_group('Main', pose_bones)
-    left_bones = _side_filter(group_bones, 'left')
-    middle_bones = _side_filter(group_bones)
-
-    #get spine and left thigh bones
-    skip = 0
-    x, y, z = middle_bones[0].head
-    if (x, y, z) == (0, 0, 0):#if exist ground root bone
-        middle_bones[0].name = bone_names_spine[0]
-        skip = 1
-
-    middle_bones[0+skip].name = bone_names_spine[1]    
-    childrens = middle_bones[0+skip].children
-    for ch in childrens:
-        gch = ch.children
-        for g in gch:
-            if g in left_bones:
-                #print("grandchildren{}".format(g))
-                ch.name = bone_names_spine[2]
-                left_thigh  = g
-                g.name = bone_names_leg[0]
-            if g in middle_bones:
-                ch.name = bone_names_spine[3] #"Spine_1"
-                spine = ch
-
-    #rename leg chain
-    leg_chain = left_thigh.children_recursive
-    bones_in_group = _get_group_bones_from_chain(left_bones, leg_chain)
-    bone = left_thigh
-    for i in range(len(bones_in_group)):
-        ch = bone.children
-        for c in ch:
-            if c in left_bones:
-                c.name = bone_names_leg[i+1]
-                bone = c
-
-    #rename spine chain
-    spine_chain = spine.children_recursive
-    bones_in_group = _get_group_bones_from_chain(middle_bones,spine_chain)
-    bone = None
-    for i in range(len(bones_in_group)):
-        if i == 0:
-            bone = spine
-        ch = bone.children
-        for c in ch:
-            if c in middle_bones:
-                c.name = bone_names_spine[i+4]
-                bone = c
-                if c.name == bone_names_spine[4]:
-                    spine_1 = c
-
-    #rename arm chain
-    arm_chain = spine_1.children_recursive
-    bones_in_group = _get_group_bones_from_chain(left_bones,arm_chain)
-    bone = None
-    for i in range(len(bones_in_group)):
-        if i == 0:
-            bone = spine_1
-        ch = bone.children
-        for c in ch:
-            if c in left_bones:
-                if i == 4:
-                    hand = c
-                c.name = bone_names_arm[i]
-                bone = c
-
-    #rename arm twist       
-    bone_group = _get_bones_from_group('Arms', pose_bones)
-    left_bones = _side_filter(bone_group, 'left')
-    middle_bones = _side_filter(bone_group)
-
-    for b in left_bones:
-        parent = b.parent
-        child = b.children
-        offset = round(b.head[0], 3)
-        children = b.children_recursive
-        if parent.name == bone_names_arm[0]:  #clavicle_twist
-            b.name = bone_names_arm_twist[1]
-        elif parent.name == bone_names_arm[1]:
-            if child:
-                if round(parent.head[0], 3) == offset: # uppearm_twist
-                    b.name = bone_names_arm_twist[2]
-                    child[0].name = bone_names_arm_twist[3]
-                else:
-                    b.name = bone_names_arm_twist[4] #upperarm
-                    child[0].name = bone_names_arm_twist[5]
+        if bone_mapping.get(b.anim_map_index):
+            if i==0:
+                x, y, z = pose_bones[i].head
+                if (x, y, z) == (0, 0, 0):#if exist ground root bone
+                    pose_bones[i].name = "root_ground"
             else:
-                b.name =  bone_names_arm_twist[6]
-        elif parent.name == bone_names_arm[2]:
-            if round(parent.head[0], 3) == offset: #lowearm_twist
-                print("lowerarm")
-                b.name = bone_names_arm_twist[7] 
-            else:
-                b.name = bone_names_arm_twist[8] # hand_twist
-
-    #rename leg twist            
-    bone_group = _get_bones_from_group('Legs', pose_bones)
-    left_bones = _side_filter(bone_group, "left")
-    middle_bones = _side_filter(bone_group)
-
-    for b in left_bones:
-        parent = b.parent
-        child = b.children
-        offset = round(b.head[0], 3)
-        if parent.name == bone_names_spine[2]:
-            b.name = bone_names_leg_twist[0]
-        elif parent.name == bone_names_leg[0]:
-            b.name = bone_names_leg_twist[1]
-
-    #rename fingers        
-    bone_group = _get_bones_from_group('Hands', pose_bones)
-    left_bones = _side_filter(bone_group, 'left')
-    finger_bones = []
-    finger_bones = [b for b in hand.children]
-
-    for b in finger_bones:
-        chain = b.children_recursive
-        if len(chain)>3: # pinky and ring
-            b.name = bone_names_fingers[0]
-            childredn = b.children
-            y_pos =[]
-            bones = {}
-            finger_bones.remove(b)
-            print("there is {}".format(len(finger_bones)))
-            for c in childredn:
-                y_pos.append(c.head[0])
-                bones[c.head[0]] = c
-                print("child is {}".format(c))
-            y_pos.sort()
-            for i in range(len(y_pos)):
-                parent_bone = bones[y_pos[i]]
-                print("parent_bone {}".format(parent_bone))
-                parent_bone.name = bone_names_fingers[i+1] + "_01" # name paretn pinky and ring
-                parent_bone_children = parent_bone.children_recursive
-                j = 2
-                for ch in parent_bone_children:
-                    ch.name = bone_names_fingers[i+1] + "_0" + str(j)
-                    j += 1
-        if len(finger_bones)==3: # thumb_chain
-            x_pos = []
-            bones = {}
-            for c in finger_bones:
-                x_pos.append(c.head[0])
-                bones[c.head[0]] = c
-            x_pos.sort()
-            thumb_bone = bones[x_pos[0]]
-            finger_bones.remove(thumb_bone)
-            thumb_bone.name = bone_names_fingers[5] + "_01"
-            thumb_bone_children = thumb_bone.children_recursive
-            j = 2
-            for ch in thumb_bone_children:
-                ch.name = bone_names_fingers[5] + "_0" + str(j)
-                j += 1
-        if len(finger_bones) < 3: # middle chain
-            print("start 1")
-            y_pos = []
-            bones = {}
-            for c in finger_bones:
-                y_pos.append(c.head[1])
-                bones[c.head[1]] = c
-            y_pos.sort()
-            print(y_pos[0])
-            index_bone = bones[y_pos[0]]
-            finger_bones.remove(index_bone)
-            index_bone.name = bone_names_fingers[4] + "_01"
-            index_bones_children = index_bone.children_recursive
-            j = 2
-            for ch in index_bones_children:
-                ch.name = bone_names_fingers[4] + "_0" + str(j)
-                j += 1
-                
-            middle_bone = bones[y_pos[1]]
-            finger_bones.remove(middle_bone)
-            middle_bone.name = bone_names_fingers[3] + "_01"
-            middle_bones_children = middle_bone.children_recursive
-            j = 2
-            for ch in middle_bones_children:
-                ch.name = bone_names_fingers[3] + "_0" + str(j)
-                j += 1
-
-    # rename basic facial
-    bone_group = _get_bones_from_group('Facial Basic', pose_bones)
-    left_bones = _side_filter(bone_group, 'left')
-    middle_bones = _side_filter(bone_group)
-
-    middle_bones[0].name = bone_names_facial[0]
-    y_pos = []
-    bones = {}
-
-    for b in left_bones:
-        print(b)
-        y_pos.append(b.head[1])
-        bones [b.head[1]] = b
-    y_pos.sort()
-    bones [y_pos[0]].name = bone_names_facial[5]
-    bones [y_pos[1]].name = bone_names_facial[4]+"_"+bone_suffix[2]
-
-
-def _rename_mirrored_bones(): # find and rename mirrored bones
-    for bone in left_bones:
-        x, y, z = bone.head
-        cur_name = bone.name
-        location_x_plus = (-x, y, z)    
-        for bone_1 in group_bones:
-            i, j, k = (bone_1.head)
-            location_x_minus = (i, j, k)
-            if location_x_plus == location_x_minus and not bone in visited:
-                bone_1.name = bone.name  + "_r"
-                bone.name = cur_name + "_l"
-                #print("mirrored {}".format(bone_1.name))r
+                name = (bone_mapping.get(b.anim_map_index))
+                pose_bones[i].name = name
+        i += 1
