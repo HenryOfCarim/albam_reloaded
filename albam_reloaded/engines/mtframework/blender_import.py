@@ -110,6 +110,7 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     uvs_per_vertex = imported_vertices['uvs']
     uvs_per_vertex_2 = imported_vertices['uvs2']
     uvs_per_vertex_3 = imported_vertices['uvs3']
+    vertex_colors = imported_vertices['vertex_colors']
     weights_per_bone = imported_vertices['weights_per_bone']
     indices = get_indices_array(mod, mesh)
     indices = strip_triangles_to_triangles_list(indices)
@@ -133,9 +134,6 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     me_ob.use_auto_smooth = True
 
     mesh_material = materials[mesh.material_index]
-    '''Old code
-    if not mesh.use_cast_shadows and mesh_material.use_cast_shadows:
-        mesh_material.use_cast_shadows = False'''
     if not mesh.use_cast_shadows and mesh_material.shadow_method: # code gets .use_cast_shadows from mesh's custom props
         mesh_material.shadow_method = 'NONE' # if use_cast_shadows is false and a material shadows is enabled, set it to NONE
     me_ob.materials.append(mesh_material)
@@ -167,7 +165,22 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
             offset = loop.vertex_index * 2
             per_loop_list.extend((source_uvs[offset], source_uvs[offset + 1]))
         uv_layer.data.foreach_set('uv', per_loop_list)
-
+    
+    # vertex colors import for static meshes 
+    if mesh.vertex_format == 0 and mesh_material.unk_flag_8_bones_vertex:
+        me_ob.vertex_colors.new(name="imported_colors")
+        color_layer = me_ob.vertex_colors["imported_colors"]
+        for poly in me_ob.polygons:
+            # loop through all loops in the polygon
+            for loop_index in poly.loop_indices:
+                #print("loop index is {}".format(loop_index))
+                # get the loop object
+                loop = me_ob.loops[loop_index]
+                # check if the loop's vertex index matches the desired one
+                if vertex_colors[loop.vertex_index]:
+                    # set the color of the loop to red
+                    #color_layer.data[loop_index].color = (0.0, 1.0, 0.0, 1.0)
+                    color_layer.data[loop_index].color = vertex_colors [loop.vertex_index]
 
     # Saving unknown metadata for export
     # TODO: use a util function
@@ -186,7 +199,8 @@ def _import_vertices(mod, mesh):
 
 
 def _import_vertices_mod156(mod, mesh):
-    vertices_array = get_vertices_array(mod, mesh)
+    vertices_array = get_vertices_array(mod, mesh) # get vertices according to vertex format
+    material_array = mod.materials_data_array
 
     if mesh.vertex_format != 0:
         locations = (transform_vertices_from_bbox(vf, mod)
@@ -201,23 +215,40 @@ def _import_vertices_mod156(mod, mesh):
                              ((v.normal_z / 255) * 2) - 1), vertices_array)
     # y up to z up
     normals = map(lambda n: (n[0], n[2] * -1, n[1]), normals)
-
     uvs = [(unpack_half_float(v.uv_x), unpack_half_float(v.uv_y) * -1) for v in vertices_array]
+    sorted_vertex_colors = []
     # XXX: normalmap has uvs as well? and then this should be uv3?
     if mesh.vertex_format == 0:
         uvs2 = [(unpack_half_float(v.uv2_x), unpack_half_float(v.uv2_y) * -1) for v in vertices_array]
-        uvs3 = [(unpack_half_float(v.uv3_x), unpack_half_float(v.uv3_y) * -1) for v in vertices_array]
+        # from [0, 255] to [0.0, 1]
+        if material_array[mesh.material_index].unk_flag_8_bones_vertex:
+            uvs3 = []
+            vertex_colors = map (lambda v: ((v.uv3_x & 0xFF) / 255,
+                                            (v.uv3_x>>8 & 0xFF) / 255,
+                                            (v.uv3_y & 0xFF) / 255,
+                                            (v.uv3_y>>8 & 0xFF) / 255
+                                            ),vertices_array)
+            vertex_colors = list(chain.from_iterable(vertex_colors))
+            # pack colors to a list
+            for vc in range(len(vertex_colors)//4):
+                i = vc * 4
+                b = vertex_colors[i]
+                g = vertex_colors[(i+1)]
+                r = vertex_colors[(i+2)]
+                a = vertex_colors[(i+3)]
+                sorted_vertex_colors.append((r, g, b, a))
+        else:
+            uvs3 = [(unpack_half_float(v.uv3_x), unpack_half_float(v.uv3_y) * -1) for v in vertices_array]
     else:
         uvs2 = []
         uvs3 = []
-
-
     return {'locations': list(locations),
             'normals': list(normals),
             # TODO: investigate why uvs don't appear above the image in the UV editor
             'uvs': list(chain.from_iterable(uvs)),
             'uvs2': list(chain.from_iterable(uvs2)),
             'uvs3': list(chain.from_iterable(uvs3)),
+            'vertex_colors': list(sorted_vertex_colors),
             'weights_per_bone': _get_weights_per_bone(mod, mesh, vertices_array)
             }
 
@@ -272,7 +303,7 @@ def _create_blender_textures_from_mod(mod, base_dir):
             w.write(dds)
         image = bpy.data.images.load(dds_path, check_existing=True)
         texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
-        texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
+        #texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
         texture = bpy.data.textures.get(texture_name_no_extension)
         # Create a texture data block if not exist
         if not texture:

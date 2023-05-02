@@ -7,6 +7,7 @@ import ntpath
 import os
 import tempfile
 
+
 try:
     import bpy
     import mathutils
@@ -236,6 +237,22 @@ def export_mod156(parent_blender_object):
 
     return ExportedMod(mod, exported_materials)
 
+def _get_vertex_colours(blender_mesh):
+    mesh = blender_mesh.data
+    colors = {}
+    try:
+        color_layer = mesh.vertex_colors[0]
+    except:
+        return colors
+    mesh_loops = {li: loop.vertex_index for li, loop in enumerate(mesh.loops)}
+    vtx_colors = {mesh_loops[li]: data.color for li, data in color_layer.data.items()}
+    for idx, color in vtx_colors.items():
+        b = round(color[0]*255)
+        g = round(color[1]*255)
+        r = round(color[2]*255)
+        a = round(color[3]*255)
+        colors[idx] = (r,g,b,a)
+    return colors
 
 def _process_weights(weights_per_vertex, max_bones_per_vertex=4):
     """
@@ -300,12 +317,24 @@ def _get_tangents_per_vertex(blender_mesh):
         tangents.setdefault(loop.vertex_index, loop.tangent)
     return tangents
 
+def _pack_uv(uv_array):
+    packed_uv = uv_array
+    for vertex_index, (uv_x, uv_y) in uv_array.items():
+        # flipping for dds textures
+        uv_y *= -1
+        uv_x = pack_half_float(uv_x)
+        uv_y = pack_half_float(uv_y)
+        packed_uv[vertex_index] = (uv_x, uv_y)
+    return packed_uv
 
 def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_bounding_box):
     blender_mesh = blender_mesh_object.data
+    vtx_color_flag = blender_mesh.materials[0].unk_flag_8_bones_vertex
     vertex_count = len(blender_mesh.vertices)
-
-    uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object)
+    uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object,0)
+    uvs_lmap_per_vertex = get_uvs_per_vertex(blender_mesh_object,1)
+    #uvs_lmap_per_vertex = get_lmap_uvs_per_vertex(blender_mesh_object)
+    colors_per_vertex = _get_vertex_colours(blender_mesh_object)
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
     max_bones_per_vertex = max({len(data) for data in weights_per_vertex.values()}, default=0)
@@ -314,13 +343,8 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
 
     VF = VERTEX_FORMATS_TO_CLASSES[max_bones_per_vertex]
 
-    for vertex_index, (uv_x, uv_y) in uvs_per_vertex.items():
-        # flipping for dds textures
-        uv_y *= -1
-        uv_x = pack_half_float(uv_x)
-        uv_y = pack_half_float(uv_y)
-        uvs_per_vertex[vertex_index] = (uv_x, uv_y)
-
+    uvs_per_vertex = _pack_uv(uvs_per_vertex)
+    uvs_lmap_per_vertex = _pack_uv(uvs_lmap_per_vertex)
     vertices_array = (VF * vertex_count)()
     has_bones = hasattr(VF, 'bone_indices')
 
@@ -357,6 +381,25 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
             print('Missing normal in vertex {}, mesh {}'.format(vertex_index, mesh_index))
         vertex_struct.uv_x = uvs_per_vertex.get(vertex_index, (0, 0))[0] if uvs_per_vertex else 0
         vertex_struct.uv_y = uvs_per_vertex.get(vertex_index, (0, 0))[1] if uvs_per_vertex else 0
+        vertex_struct.uv2_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 65535
+        vertex_struct.uv2_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 65535
+        #export vertex colors
+        if max_bones_per_vertex == 0:
+            if vtx_color_flag == 1 :
+                try:
+                    color = colors_per_vertex[vertex_index]
+                except:
+                    #print(blender_mesh_object)
+                    color = (255, 255, 255, 255)
+
+                _uv3_x = (color[1]<<8)|color[0] 
+                _uv3_y = (color[3]<<8)|color[2] 
+                vertex_struct.uv3_x = _uv3_x
+                vertex_struct.uv3_y = _uv3_y 
+            else:
+                vertex_struct.uv3_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 65535
+                vertex_struct.uv3_y = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[1] if uvs_lmap_per_vertex else 65535
+
     return vertices_array
 
 
@@ -369,7 +412,10 @@ def _create_bone_palettes(blender_mesh_objects):
         armature = mesh.parent
         vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
         vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
-        bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
+        try:
+            bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
+        except:
+            print("Can't find vertex group in the armature")
 
         msg = "Mesh {} is influenced by more than 32 bones, which is not supported".format(mesh.name)
         assert len(bone_indices) <= MAX_BONE_PALETTE_SIZE, msg
@@ -481,7 +527,6 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
     face_position = 0
     weight_bounds_list = []
 
-
     for mesh_index, blender_mesh_ob in enumerate(blender_meshes):
         bone_palette_index = 0
         bone_palette = []
@@ -551,7 +596,6 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         m156.vertex_index_start_2 = vertex_position
         m156.vertex_group_count = len(blender_mesh_ob.vertex_groups) if is_skeletal else 1
         m156.bone_palette_index = bone_palette_index
-        #m156.use_cast_shadows = int(blender_material.use_cast_shadows)
         m156.use_cast_shadows = int(_get_shadow_method(blender_material))
         vertex_position += vertex_count
         face_position += index_count
@@ -631,11 +675,23 @@ def _calculate_weight_bounds_skeletal_mesh(blender_mesh_ob, armature):
     return sorted(unsorted_weight_bounds, key=lambda x: x.bone_id)
 
 def _export_textures_and_materials(blender_objects, saved_mod):
-    '''blender_objects : bpy.data.objects['Pl0200.mod_0000_LOD_1']
+    '''Get array of materials and  textures for certain .mod parent
        saved_mod : <albam_reloaded.engines.mtframework.mod_156.GenMod156 object>  
     '''
     textures = get_textures_from_blender_objects(blender_objects) # get a set of ShaderNodeTexImage
     blender_materials = get_materials_from_blender_objects(blender_objects) # get a set with blender_objects.data.materials
+
+    # get skinned meshes with 8 bones per vertex flag and set it to 0
+    skinned_meshes = []
+    for obj in blender_objects:
+        for modifier in obj.modifiers:
+             if modifier.type == "ARMATURE":
+                 skinned_meshes .append(obj)
+                 continue
+    skinned_meshes  = [ob for ob in skinned_meshes if ob.type == 'MESH']
+    vtx_mats = [ob.data.materials[0] for ob in skinned_meshes  if ob.data.materials[0].unk_flag_8_bones_vertex == 1]
+    for mat in vtx_mats:
+        mat.unk_flag_8_bones_vertex = 0
 
     textures_array = ((ctypes.c_char * 64) * len(textures))()
     materials_data_array = (MaterialData * len(blender_materials))()
@@ -673,23 +729,17 @@ def _export_textures_and_materials(blender_objects, saved_mod):
             if not attr_name.startswith('unk_'):
                 continue
             setattr(material_data, attr_name, getattr(mat, attr_name))
-
-        #shader_node = mat.node_tree.nodes.get("MTFrameworkGroup")
-        #socket_name = shader_node.inputs[0].name
-        #is_linked = shader_node.inputs['Diffuse BM'].is_linked
-        #node_connected = shader_node.inputs['Diffuse BM'].node
-
         mat_tex = get_textures_from_the_material(mat) # get list with all ImageTexture nodes of the material
         
         for texture_node in mat_tex:
             if not texture_node or not texture_node.image:
                 continue
-            texture = texture_node.image.name    
+            texture_name = texture_node.image.name    
             texture_data = [td for td in textures if td.image == texture_node.image] # get a texture data linked to the imageTexture node
             try:
                 texture_index = textures.index(texture_data[0]) + 1 # get the texture data index,  texture_indices expects index-1 based
             except:
-                raise ExportError("No texture data container linked with {} texture was found. Please create it before the export ".format(texture))
+                raise ExportError("No texture data container linked with {} texture was found. Please create it before the export ".format(texture_name))
 
             texture_code = blender_texture_to_texture_code(texture_node)
             if texture_code is None:

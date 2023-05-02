@@ -149,11 +149,11 @@ class MaterialData(Structure):
                 ('unk_flag_10', c_uint16, 1),
                 ('unk_flag_11', c_uint16, 1),
                 # Always set to zero since 8 bones is not yet supported
-                ('flag_8_bones_vertex', c_uint16, 1),
-                ('unk_flag_12', c_uint16, 1),
+                ('unk_flag_8_bones_vertex', c_uint16, 1),
                 ('unk_flag_13', c_uint16, 1),
                 ('unk_flag_14', c_uint16, 1),
                 ('unk_flag_15', c_uint16, 1),
+                ('unk_flag_16', c_uint16, 1),
                 ('unk_02_flag_01',  c_uint16, 1),#'unk_02', c_short
                 ('unk_02_flag_02',  c_uint16, 1),
                 ('unk_02_flag_03',  c_uint16, 1),
@@ -276,8 +276,12 @@ class VertexFormat0(Structure):
                 ('uv_y', c_ushort),  # half float
                 ('uv2_x', c_ushort),  # half float
                 ('uv2_y', c_ushort),  # half float
-                ('uv3_x', c_ushort),  # half float
-                ('uv3_y', c_ushort),  # half float
+                ('uv3_x', c_ushort),  # half float argb vertex color for static meshes
+                ('uv3_y', c_ushort),  # half float argb vertex color for static meshes
+                #('vertex_color_r', c_ubyte),
+                #('vertex_color_g', c_ubyte),
+                #('vertex_color_b', c_ubyte),
+                #('vertex_color_a', c_ubyte),
                 )
 
 

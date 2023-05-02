@@ -13,7 +13,7 @@ from . registry import *
 bl_info = {
     "name": "Albam Reloaded",
     "author": "Sebastian Brachi",
-    "version": (0, 3, 6),
+    "version": (0, 3, 7),
     "blender": (2, 80, 0),
     "location": "Properties Panel",
     "description": "Import-Export multiple video-game formats",
@@ -31,6 +31,8 @@ classes = ( AlbamImportedItem,
             ALBAM_PT_ToolsPanel,
             ALBAM_PT_CustomMaterialOptions,
             ALBAM_PT_CustomMeshOptions,
+            CopyCustomPropertiesMat,
+            PasteCustomPropertiesMat,
             AlbamImportOperator,
             AlbamFixLeakedTexuresOperator,
             AlbamSelectInvalidMeshesOperator,
@@ -75,6 +77,7 @@ def register():
     bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName) # register name property for scene
     bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem) # register new object properties
     bpy.types.Scene.albam_export_settings = bpy.props.PointerProperty(type=blender.AlbamExportSettings)
+    bpy.types.Scene.albam_copypaste_buffer = bpy.props.StringProperty()
     bpy.types.Scene.albam_scene_meshes = bpy.props.PointerProperty(type=bpy.types.Object)
 
 def unregister():
@@ -87,6 +90,8 @@ def unregister():
     del bpy.types.Scene.albam_items_imported
     del bpy.types.Object.albam_imported_item
     del bpy.types.Scene.albam_export_settings
+    del bpy.types.Scene.albam_copypaste_buffer
+    del bpy.types.Scene.albam_scene_meshes
 
 if __name__ == "__main__":
     register()

@@ -245,10 +245,11 @@ def get_bone_indices_and_weights_per_vertex(blender_object):
     return weights_per_vertex
 
 
-def get_uvs_per_vertex(blender_mesh_object):
+def get_uvs_per_vertex(blender_mesh_object, layer_index):
+    '''get .mod return dictionaly with UV'''
     vertices = {}  # vertex_index: (uv_x, uv_y)
     try:
-        uv_layer = blender_mesh_object.data.uv_layers[0]
+        uv_layer = blender_mesh_object.data.uv_layers[layer_index]
     except IndexError:
         return vertices
     uvs_per_loop = uv_layer.data

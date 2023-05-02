@@ -1,6 +1,8 @@
 # Albam Reloaded
 Updated and upgraded Sebastian Brachi's albam addon to blender 2.80+ for Resident Evil 5 modding
 
+The addon was tested on Blender 2.93 and 3.1, functionality on other versions hasn't been tested
+
 With the current version you can:
 - edit character meshes
 - rename bones for convenient skin weights painting and mirroring weights
@@ -14,6 +16,10 @@ Download the latest release
 Run Blender
 Go to `Edit>Preference>Add-ons>Install`, select downloaded zip archive and press `Install Add-on`
 Turn it on after installing
+
+Basic overview of the addon and its limitation you can find on the [wiki page](https://github.com/HenryOfCarim/albam_reloaded/wiki)
+
+Basic demonstration of modding process is here [youtube playlist link](https://www.youtube.com/playlist?list=PLylhrXLaRiau0Q27cBihqJIkgxQr-CEUh)
 
 # Contacts
 If you are willing to help in development or get quick help you can visit our discord server https://discord.gg/69sphky9UX
