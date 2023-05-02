@@ -5,8 +5,6 @@ from itertools import chain
 import math
 import ntpath
 import os
-#import re
-#import struct
 import tempfile
 
 try:

@@ -589,7 +589,6 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
             blender_bone.parent = blender_bones[bone.parent_index]
 
         blender_bone.tail = Vector((blender_bone.head[0], blender_bone.head[1], blender_bone.head[2] + 0.01))
-        blender_bone['mirror index'] = bone.mirror_index
         blender_bones.append(blender_bone)
 
 
