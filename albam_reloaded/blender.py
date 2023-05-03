@@ -185,7 +185,7 @@ class ALBAM_PT_ToolsPanel(bpy.types.Panel):
         layout.operator('albam_tools.fix_leaked_texures', text="Fix leaked textures")
         layout.operator('albam_tools.select_invalid_meshes', text="Select invalid meshes")
         layout.operator('albam_tools.remove_empty_vertex_groups', text="Remove empty vertex groups")
-        layout.operator('albam_tools.rename_bones', text="Autorename bones")
+        layout.operator('albam_tools.rename_bones', text="Auto-rename bones")
         layout.operator('albam_tools.transfer_normals', text="Transfer normals")
         layout.prop(scn, "albam_scene_meshes", text="from")
         #layout.prop_search(scn, 'albam_scene_meshes', bpy.data, 'meshes', text='from')
