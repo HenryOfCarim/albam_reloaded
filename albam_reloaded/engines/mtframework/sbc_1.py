@@ -26,9 +26,9 @@ class RE5v4quad(Structure):
 
 class SBCgroup(Structure):
     _fields_ = (('base', c_uint),
-                ('offset_a', c_uint),
-                ('offset_b', c_uint),
-                ('vstart', c_uint),
+                ('start_tris', c_uint),
+                ('start_boxes', c_uint),
+                ('start_vertices', c_uint),
                 ('group_id', c_uint),
                 ('box_a', c_float * 6),
                 ('box_b', c_float* 6),
