@@ -127,9 +127,9 @@ class MaterialData(Structure):
                 ('unk_01_flag_04', c_uint16, 1),
                 ('unk_01_flag_05', c_uint16, 1),
                 ('unk_01_flag_06', c_uint16, 1),
-                ('unk_01_no_alpha', c_uint16, 1),
-                ('unk_01_flag_08', c_uint16, 1),
-                ('unk_01_alpha_transparency', c_uint16, 1),
+                ('unk_01_no_alpha', c_uint16, 1),#opaque
+                ('unk_01_flag_08', c_uint16, 1), #translusent
+                ('unk_01_alpha_transparency', c_uint16, 1),#alpha transparency
                 ('unk_01_flag_10', c_uint16, 1),
                 ('unk_01_flag_11', c_uint16, 1),
                 ('unk_01_flag_12', c_uint16, 1),
@@ -148,7 +148,6 @@ class MaterialData(Structure):
                 ('unk_flag_09', c_uint16, 1),
                 ('unk_flag_10', c_uint16, 1),
                 ('unk_flag_11', c_uint16, 1),
-                # Always set to zero since 8 bones is not yet supported
                 ('unk_flag_8_bones_vertex', c_uint16, 1),
                 ('unk_flag_13', c_uint16, 1),
                 ('unk_flag_14', c_uint16, 1),
@@ -168,7 +167,7 @@ class MaterialData(Structure):
                 ('unk_02_use_detail_map',  c_uint16, 1),
                 ('unk_02_flag_13',  c_uint16, 1),
                 ('unk_02_flag_14',  c_uint16, 1),
-                ('unk_02_flag_15',  c_uint16, 1),
+                ('unk_02_flag_15',  c_uint16, 1),# env cubemap flag
                 ('unk_02_flag_16',  c_uint16, 1),
                 ('unk_03', c_short), 
                 ('unk_04', c_ushort),
@@ -200,7 +199,7 @@ class MaterialData(Structure):
                 ('unk_f_18', c_float),
                 ('unk_f_19', c_float),
                 ('unk_f_20', c_float),
-                ('unk_normalmap_green_channel', c_float), # -1 or 1
+                ('unk_normalmap_green_channel', c_float), # NormalMapFlip -1 or 1
                 ('unk_f_22', c_float),
                 ('unk_f_23', c_float),
                 ('unk_f_24', c_float),
