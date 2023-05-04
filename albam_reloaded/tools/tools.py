@@ -51,12 +51,20 @@ def split_UV_seams_operator(selected_meshes):
         bpy.ops.object.mode_set(mode = 'OBJECT')
         show_message_box(message="The fix is complete")
 
+
 def select_invalid_meshes_operator(scene_meshes):
+    '''Select meshes with more than 32 bone influences
+    works only with parented meshes to an armature so it exclude meshes that excludes grids that will not be exported
+
+    Parameters:
+    scene_meshes (bpy.context.scene.objects): blender objects filtered by mesh type
+    '''
     bpy.ops.object.select_all(action='DESELECT')
     invalid_meshes = []
     invalid_vertex_groups = []
-    for mesh in scene_meshes:
-        armature = mesh.parent
+    visible_meshes = [ob for ob in scene_meshes if ob.visible_get()]
+    for mesh in visible_meshes:
+        armature = mesh.parent #
         if armature:
             vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
             vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
@@ -70,16 +78,15 @@ def select_invalid_meshes_operator(scene_meshes):
             if len(bone_indices)>32:
                 invalid_meshes.append(mesh)
         else:
-            continue
-        
+            continue     
     if invalid_meshes:
         for mesh in invalid_meshes:
-            mesh.hide_select = False
+            #mesh.hide_select = False
             mesh.select_set(True)
             #bpy.context.view_layer.objects.active = mesh
         show_message_box(message="Meshes with more than 32 bone influences selected")
     else:
-        show_message_box(message="There is no invalid mesh")
+        show_message_box(message="There is no invalid mesh among visible")
 
 
 def transfer_normals(source_obj, target_objs):
