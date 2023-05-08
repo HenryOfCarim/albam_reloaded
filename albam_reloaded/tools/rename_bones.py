@@ -108,10 +108,10 @@ bone_mapping = {
                 #117:"ev_eye_r",
                 #118:"ev_eye_l",
                 #119:"ev_lip_upper_corner_r",
-                #120:"ev_lip_upper_2_r",
-                #121:"ev_lip_upper_1_r",
-                #122:"ev_lip_upper",
-                #123:"ev_lip_upper_1_l",
+                120:"ctr_breast_r", # can be middle
+                121:"breast_r", # can be middle
+                122:"ctr_breast_l",
+                123:"breast_l",
                 #124:"ev_lip_upper_2_l",
                 #125:"ev_lip_upper_corner_l",
                 #126:"ev_lip_above_upper_r",
