@@ -15,8 +15,8 @@ class FileEntry(Structure):
     _fields_ = (('file_path', c_char * MAX_FILE_PATH),
                 ('file_id', c_int),
                 ('zsize', c_uint),
-                ('size', c_uint, 24),
-                ('flags', c_uint, 8),
+                ('size', c_uint, 29),
+                ('flags', c_uint, 3),
                 ('offset', c_uint),
                 )
 
@@ -83,7 +83,7 @@ class Arc(DynamicStructure):
             ext = os.path.splitext(file_path)[1].replace('.', '')
             file_entries[i] = FileEntry(file_path=cls._set_path(source_path, file_path),
                                         file_id=EXTENSION_TO_FILE_ID.get(ext) or 0,
-                                        flags=64,  # always compressing
+                                        flags=2,  # always compressing
                                         size=os.path.getsize(file_path),
                                         zsize=len(chunk), offset=current_offset)
             current_offset += len(chunk)
