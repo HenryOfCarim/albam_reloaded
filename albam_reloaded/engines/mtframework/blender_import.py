@@ -155,9 +155,6 @@ def import_sbc(blender_object, file_path, **kwargs):
     vertices = [v for v in sbc.vertices]
     vertices = _transform_coordinates(vertices)
     name = os.path.basename(file_path)
-    parent = bpy.data.objects.new(name, None)
-    bpy.context.collection.objects.link(parent)   
-    parent.empty_display_type = 'PLAIN_AXES'
     
     for gi in range(len(groups)):
         cur_triag = []
@@ -172,11 +169,12 @@ def import_sbc(blender_object, file_path, **kwargs):
             ofc_triangle = ()
             ofc_triangle = (cur_idx[0] + cur_vert_ofc, cur_idx[1] + cur_vert_ofc, cur_idx[2] + cur_vert_ofc)
             cur_triag.append(ofc_triangle)
-        mesh_data = bpy.data.meshes.new(name + "_mesh")
+        mesh_name = _create_mesh_name(gi,file_path)
+        mesh_data = bpy.data.meshes.new(mesh_name)
         mesh_data.from_pydata(vertices, [], cur_triag)
-        mesh_obj = bpy.data.objects.new(name + "_" + str(gi), mesh_data)
+        mesh_obj = bpy.data.objects.new(mesh_name, mesh_data)
         bpy.context.collection.objects.link(mesh_obj)
-        mesh_obj.parent = parent   
+        mesh_obj.parent = blender_object   
     print("it works somehow")
 
 
