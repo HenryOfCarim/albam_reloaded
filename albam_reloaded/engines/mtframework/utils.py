@@ -1,4 +1,8 @@
-from ast import Return
+try:
+    import bpy
+except ImportError:
+    pass
+
 import ctypes
 from collections import Counter
 import ntpath
@@ -160,6 +164,11 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
         link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[7])
         shader_node_grp.inputs[8].default_value = 1
 
+    elif texture_code == 6:
+        # Enviroment _CM
+        blender_texture_node.location = (-800, -350)
+        link(blender_texture_node.outputs['Color'], shader_node_grp.inputs[9])
+
     elif texture_code == 7:
         #Detail normal map
         blender_texture_node.location = (-300, -1750)
@@ -176,14 +185,15 @@ def texture_code_to_blender_texture(texture_code, blender_texture_node, blender_
         shader_node_grp.inputs[12].default_value = 1
         #TODO move it to function
         #Link the material properites value
-        for x in range(3):
-            d = mapping_node.inputs[3].driver_add("default_value", x)
-            var1 = d.driver.variables.new()
-            var1.name = "detail_multiplier"
-            var1.targets[0].id_type = 'MATERIAL'
-            var1.targets[0].id = blender_material
-            var1.targets[0].data_path = '["unk_detail_factor"]'
-            d.driver.expression = var1.name
+        if bpy.app.version > (2,80,75) :
+            for x in range(3):
+                d = mapping_node.inputs[3].driver_add("default_value", x)
+                var1 = d.driver.variables.new()
+                var1.name = "detail_multiplier"
+                var1.targets[0].id_type = 'MATERIAL'
+                var1.targets[0].id = blender_material
+                var1.targets[0].data_path = '["unk_detail_factor"]'
+                d.driver.expression = var1.name
     else:
         print('texture_code not supported', texture_code)
         # TODO: 6 CM cubemap

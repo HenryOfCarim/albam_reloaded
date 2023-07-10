@@ -263,6 +263,21 @@ def _get_path_to_albam():
         else:
             pass
 
+def _create_dummy_texture(i, path):
+    texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
+    texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
+    texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE')
+    texture.use_fake_user = True
+
+    image_path = _get_path_to_albam()
+    image_path = os.path.join(image_path, "resourses", "missing texture.dds")
+    dummy_image = bpy.data.images.load(image_path)
+
+    texture.image = dummy_image
+    texture_node_name = texture_name_no_extension + ".dds"
+    texture.image.name = texture_node_name
+    return texture
+
 
 def _create_blender_textures_from_mod(mod, base_dir):
     textures = [None]  # materials refer to textures in index-1
@@ -277,19 +292,8 @@ def _create_blender_textures_from_mod(mod, base_dir):
             # TODO: log warnings, figure out 'rtex' format
             print('path {} does not exist'.format(path))
             # add a placeholder instead of the missing texure
-            texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
-            texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
-            texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE')
-            texture.use_fake_user = True
-
-            image_path = _get_path_to_albam()
-            image_path = os.path.join(image_path, "resourses", "missing texture.dds")
-            dummy_image = bpy.data.images.load(image_path)
-
-            texture.image = dummy_image
-            texture_node_name = texture_name_no_extension + ".dds"
-            texture.image.name = texture_node_name
-            textures.append(texture) 
+            dummy_texture =_create_dummy_texture(i, path)
+            textures.append(dummy_texture) 
             continue
         tex = Tex112(path)
         try:
@@ -297,7 +301,8 @@ def _create_blender_textures_from_mod(mod, base_dir):
         except TextureError as err:
             # TODO: log this instead of printing it
             print('Error converting "{}"to dds: {}'.format(path, err))
-            textures.append(None)
+            dummy_texture = _create_dummy_texture(i, path)
+            textures.append(dummy_texture) 
             continue
         dds_path = path.replace('.tex', '.dds') # change extension in the full path
         with open(dds_path, 'wb') as w: #write bynary
@@ -374,9 +379,9 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
                 # This means the conversion failed before
                 # TODO: logging
                 continue
-            if texture_code == 6:
-                print('texture_code not supported', texture_code)
-                continue
+            #if texture_code == 6:
+            #    print('texture_code not supported', texture_code)
+            #    continue
             texture_node = blender_material.node_tree.nodes.new('ShaderNodeTexImage') 
             texture_code_to_blender_texture(texture_code, texture_node, blender_material)
             texture_node.image = texture_target.image # set bpy.data.textures[].image as a texures for ShaderNodeTexImage

@@ -4,7 +4,6 @@ except ImportError:
     pass
 from collections import deque, namedtuple
 import math
-import os
 
 
 BoundingBox = namedtuple('bounding_box', (
@@ -45,6 +44,16 @@ def get_model_bounding_box(blender_objects):
     )
 
 
+def get_dist(point_a, point_b):
+    x1, y1, z1= point_a
+    x2, y2, z2 = point_b
+    x3 = x1-x2
+    y3 = y1-y2
+    z3 = z1-z2
+    magnitude = math.sqrt((x3*x3)+(y3*y3)+(z3*z3))
+    return magnitude
+
+
 def get_model_bounding_sphere(blender_objects):
     # TODO: optimize
 
@@ -57,7 +66,8 @@ def get_model_bounding_sphere(blender_objects):
     center_z = (bbox.min_z + bbox.max_z) / 2
     center = [center_x, center_y, center_z]
 
-    radius = max(map(lambda vertex: math.dist(center, vertex), vertices))
+    #radius = max(map(lambda vertex: math.dist(center, vertex), vertices))
+    radius = max(map(lambda vertex: get_dist(center, vertex), vertices))
     return center + [radius]
 
 

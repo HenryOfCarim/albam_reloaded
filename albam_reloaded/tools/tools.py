@@ -36,6 +36,11 @@ def split_UV_seams_operator(selected_meshes):
 
     for mesh in selected_meshes:
         me = mesh.data
+        # create temporal mesh for normal transfer
+        temp_list = []
+        temp_data = me.copy()
+        temp_mesh = mesh.copy()
+        temp_mesh.data = temp_data 
         # in order to select edges, you need to make sure that
         # previously you deselected everything in the Edit Mode
         # and set the select_mode to 'EDGE'
@@ -49,6 +54,11 @@ def split_UV_seams_operator(selected_meshes):
         # otherwise, the result won't be seen,
         # see https://blender.stackexchange.com/questions/43127 for info
         bpy.ops.object.mode_set(mode = 'OBJECT')
+        # transfer normals and remove temporal mesh
+        temp_list.append(mesh)
+        transfer_normals(temp_mesh, temp_list)
+        objs = bpy.data.objects
+        objs.remove(temp_mesh, do_unlink=True)
         show_message_box(message="The fix is complete")
 
 

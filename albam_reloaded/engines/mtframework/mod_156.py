@@ -184,7 +184,7 @@ class MaterialData(Structure):
                 ('unk_f_03', c_float), # specular power ? 0.0 - 0.04
                 ('unk_f_04', c_float), # glossnes level ?
                 ('unk_f_05', c_float), # specular contrast ? 1.0 - 250
-                ('unk_f_06', c_float),
+                ('unk_cubemap_roughness', c_float), # 7 for glasses
                 ('unk_f_07', c_float),
                 ('unk_f_08', c_float),
                 ('unk_f_09', c_float),

@@ -13,7 +13,7 @@ from . registry import *
 bl_info = {
     "name": "Albam Reloaded",
     "author": "Sebastian Brachi",
-    "version": (0, 3, 7),
+    "version": (0, 3, 8),
     "blender": (2, 80, 0),
     "location": "Properties Panel",
     "description": "Import-Export multiple video-game formats",
@@ -40,6 +40,9 @@ classes = ( AlbamImportedItem,
             AlbamRenameBonesOperator,
             AlbamTransferNormalsOperator,
            )
+
+def mesh_filter(self, object):
+    return object.type == 'MESH'
 
 def register():
 
@@ -78,7 +81,7 @@ def register():
     bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem) # register new object properties
     bpy.types.Scene.albam_export_settings = bpy.props.PointerProperty(type=blender.AlbamExportSettings)
     bpy.types.Scene.albam_copypaste_buffer = bpy.props.StringProperty()
-    bpy.types.Scene.albam_scene_meshes = bpy.props.PointerProperty(type=bpy.types.Object)
+    bpy.types.Scene.albam_scene_meshes = bpy.props.PointerProperty(type=bpy.types.Object, poll=mesh_filter)
 
 def unregister():
     ''' Classic blender 2.80 unregistration of classes'''

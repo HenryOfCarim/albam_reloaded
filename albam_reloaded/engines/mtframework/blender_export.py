@@ -7,7 +7,6 @@ import ntpath
 import os
 import tempfile
 
-
 try:
     import bpy
     import mathutils
@@ -47,6 +46,11 @@ from ...lib.blender import (
     get_model_bounding_box,
     get_model_bounding_sphere,
 )
+
+try:
+    from math import dist as get_dist
+except ImportError:
+    from ...lib.blender import get_dist
 
 # Until it's needed, we simplify modding by exporting all meshes with the always-visible level of detail
 # This way one doesn't need to care about them
@@ -292,7 +296,6 @@ def _process_weights(weights_per_vertex, max_bones_per_vertex=4):
 
     return new_weights_per_vertex
 
-
 def _get_normals_per_vertex(blender_mesh):
     normals = {}
 
@@ -304,7 +307,6 @@ def _get_normals_per_vertex(blender_mesh):
         for vertex in blender_mesh.vertices:
             normals[vertex.index] = vertex.normal
     return normals
-
 
 def _get_tangents_per_vertex(blender_mesh):
     tangents = {}
@@ -402,7 +404,6 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
 
     return vertices_array
 
-
 def _create_bone_palettes(blender_mesh_objects):
     bone_palette_dicts = []
     MAX_BONE_PALETTE_SIZE = 32
@@ -445,7 +446,6 @@ def _get_shadow_method(blender_material):
     return index
 
 
-
 def calculate_vertex_group_weight_bound(blender_mesh, armature, vertex_group):
     vertices_in_group = []
 
@@ -476,7 +476,8 @@ def calculate_vertex_group_weight_bound(blender_mesh, armature, vertex_group):
     center_y = (min_y + max_y) / 2
     center_z = (min_z + max_z) / 2
     center = (center_x, center_y, center_z)
-    radius = max(map(lambda vertex: math.dist(center, vertex[:]), vertices_in_group_bone_space))
+    #radius = max(map(lambda vertex: math.dist(center, vertex[:]), vertices_in_group_bone_space))
+    radius = max(map(lambda vertex: get_dist(center, vertex[:]), vertices_in_group_bone_space))
     bsphere_export = (center_x * 100, center_z * 100, -center_y * 100, radius * 100)
 
     bbox_min_export = (min_x * 100, min_z * 100, -max_y * 100, 0.0)
@@ -633,7 +634,8 @@ def _calculate_bound_static_mesh(blender_mesh_ob):
     center_y = (min_y + max_y) / 2
     center_z = (min_z + max_z) / 2
     center = (center_x, center_y, center_z)
-    radius = max(map(lambda vertex: math.dist(center, vertex.co[:]), bl_mesh.vertices))
+    #radius = max(map(lambda vertex: math.dist(center, vertex.co[:]), bl_mesh.vertices))
+    radius = max(map(lambda vertex: get_dist(center, vertex.co[:]), bl_mesh.vertices))
     bsphere_export = (center_x * 100, center_z * 100, -center_y * 100, radius * 100)
 
     bbox_min_export = (min_x * 100, min_z * 100, -max_y * 100, 0.0)
