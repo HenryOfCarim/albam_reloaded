@@ -6,6 +6,7 @@ try:
     import bpy
     import addon_utils
     from mathutils import Matrix, Vector
+    import numpy as np
 except ImportError:
     pass
 
@@ -125,11 +126,10 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     me_ob.update(calc_edges=True)
     me_ob.polygons.foreach_set("use_smooth", [True] * len(me_ob.polygons))
 
-    loop_normals = []
-    for loop in me_ob.loops:
-        loop_normals.append(vertex_normals[loop.vertex_index])
-
-    me_ob.normals_split_custom_set_from_vertices(vertex_normals)
+    vert_normals = np.array(vertex_normals, dtype=np.float32)
+    norms = np.linalg.norm(vert_normals, axis=1, keepdims=True)
+    np.divide(vert_normals, norms, out=vert_normals, where=norms != 0)
+    me_ob.normals_split_custom_set_from_vertices(vert_normals)
     me_ob.use_auto_smooth = True
 
     mesh_material = materials[mesh.material_index]
