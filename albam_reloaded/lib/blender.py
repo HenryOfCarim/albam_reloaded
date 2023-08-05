@@ -196,17 +196,23 @@ def get_textures_from_blender_objects(blender_objects): # only blender export fu
     textures = set() 
     meshes = {ob.data for ob in blender_objects if ob.type == 'MESH'} # add only meshes to the dictionary?
     for ob in meshes:
-        obt = get_textures_from_the_material(ob.materials[0])
+        try:
+            obt = get_textures_from_the_material(ob.materials[0])
+        except:
+            continue
         for tn in obt:
+            td_exists = False
             for td in texture_data:
                 if tn.image == td.image:
                     textures.add((td))
-        '''Old code
-        for ts in ob.materials[0].texture_slots:#
-            if ts and ts.texture and ts.texture.image:
-                textures.add(ts.texture)
-        return sorted(textures, key=lambda t: t.name)
-        '''
+                    td_exists = True
+                    continue
+            if not td_exists:
+                temp_td = bpy.data.textures.new("test" + tn.image.name, type='IMAGE')
+                temp_td.use_fake_user = True
+                temp_td.image = tn.image
+                texture_data.append(temp_td)
+                textures.add((temp_td))
     return sorted(textures, key=lambda t: t.image.name)
 
 def get_materials_from_blender_objects(blender_objects):
