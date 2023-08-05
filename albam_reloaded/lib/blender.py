@@ -208,7 +208,7 @@ def get_textures_from_blender_objects(blender_objects): # only blender export fu
                     td_exists = True
                     continue
             if not td_exists:
-                temp_td = bpy.data.textures.new("test" + tn.image.name, type='IMAGE')
+                temp_td = bpy.data.textures.new("rstd_" + tn.image.name, type='IMAGE')
                 temp_td.use_fake_user = True
                 temp_td.image = tn.image
                 texture_data.append(temp_td)

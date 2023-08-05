@@ -98,9 +98,11 @@ def export_arc(blender_object, file_path):
                 # TODO: mods with the same name in different folders
                 exported_mod = mods[filename]
             except KeyError:
-                raise ExportError("Can't export to arc, a mod file is missing: {}. "
-                                  "Was it deleted before exporting?. "
-                                  "mods.items(): {}".format(filename, mods.items()))
+                #raise ExportError("Can't export to arc, a mod file is missing: {}. "
+                #                  "Was it deleted before exporting?. "
+                #                  "mods.items(): {}".format(filename, mods.items()))
+                print(f"Ignoring missing mod file in Blender: {filename}")
+                continue
 
             with open(modf, 'wb') as w:
                 w.write(exported_mod.mod)
