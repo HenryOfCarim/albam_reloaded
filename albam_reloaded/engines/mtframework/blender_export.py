@@ -372,19 +372,27 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
         vertex_struct.position_y = xyz[1]
         vertex_struct.position_z = xyz[2]
         vertex_struct.position_w = 32767
+
+        vertex_struct.normal_w = 255
+        vertex_struct.tangent_w = 255
         try:
             # TODO: use a function with a good name (range conversion + y_up_to_z_up?)
             vertex_struct.normal_x = round(((normals[vertex_index][0] * 0.5) + 0.5) * 255)
             vertex_struct.normal_y = round(((normals[vertex_index][2] * 0.5) + 0.5) * 255)
             vertex_struct.normal_z = round(((normals[vertex_index][1] * -0.5) + 0.5) * 255)
-            vertex_struct.normal_w = 255
             vertex_struct.tangent_x = round(((tangents[vertex_index][0] * 0.5) + 0.5) * 255)
             vertex_struct.tangent_y = round(((tangents[vertex_index][2] * 0.5) + 0.5) * 255)
             vertex_struct.tangent_z = round(((tangents[vertex_index][1] * -0.5) + 0.5) * 255)
-            vertex_struct.tangent_w = 255
         except KeyError:
             # should not happen. TODO: investigate cases where it did happen
             print('Missing normal in vertex {}, mesh {}'.format(vertex_index, mesh_index))
+        except ValueError as err:
+            # Ignore all normals/tangents if we have invalid vertices
+            # will get 0 instead
+            if "cannot convert float NaN to integer" in str(err):
+                pass
+            else:
+                raise
         vertex_struct.uv_x = uvs_per_vertex.get(vertex_index, (0, 0))[0] if uvs_per_vertex else 0
         vertex_struct.uv_y = uvs_per_vertex.get(vertex_index, (0, 0))[1] if uvs_per_vertex else 0
         vertex_struct.uv2_x = uvs_lmap_per_vertex.get(vertex_index, (0, 0))[0] if uvs_lmap_per_vertex else 65535
