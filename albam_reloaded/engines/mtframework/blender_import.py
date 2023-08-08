@@ -50,8 +50,13 @@ def import_arc(blender_object, file_path, **kwargs):
         out = out + os.path.sep
 
     arc = Arc(file_path=file_path)
-    arc.unpack(out)
+    # make sure we have an empty dir (from previous imports)
+    if (bpy.context.scene.albam_export_settings.clear_temp_foder_bool == True):
+        existing_files = [os.path.join(root, f) for root, _, files in os.walk(out) for f in files]
+        for f in existing_files:
+            os.remove(f)
 
+    arc.unpack(out)
     mod_files = [os.path.join(root, f) for root, _, files in os.walk(out)
                  for f in files if f.endswith('.mod')]
     mod_folders = [os.path.dirname(mod_file.split(out)[-1]) for mod_file in mod_files]

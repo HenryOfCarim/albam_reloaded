@@ -24,7 +24,7 @@ bl_info = {
 
 classes = ( AlbamImportedItem,
             AlbamImportedItemName,
-            AlbamExportSettings,
+            AlbamSettings,
             ALBAM_PT_CustomTextureOptions,
             AlbamExportOperator,
             ALBAM_PT_ImportExportPanel,
@@ -79,7 +79,7 @@ def register():
     bpy.types.Scene.albam_item_to_export = bpy.props.StringProperty()
     bpy.types.Scene.albam_items_imported = bpy.props.CollectionProperty(type=blender.AlbamImportedItemName) # register name property for scene
     bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem) # register new object properties
-    bpy.types.Scene.albam_export_settings = bpy.props.PointerProperty(type=blender.AlbamExportSettings)
+    bpy.types.Scene.albam_export_settings = bpy.props.PointerProperty(type=blender.AlbamSettings)
     bpy.types.Scene.albam_copypaste_buffer = bpy.props.StringProperty()
     bpy.types.Scene.albam_scene_meshes = bpy.props.PointerProperty(type=bpy.types.Object, poll=mesh_filter)
 

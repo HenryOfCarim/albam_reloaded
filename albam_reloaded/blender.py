@@ -28,11 +28,21 @@ class AlbamImportedItem(bpy.types.PropertyGroup):
     file_type : bpy.props.StringProperty(options={'HIDDEN'})
 
 
-class AlbamExportSettings(bpy.types.PropertyGroup):
+class AlbamSettings(bpy.types.PropertyGroup):
     '''Export option checkboxes for the Albam panel'''
     export_visible_bool : bpy.props.BoolProperty(
-        name="Enable or Disable",
+        name="AlbamSet only visible",
         description="Export visible meshes only",
+        default = False
+        )
+    ignore_missing_mod_bool : bpy.props.BoolProperty(
+        name="AlbamSet ignore missing",
+        description="Ignore missing .mod error on during the export",
+        default = False
+        )
+    clear_temp_foder_bool : bpy.props.BoolProperty(
+        name="AlbamSet clear temp folder",
+        description="Clear temporary folder before the import",
         default = False
         )
     
@@ -168,6 +178,8 @@ class ALBAM_PT_ImportExportPanel(bpy.types.Panel):
         layout.prop_search(scn, 'albam_item_to_export', scn, 'albam_items_imported', text='select')
         layout.operator('albam_export.item', text='Export')
         layout.prop(export_settings, "export_visible_bool", text="Export visible meshes only")
+        layout.prop(export_settings, "ignore_missing_mod_bool", text="Ignore missing .mod files")
+        layout.prop(export_settings, "clear_temp_foder_bool", text="Clear temporary folder")
 
 
 class ALBAM_PT_ToolsPanel(bpy.types.Panel):
