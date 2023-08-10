@@ -51,7 +51,10 @@ class Tex112(DynamicStructure):
         fixed_size_of_header = 40
         start_offset = fixed_size_of_header + (mipmap_count * 4)
         mipmap_offsets = cls.calculate_mipmap_offsets(mipmap_count, width, height, compression_format, start_offset)
-        assert len(mipmap_offsets) == mipmap_count
+        try:
+            assert len(mipmap_offsets) == mipmap_count
+        except:
+              raise TypeError('There is no mipmap in {}'.format(file_path))
         mipmap_offsets = (c_uint * len(mipmap_offsets))(*mipmap_offsets)
         dds_data = (c_byte * len(dds.data)).from_buffer(dds.data)
 
