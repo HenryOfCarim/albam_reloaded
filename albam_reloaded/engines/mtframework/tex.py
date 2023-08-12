@@ -1,10 +1,20 @@
-from ctypes import c_int, c_uint, c_char, c_short, c_float, c_byte, sizeof
+from ctypes import c_int, c_uint, c_char, c_short, c_float, c_ubyte, sizeof
 import os
 
 from ...image_formats.dds import DDSHeader, DDS
 from ...lib.structure import DynamicStructure
 from ...registry import blender_registry
 from ...engines.mtframework.defaults import DEFAULT_TEXTURE
+
+
+COMPRESSED_FORMATS = (
+    "DXT1",
+    "DXT5",
+    b"DXT1",
+    b"DXT5",
+)
+
+UNCOMPRESSED_TAG = b"\x15"
 
 
 @blender_registry.register_bpy_prop('texture', 'unk_')
@@ -15,10 +25,10 @@ class Tex112(DynamicStructure):
     _fields_ = (('id_magic', c_char * 4),
                 ('version', c_short),
                 ('revision', c_short),
-                ('mipmap_count', c_byte),
-                ('unk_byte_1', c_byte),
-                ('unk_byte_2', c_byte),
-                ('unk_byte_3', c_byte),
+                ('mipmap_count', c_ubyte),
+                ('image_count', c_ubyte),
+                ('unk_byte_1', c_ubyte),
+                ('unk_byte_2', c_ubyte),
                 ('width', c_short),
                 ('height', c_short),
                 ('reserved_1', c_int),
@@ -27,18 +37,25 @@ class Tex112(DynamicStructure):
                 ('unk_f_green', c_float),
                 ('unk_f_blue', c_float),
                 ('unk_f_alpha', c_float),
-                ('mipmap_offsets', lambda s: c_uint * s.mipmap_count),
-                ('dds_data', lambda s, f: c_byte * (os.path.getsize(f) - 40 -
-                 sizeof(s.mipmap_offsets)) if f else c_byte * len(s.dds_data)),
+                ("floats_unk", lambda s: c_float * 27 if s.image_count > 1 else c_ubyte * 0),
+                ('mipmap_offsets', lambda s: c_uint * (s.mipmap_count * s.image_count)),
+                ('dds_data', lambda s, f: c_ubyte * (os.path.getsize(f) - 40 -
+                 sizeof(s.mipmap_offsets)) if f else c_ubyte * len(s.dds_data)),
                 )
 
     def to_dds(self):
+        if self.compression_format == UNCOMPRESSED_TAG:
+            is_compressed = False
+            pixel_fmt = b""
+        else:
+            is_compressed = True
+            pixel_fmt = self.compression_format
         header = DDSHeader(dwHeight=self.height, dwWidth=self.width,
                            dwMipMapCount=self.mipmap_count,
-                           pixelfmt_dwFourCC=self.compression_format)
+                           pixelfmt_dwFourCC=pixel_fmt)
+        header.set_constants()
+        header.set_variables(compressed=is_compressed)
         dds = DDS(header=header, data=self.dds_data)
-        dds.set_constants()
-        dds.set_variables()
         return dds
 
     @classmethod
@@ -47,23 +64,24 @@ class Tex112(DynamicStructure):
         mipmap_count = dds.header.dwMipMapCount
         width = dds.header.dwWidth
         height = dds.header.dwHeight
-        compression_format = dds.header.pixelfmt_dwFourCC
+        dds_fmt = dds.header.pixelfmt_dwFourCC
+        compression_format = dds_fmt or UNCOMPRESSED_TAG
         fixed_size_of_header = 40
         start_offset = fixed_size_of_header + (mipmap_count * 4)
-        mipmap_offsets = cls.calculate_mipmap_offsets(mipmap_count, width, height, compression_format, start_offset)
+        mipmap_offsets = cls.calculate_mipmap_offsets(mipmap_count, width, height, dds_fmt, start_offset)
         try:
             assert len(mipmap_offsets) == mipmap_count
         except:
               raise TypeError('There is no mipmap in {}'.format(file_path))
         mipmap_offsets = (c_uint * len(mipmap_offsets))(*mipmap_offsets)
-        dds_data = (c_byte * len(dds.data)).from_buffer(dds.data)
+        dds_data = (c_ubyte * len(dds.data)).from_buffer(dds.data)
 
         # TODO: Don't hardcode uknown floats (seem to be brightness values)
         tex = cls(id_magic=cls.ID_MAGIC,
                   version=112,
                   revision=34,
                   mipmap_count=mipmap_count,
-                  unk_byte_1=1,
+                  image_count=1,
                   unk_byte_2=0,
                   unk_byte_3=0,
                   width=width,
@@ -87,7 +105,7 @@ class Tex112(DynamicStructure):
         offsets = [start_offset]
         current_offset = start_offset
         for i in range(mipmap_count - 1):
-            size = DDS.calculate_mipmap_size(width, height, i, fmt)
+            size = DDSHeader.calculate_mipmap_size(width, height, i, fmt)
             current_offset += size
             offsets.append(current_offset)
         return offsets
