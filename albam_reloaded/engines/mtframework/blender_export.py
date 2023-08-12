@@ -327,7 +327,7 @@ def _pack_uv(uv_array):
     packed_uv = uv_array
     for vertex_index, (uv_x, uv_y) in uv_array.items():
         # flipping for dds textures
-        uv_y *= -1
+        uv_y = (uv_y -1) * -1
         uv_x = pack_half_float(uv_x)
         uv_y = pack_half_float(uv_y)
         packed_uv[vertex_index] = (uv_x, uv_y)
@@ -339,7 +339,6 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
     vertex_count = len(blender_mesh.vertices)
     uvs_per_vertex = get_uvs_per_vertex(blender_mesh_object,0)
     uvs_lmap_per_vertex = get_uvs_per_vertex(blender_mesh_object,1)
-    #uvs_lmap_per_vertex = get_lmap_uvs_per_vertex(blender_mesh_object)
     colors_per_vertex = _get_vertex_colours(blender_mesh_object)
     weights_per_vertex = get_bone_indices_and_weights_per_vertex(blender_mesh_object)
     weights_per_vertex = _process_weights(weights_per_vertex)
