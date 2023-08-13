@@ -58,7 +58,7 @@ bone_mapping = {
                 48:"middle_03_l",
                 49:"palm_l",
                 50:"ring_01_l",
-                51:"ring_02",
+                51:"ring_02_l",
                 52:"ring_03_l",
                 53:"pinky_01_l",
                 54:"pinky_02_l",
