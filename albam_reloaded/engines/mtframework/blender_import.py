@@ -90,6 +90,8 @@ def import_mod(blender_object, file_path, **kwargs):
             # TODO: logging
             print(f'Error building mesh {i} for mod {file_path}')
             print('Details:', err)
+        except Exception as err:
+            print(f"unexpected error building mesh {name}: {err}")
 
     if mod.bone_count:
         armature_name = 'skel_{}'.format(blender_object.name)
