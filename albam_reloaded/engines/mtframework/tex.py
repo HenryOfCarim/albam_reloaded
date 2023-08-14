@@ -24,7 +24,7 @@ class Tex112(DynamicStructure):
     _defaults_ = DEFAULT_TEXTURE
     _fields_ = (('id_magic', c_char * 4),
                 ('version', c_short),
-                ('revision', c_short),
+                ('revision', c_short),  # TODO: This is probably contains flags, e.g. cubemap doesn't work with 34
                 ('mipmap_count', c_ubyte),
                 ('image_count', c_ubyte),
                 ('unk_byte_1', c_ubyte),
@@ -50,11 +50,12 @@ class Tex112(DynamicStructure):
         else:
             is_compressed = True
             pixel_fmt = self.compression_format
+        is_cubemap = self.image_count > 1
         header = DDSHeader(dwHeight=self.height, dwWidth=self.width,
                            dwMipMapCount=self.mipmap_count,
                            pixelfmt_dwFourCC=pixel_fmt)
         header.set_constants()
-        header.set_variables(compressed=is_compressed)
+        header.set_variables(compressed=is_compressed, cubemap=is_cubemap)
         dds = DDS(header=header, data=self.dds_data)
         return dds
 
@@ -66,31 +67,27 @@ class Tex112(DynamicStructure):
         height = dds.header.dwHeight
         dds_fmt = dds.header.pixelfmt_dwFourCC
         compression_format = dds_fmt or UNCOMPRESSED_TAG
+        image_count = 6 if dds.header.is_proper_cubemap else 1
         fixed_size_of_header = 40
-        start_offset = fixed_size_of_header + (mipmap_count * 4)
-        mipmap_offsets = cls.calculate_mipmap_offsets(mipmap_count, width, height, dds_fmt, start_offset)
+        start_offset = fixed_size_of_header + (mipmap_count * 4 * image_count)
+        if image_count > 1:
+            start_offset += (27 * 4)
+        mipmap_offsets = cls.calculate_mipmap_offsets(mipmap_count, width, height, dds_fmt, start_offset, image_count)
         try:
-            assert len(mipmap_offsets) == mipmap_count
+            assert len(mipmap_offsets) // image_count == mipmap_count
         except:
-              raise TypeError('There is no mipmap in {}'.format(file_path))
+            raise TypeError('There is no mipmap in {}'.format(file_path))
         mipmap_offsets = (c_uint * len(mipmap_offsets))(*mipmap_offsets)
         dds_data = (c_ubyte * len(dds.data)).from_buffer(dds.data)
 
-        # TODO: Don't hardcode uknown floats (seem to be brightness values)
         tex = cls(id_magic=cls.ID_MAGIC,
                   version=112,
-                  revision=34,
+                  revision=34 if not image_count > 1 else 3,  # TODO: proper flags
                   mipmap_count=mipmap_count,
-                  image_count=1,
-                  unk_byte_2=0,
-                  unk_byte_3=0,
+                  image_count=image_count,
                   width=width,
                   height=height,
                   compression_format=compression_format,
-                  unk_f_red=0.76,
-                  unk_f_green=0.76,
-                  unk_f_blue=0.76,
-                  unk_f_alpha=0,
                   mipmap_offsets=mipmap_offsets,
                   dds_data=dds_data)
 
@@ -101,11 +98,15 @@ class Tex112(DynamicStructure):
         return (cls.from_dds(file_path) for file_path in file_paths)
 
     @staticmethod
-    def calculate_mipmap_offsets(mipmap_count, width, height, fmt, start_offset):
+    def calculate_mipmap_offsets(mipmap_count, width, height, fmt, start_offset, image_count):
         offsets = [start_offset]
         current_offset = start_offset
-        for i in range(mipmap_count - 1):
-            size = DDSHeader.calculate_mipmap_size(width, height, i, fmt)
-            current_offset += size
-            offsets.append(current_offset)
+        for im in range(image_count):
+            for i in range(mipmap_count):
+                # Don't calculate last offset since we already start with one extra
+                if im == image_count - 1 and i == mipmap_count - 1:
+                    break
+                size = DDSHeader.calculate_mipmap_size(width, height, i, fmt)
+                current_offset += size
+                offsets.append(current_offset)
         return offsets

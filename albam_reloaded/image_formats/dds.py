@@ -67,7 +67,7 @@ class DDSHeader(Structure):
         self.pixelfmt_dwSize = 32
         self.dwCaps = self.DDSCAPS_TEXTURE
 
-    def set_variables(self, compressed=True):
+    def set_variables(self, compressed=True, cubemap=False):
         if not compressed:
             self.dwPitchOrLinearSize = 0
         else:
@@ -75,6 +75,7 @@ class DDSHeader(Structure):
                 self.dwPitchOrLinearSize = self.calculate_linear_size(
                     self.dwWidth, self.dwHeight, self.pixelfmt_dwFourCC
                 )
+                self.dwFlags |= self.DDSD_LINEARSIZE
             except Exception as err:
                 print(f"failed to set dwPitchOrLinearSize: {err}")
 
@@ -95,7 +96,27 @@ class DDSHeader(Structure):
             self.pixelfmt_dwGBitMask = 0xFF00
             self.pixelfmt_dwBBitMask = 0xFF
             self.pixelfmt_dwABitMask = 0xFF000000
+        if cubemap:
+            self.dwCaps2 |= self.DDSCAPS2_CUBEMAP
+            self.dwCaps2 |= self.DDSCAPS2_CUBEMAP_POSITIVEX
+            self.dwCaps2 |= self.DDSCAPS2_CUBEMAP_NEGATIVEX
+            self.dwCaps2 |= self.DDSCAPS2_CUBEMAP_POSITIVEY
+            self.dwCaps2 |= self.DDSCAPS2_CUBEMAP_NEGATIVEY
+            self.dwCaps2 |= self.DDSCAPS2_CUBEMAP_POSITIVEZ
+            self.dwCaps2 |= self.DDSCAPS2_CUBEMAP_NEGATIVEZ
 
+    @property
+    def is_proper_cubemap(self):
+        return bool(
+            self.dwCaps2 |
+            self.DDSCAPS2_CUBEMAP &
+            self.DDSCAPS2_CUBEMAP_POSITIVEX &
+            self.DDSCAPS2_CUBEMAP_NEGATIVEX &
+            self.DDSCAPS2_CUBEMAP_POSITIVEY &
+            self.DDSCAPS2_CUBEMAP_NEGATIVEY &
+            self.DDSCAPS2_CUBEMAP_POSITIVEZ &
+            self.DDSCAPS2_CUBEMAP_NEGATIVEZ
+        )
     @property
     def mipmap_sizes(self):
         h = self.dwWidth
