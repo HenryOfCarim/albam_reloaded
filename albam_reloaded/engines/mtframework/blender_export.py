@@ -327,7 +327,11 @@ def _pack_uv(uv_array):
     packed_uv = uv_array
     for vertex_index, (uv_x, uv_y) in uv_array.items():
         # flipping for dds textures
-        uv_y = (uv_y -1) * -1
+        uv_y = (uv_y -1.0)
+        uv_y = round(uv_y, 4)
+        uv_y *= -1
+        if uv_y == -0.0:
+            uv_y = 0.0
         uv_x = pack_half_float(uv_x)
         uv_y = pack_half_float(uv_y)
         packed_uv[vertex_index] = (uv_x, uv_y)

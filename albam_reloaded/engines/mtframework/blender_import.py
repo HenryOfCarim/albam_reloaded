@@ -227,7 +227,7 @@ def _import_vertices_mod156(mod, mesh):
     sorted_vertex_colors = []
     # XXX: normalmap has uvs as well? and then this should be uv3?
     if mesh.vertex_format == 0:
-        uvs2 = [(unpack_half_float(v.uv2_x), unpack_half_float(v.uv2_y) * -1) for v in vertices_array]
+        uvs2 = [(unpack_half_float(v.uv2_x), (unpack_half_float(v.uv2_y) * -1) +1) for v in vertices_array]
         # from [0, 255] to [0.0, 1]
         if material_array[mesh.material_index].unk_flag_8_bones_vertex:
             uvs3 = []
@@ -246,7 +246,7 @@ def _import_vertices_mod156(mod, mesh):
                 a = vertex_colors[(i+3)]
                 sorted_vertex_colors.append((r, g, b, a))
         else:
-            uvs3 = [(unpack_half_float(v.uv3_x), unpack_half_float(v.uv3_y) * -1) for v in vertices_array]
+            uvs3 = [(unpack_half_float(v.uv3_x), (unpack_half_float(v.uv3_y) * -1) + 1) for v in vertices_array]
     else:
         uvs2 = []
         uvs3 = []

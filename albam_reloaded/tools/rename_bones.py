@@ -367,4 +367,4 @@ def rename_bones(armature):
                 pose_bones[i].name = name
             i += 1
     else:
-        raise TypeError("Can perform renaming because imported and current armature doesn't match")
+        raise TypeError("Can't perform renaming because imported and current armature doesn't match")
