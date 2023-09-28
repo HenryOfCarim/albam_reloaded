@@ -64,7 +64,9 @@ class Mod156(DynamicStructure):
                 ('unk_10', c_uint),
                 ('unk_11', c_uint),
                 ('reserved_03', c_uint),
-                ('unk_12', unk_data_depends_on_other_unk),
+                ('unk_vtx8_01', lambda s: Unk8Block01 * s.unk_10),
+                ('unk_vtx8_02', lambda s: Unk8Block02 * s.unk_09),
+                ('unk_vtx8_03', lambda s: Unk8Block03 * s.unk_08),
                 ('bones_array', lambda s: Bone * s.bone_count),
                 ('bones_unk_matrix_array', lambda s: (c_float * 16) * s.bone_count),
                 ('bones_world_transform_matrix_array', lambda s: (c_float * 16) * s.bone_count),
@@ -82,6 +84,31 @@ class Mod156(DynamicStructure):
                 ('index_buffer', lambda s: c_ushort * (s.face_count - 1)),
                 )
 
+class Unk8Block01(Structure):
+    _fields_ = (('unk_01', c_ushort),
+                ('unk_02', c_ushort),
+                )
+
+class Unk8Block02(Structure):
+    _fields_ = (('pos_x', c_ushort),
+                ('pos_y', c_ushort),
+                ('pos_z', c_ushort),
+                ('pos_w', c_ushort),
+                ('unk_00', c_uint),
+                ('unk_01', c_uint),
+                )
+
+class Unk8Block03(Structure):
+    _fields_ = (('unk_00', c_ushort),
+                ('unk_01', c_ushort),
+                ('unk_02', c_ushort),
+                ('unk_03', c_ushort),
+                )
+
+class Unk8Block03(Structure):
+    _fields_ = (('unk_01', c_uint),
+                ('unk_02', c_uint),
+                )
 
 class Bone(Structure):
     _fields_ = (('anim_map_index', c_ubyte),
@@ -229,7 +256,7 @@ class Mesh156(LittleEndianStructure):
                 ('unk_01', c_ubyte),
                 ('vertex_format', c_ubyte),
                 ('vertex_stride', c_ubyte),
-                ('unk_02', c_ubyte),
+                ('unk_02', c_ubyte), # vertex_stride_2
                 ('unk_03', c_ubyte),
                 ('unk_flag_01', c_uint8, 1),
                 ('unk_flag_02', c_uint8, 1),
@@ -241,15 +268,15 @@ class Mesh156(LittleEndianStructure):
                 ('unk_flag_07', c_uint8, 1),
                 ('vertex_count', c_ushort),
                 ('vertex_index_end', c_ushort),
-                ('vertex_index_start_1', c_uint),
+                ('vertex_index_start_1', c_uint), #vertex_position_2
                 ('vertex_offset', c_uint),
-                ('unk_05', c_uint),
+                ('unk_05', c_uint), #vertex_offset
                 ('face_position', c_uint),
                 ('face_count', c_uint),
                 ('face_offset', c_uint),
                 ('unk_06', c_ubyte),
                 ('unk_07', c_ubyte),
-                ('vertex_index_start_2', c_ushort),
+                ('vertex_index_start_2', c_ushort), #vertex_position
                 ('vertex_group_count', c_ubyte),
                 ('bone_palette_index', c_ubyte),
                 ('unk_08', c_ubyte),
