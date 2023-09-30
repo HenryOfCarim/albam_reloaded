@@ -221,9 +221,9 @@ def export_mod156(parent_blender_object):
                  unk_09=0,
                  unk_10=0,
                  unk_11=0,
-                 #unk_vtx8_01=0,
-                 #unk_vtx8_02=0,
-                 #unk_vtx8_03=0,
+                 #unk_vtx8_01=saved_mod.unk_vtx8_01,
+                 #unk_vtx8_02=saved_mod.unk_vtx8_02,
+                 #unk_vtx8_03=saved_mod.unk_vtx8_03,
                  bones_array=saved_mod.bones_array,
                  bones_unk_matrix_array=saved_mod.bones_unk_matrix_array,
                  bones_world_transform_matrix_array=saved_mod.bones_world_transform_matrix_array,
@@ -570,9 +570,9 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         vertex_count = len(blender_mesh.vertices)
         index_count = len(triangle_strips_python)
 
-        if (vertex_position + vertex_count >=  65535):
-            vertex_offset += vertex_position * 32
-            vertex_position = 0
+        #if (vertex_position + vertex_count >=  65535):
+        #    vertex_offset += vertex_position * 32
+        #    vertex_position = 0
 
         m156 = meshes_156[mesh_index]
         #for field in m156._fields_:
@@ -612,7 +612,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         m156.vertex_count = vertex_count
         m156.vertex_index_end = vertex_position + vertex_count - 1
         m156.vertex_index_start_1 = vertex_position
-        m156.vertex_offset = vertex_offset
+        m156.vertex_offset = 0 #vertex_offset
         m156.face_position = face_position
         m156.face_count = index_count
         m156.face_offset = 0
