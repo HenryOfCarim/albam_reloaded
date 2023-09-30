@@ -9,7 +9,7 @@ except ImportError:
 from .registry import blender_registry
 from .tools.tools import *
 from .tools.rename_bones import rename_bones
-from .engines.mtframework.mod_156 import MaterialData
+from .engines.mtframework.mod_156 import MaterialData, Mesh156
 
 class AlbamImportedItemName(bpy.types.PropertyGroup): #
     '''Class for  bpy.types.Scene.albam_items_imported __init__.py registration
@@ -89,6 +89,48 @@ class PasteCustomPropertiesMat(bpy.types.Operator):
 
         return {'FINISHED'}
     
+class CopyCustomPropertiesMesh(bpy.types.Operator):
+    """Copy Albam mesh properties from the active mesh"""
+    bl_idname = "mesh.custom_property_copy"
+    bl_label = "Copy Properties"
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+      obj = bpy.context.active_object.name
+      if obj:
+          bpy.types.Scene.albam_copypaste_buffer_mesh = obj
+          print(bpy.types.Scene.albam_copypaste_buffer_mesh )
+      return {'FINISHED'}
+    
+class PasteCustomPropertiesMesh(bpy.types.Operator):
+    """Paste Albam mesh properties to the active material"""
+    bl_idname = "mesh.custom_property_paste"
+    bl_label = "Paste Properties"
+    
+    @classmethod
+    def poll(cls, context):
+        if not bpy.types.Scene.albam_copypaste_buffer_mesh:
+            return False
+        return True
+
+    def execute(self, context):
+        mesh_name = bpy.types.Scene.albam_copypaste_buffer_mesh 
+        try:
+            copied_mesh = bpy.data.objects.get(mesh_name)
+        except:
+            bpy.types.Scene.albam_copypaste_buffer = ""
+        active_mesh = bpy.context.active_object
+        mesh_data = Mesh156()
+        for field in mesh_data._fields_:
+            attr_name = field[0]
+            if not attr_name.startswith('unk_'):
+                continue 
+            setattr(active_mesh.data, attr_name, getattr(copied_mesh.data, attr_name))
+
+        return {'FINISHED'}
 
 class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
     '''Custom Properies panel in the Material section'''
@@ -151,6 +193,9 @@ class ALBAM_PT_CustomMeshOptions(bpy.types.Panel):
     def draw(self, context):  # pragma: no cover
         mesh = context.mesh
         layout = self.layout
+        row = layout.row()
+        row.operator("mesh.custom_property_copy")
+        row.operator("mesh.custom_property_paste")
         if not mesh:
             return
         for prop_name, _, _ in blender_registry.bpy_props.get('mesh', []):

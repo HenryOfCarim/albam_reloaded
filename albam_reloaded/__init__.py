@@ -33,6 +33,8 @@ classes = ( AlbamImportedItem,
             ALBAM_PT_CustomMeshOptions,
             CopyCustomPropertiesMat,
             PasteCustomPropertiesMat,
+            CopyCustomPropertiesMesh,
+            PasteCustomPropertiesMesh,
             AlbamImportOperator,
             AlbamFixLeakedTexuresOperator,
             AlbamSelectInvalidMeshesOperator,
@@ -81,6 +83,7 @@ def register():
     bpy.types.Object.albam_imported_item = bpy.props.PointerProperty(type=blender.AlbamImportedItem) # register new object properties
     bpy.types.Scene.albam_export_settings = bpy.props.PointerProperty(type=blender.AlbamSettings)
     bpy.types.Scene.albam_copypaste_buffer = bpy.props.StringProperty()
+    bpy.types.Scene.albam_copypaste_buffer_mesh = bpy.props.StringProperty()
     bpy.types.Scene.albam_scene_meshes = bpy.props.PointerProperty(type=bpy.types.Object, poll=mesh_filter)
 
 def unregister():
@@ -94,6 +97,7 @@ def unregister():
     del bpy.types.Object.albam_imported_item
     del bpy.types.Scene.albam_export_settings
     del bpy.types.Scene.albam_copypaste_buffer
+    del bpy.types.Scene.albam_copypaste_buffer_mesh
     del bpy.types.Scene.albam_scene_meshes
 
 if __name__ == "__main__":
