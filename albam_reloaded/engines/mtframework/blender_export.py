@@ -156,11 +156,11 @@ def export_mod156(parent_blender_object):
         bone_palettes = _create_bone_palettes(blender_meshes)
         bone_palette_array = (BonePalette * len(bone_palettes))()
 
-        if saved_mod.unk_08:
-            # Since unk_12 depends on the offset, calculate it early
-            bones_array_offset = 176 + len(saved_mod.unk_12)
-        else:
-            bones_array_offset = 176
+        #if saved_mod.unk_08:
+        #    # Since unk_12 depends on the offset, calculate it early
+        #    bones_array_offset = 176 + len(saved_mod.unk_12)
+        #else:
+        bones_array_offset = 176
         for i, bp in enumerate(bone_palettes.values()):
             bone_palette_array[i].unk_01 = len(bp)
             if len(bp) != 32:
@@ -217,11 +217,13 @@ def export_mod156(parent_blender_object):
                  unk_05=saved_mod.unk_05,
                  unk_06=saved_mod.unk_06,
                  unk_07=saved_mod.unk_07,
-                 unk_08=saved_mod.unk_08,
-                 unk_09=saved_mod.unk_09,
-                 unk_10=saved_mod.unk_10,
-                 unk_11=saved_mod.unk_11,
-                 unk_12=saved_mod.unk_12,
+                 unk_08=0,
+                 unk_09=0,
+                 unk_10=0,
+                 unk_11=0,
+                 #unk_vtx8_01=saved_mod.unk_vtx8_01,
+                 #unk_vtx8_02=saved_mod.unk_vtx8_02,
+                 #unk_vtx8_03=saved_mod.unk_vtx8_03,
                  bones_array=saved_mod.bones_array,
                  bones_unk_matrix_array=saved_mod.bones_unk_matrix_array,
                  bones_world_transform_matrix_array=saved_mod.bones_world_transform_matrix_array,
@@ -540,6 +542,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
     materials_mapping = exported_materials.materials_mapping
 
     vertex_position = 0
+    vertex_offset = 0
     face_position = 0
     weight_bounds_list = []
 
@@ -567,6 +570,10 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         vertex_count = len(blender_mesh.vertices)
         index_count = len(triangle_strips_python)
 
+        #if (vertex_position + vertex_count >=  65535):
+        #    vertex_offset += vertex_position * 32
+        #    vertex_position = 0
+
         m156 = meshes_156[mesh_index]
         #for field in m156._fields_:
         #    attr_name = field[0]
@@ -581,7 +588,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
             # TODO: insert an empty generic material in this case
             raise ExportError('Mesh {} has no materials'.format(blender_mesh.name))
         m156.unk_01 = blender_mesh.unk_01
-        m156.unk_02 = blender_mesh.unk_02
+        m156.unk_02 = blender_mesh.unk_02 # vertex_stride_2
         m156.unk_03 = 0 # makes meshes semi transparent with an orginal value
         m156.unk_flag_01 = blender_mesh.unk_flag_01
         m156.unk_flag_02 = blender_mesh.unk_flag_02
@@ -590,7 +597,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         m156.unk_flag_05 = blender_mesh.unk_flag_05
         m156.unk_flag_06 = blender_mesh.unk_flag_06 #high brightness
         m156.unk_flag_07 = blender_mesh.unk_flag_07
-        m156.unk_05 = blender_mesh.unk_05
+        m156.unk_05 = blender_mesh.unk_05 # vertex_offset_2
         m156.unk_06 = blender_mesh.unk_06
         m156.unk_07 = blender_mesh.unk_07
         m156.unk_08 = blender_mesh.unk_08
@@ -605,7 +612,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         m156.vertex_count = vertex_count
         m156.vertex_index_end = vertex_position + vertex_count - 1
         m156.vertex_index_start_1 = vertex_position
-        m156.vertex_offset = 0
+        m156.vertex_offset = 0 #vertex_offset
         m156.face_position = face_position
         m156.face_count = index_count
         m156.face_offset = 0
