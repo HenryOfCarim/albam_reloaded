@@ -29,7 +29,12 @@ class AlbamImportedItem(bpy.types.PropertyGroup):
 
 
 class AlbamSettings(bpy.types.PropertyGroup):
-    '''Export option checkboxes for the Albam panel'''
+    '''Import-export option checkboxes for the Albam panel'''
+    import_3dsmax_mod_bool : bpy.props.BoolProperty(
+        name="AlbamSet 3dsmax compatibility",
+        description="Import a mod made in 3ds max",
+        default = False
+        )
     export_visible_bool : bpy.props.BoolProperty(
         name="AlbamSet only visible",
         description="Export visible meshes only",
@@ -222,6 +227,7 @@ class ALBAM_PT_ImportExportPanel(bpy.types.Panel):
         layout.operator('albam_import.item', text='Import')
         layout.prop_search(scn, 'albam_item_to_export', scn, 'albam_items_imported', text='select')
         layout.operator('albam_export.item', text='Export')
+        layout.prop(export_settings, "import_3dsmax_mod_bool", text="3ds max import compability")
         layout.prop(export_settings, "export_visible_bool", text="Export visible meshes only")
         layout.prop(export_settings, "ignore_missing_mod_bool", text="Ignore missing .mod files")
         layout.prop(export_settings, "clear_temp_foder_bool", text="Clear temporary folder")

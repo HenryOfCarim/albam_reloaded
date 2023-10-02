@@ -126,7 +126,8 @@ class Bone(Structure):
 
 class BonePalette(Structure):
     _fields_ = (('unk_01', c_uint),
-                ('values', c_ubyte * 32),
+                ('values', c_ubyte * 32 ),
+                #('values', lambda s: c_ubyte * s.unk_01 if 255>s.unk_01>32 else c_ubyte * 32),
                 )
 
     _comments_ = {'unk_01': 'Seems to be the count of meaninful values out of the 32 bytes, needs verification'}

@@ -17,14 +17,21 @@ from ...lib.structure import get_size
 
 
 def get_vertices_array(mod, mesh):
+    is_3dsmax = bpy.context.scene.albam_export_settings.import_3dsmax_mod_bool
     try:
         VF = VERTEX_FORMATS_TO_CLASSES[mesh.vertex_format]
     except KeyError:
         raise TypeError('Unrecognized vertex format: {}'.format(hex(mesh.vertex_format)))
+    if is_3dsmax:
+        if mesh.vertex_format>4:
+            VF = VERTEX_FORMATS_TO_CLASSES[4]
     if mod.version == 156:
-        position = max(mesh.vertex_index_start_1, mesh.vertex_index_start_2) * mesh.vertex_stride
-        if mesh.vertex_index_start_2 > mesh.vertex_index_start_1:
+        #position = max(mesh.vertex_index_start_1, mesh.vertex_index_start_2) * mesh.vertex_stride
+        position = mesh.vertex_index_start_1 * mesh.vertex_stride  #+ mesh.vertex_offset
+        if not is_3dsmax and mesh.vertex_index_start_2 > mesh.vertex_index_start_1:
             vertex_count = mesh.vertex_index_end - mesh.vertex_index_start_2 + 1
+            #vertex_count = mesh.vertex_index_start_2 - mesh.vertex_index_start_1
+            position+= (mesh.vertex_index_start_2 - mesh.vertex_index_start_1)* 32
             # TODO: research the content of mesh.vertex_index_start_1 and what it means in this case
             # So far it looks it contains only garbage; all vertices have the same values.
             # It's unknown why they exist for, and why they count for mesh.vertex_count
