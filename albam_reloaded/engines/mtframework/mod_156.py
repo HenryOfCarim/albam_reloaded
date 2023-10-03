@@ -64,7 +64,7 @@ class Mod156(DynamicStructure):
                 ('unk_10', c_uint),
                 ('unk_11', c_uint),
                 ('reserved_03', c_uint),
-                ("unk_12",  lambda s: c_ubyte * (s.bones_array_offset - 176)),
+                ("unk_12",  lambda s: c_ubyte * (s.bones_array_offset - 176) if s.bone_palette_count else c_ubyte * 0),
                 #('unk_vtx8_01', lambda s: Unk8Block01 * s.unk_10),
                 #('unk_vtx8_02', lambda s: Unk8Block02 * s.unk_09),
                 #('unk_vtx8_03', lambda s: Unk8Block03 * s.unk_08),
