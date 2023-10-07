@@ -545,6 +545,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
     vertex_offset = 0
     face_position = 0
     weight_bounds_list = []
+    unk_group = ()
 
     for mesh_index, blender_mesh_ob in enumerate(blender_meshes):
         bone_palette_index = 0
@@ -570,9 +571,10 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         vertex_count = len(blender_mesh.vertices)
         index_count = len(triangle_strips_python)
 
-        #if (vertex_position + vertex_count >=  65535):
-        #    vertex_offset += vertex_position * 32
-        #    vertex_position = 0
+        if unk_group:
+            if unk_group != (blender_mesh.unk_06, blender_mesh.unk_07):
+                vertex_offset += vertex_position * 32
+                vertex_position = 0
 
         m156 = meshes_156[mesh_index]
         #for field in m156._fields_:
@@ -612,7 +614,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         m156.vertex_count = vertex_count
         m156.vertex_index_end = vertex_position + vertex_count - 1
         m156.vertex_index_start_1 = vertex_position
-        m156.vertex_offset = 0 #vertex_offset
+        m156.vertex_offset = vertex_offset
         m156.face_position = face_position
         m156.face_count = index_count
         m156.face_offset = 0
@@ -622,6 +624,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         m156.use_cast_shadows = int(_get_shadow_method(blender_material))
         vertex_position += vertex_count
         face_position += index_count
+        unk_group = (blender_mesh.unk_06, blender_mesh.unk_07)
 
         if is_skeletal:
             weight_bounds = _calculate_weight_bounds_skeletal_mesh(blender_mesh_ob, blender_mesh_ob.parent)
