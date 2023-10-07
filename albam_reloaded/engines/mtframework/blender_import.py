@@ -350,7 +350,8 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
         #blender_material.alpha_treshhold = 0.33
 
         node_to_delete = blender_material.node_tree.nodes.get("Principled BSDF")
-        blender_material.node_tree.nodes.remove( node_to_delete )
+        if node_to_delete:
+            blender_material.node_tree.nodes.remove( node_to_delete )
         #principled_node.inputs['Specular'].default_value = 0.2 # change specular
         shader_node_group = blender_material.node_tree.nodes.new('ShaderNodeGroup')
         shader_node_group.node_tree = bpy.data.node_groups["MT Framework shader"]
