@@ -590,7 +590,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
             # TODO: insert an empty generic material in this case
             raise ExportError('Mesh {} has no materials'.format(blender_mesh.name))
         m156.unk_01 = blender_mesh.unk_01
-        m156.unk_02 = blender_mesh.unk_02 # vertex_stride_2
+        m156.unk_02 = 0 #blender_mesh.unk_02 # vertex_stride_2
         m156.unk_03 = 0 # makes meshes semi transparent with an orginal value
         m156.unk_flag_01 = blender_mesh.unk_flag_01
         m156.unk_flag_02 = blender_mesh.unk_flag_02
@@ -599,7 +599,7 @@ def _export_meshes(blender_meshes, bone_palettes, exported_materials, model_boun
         m156.unk_flag_05 = blender_mesh.unk_flag_05
         m156.unk_flag_06 = blender_mesh.unk_flag_06 #high brightness
         m156.unk_flag_07 = blender_mesh.unk_flag_07
-        m156.unk_05 = blender_mesh.unk_05 # vertex_offset_2
+        m156.unk_05 = 0 #blender_mesh.unk_05 # vertex_offset_2
         m156.unk_06 = blender_mesh.unk_06
         m156.unk_07 = blender_mesh.unk_07
         m156.unk_08 = blender_mesh.unk_08
