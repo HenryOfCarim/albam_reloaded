@@ -349,7 +349,12 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
         blender_material.blend_method = 'CLIP' # set transparency method 'OPAQUE', 'CLIP', 'HASHED', 'BLEND'
         #blender_material.alpha_treshhold = 0.33
 
-        node_to_delete = blender_material.node_tree.nodes.get("Principled BSDF")
+        #node_to_delete = blender_material.node_tree.nodes.get("Principled BSDF")
+        node_to_delete = None
+        for node in blender_material.node_tree.nodes:
+            if node.type == 'BSDF_PRINCIPLED':
+                node_to_delete = node
+                break
         if node_to_delete:
             blender_material.node_tree.nodes.remove( node_to_delete )
         #principled_node.inputs['Specular'].default_value = 0.2 # change specular
@@ -357,7 +362,12 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
         shader_node_group.node_tree = bpy.data.node_groups["MT Framework shader"]
         shader_node_group.name = "MTFrameworkGroup"
         shader_node_group.width = 300
-        material_output = blender_material.node_tree.nodes.get("Material Output")
+        #material_output = blender_material.node_tree.nodes.get("Material Output")
+        material_output = None
+        for node in blender_material.node_tree.nodes:
+            if node.type == 'OUTPUT_MATERIAL':
+                material_output = node
+                break
         material_output.location = (400, 0)
 
         link = blender_material.node_tree.links.new
