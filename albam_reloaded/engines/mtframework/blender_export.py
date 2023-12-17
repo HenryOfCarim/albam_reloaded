@@ -421,6 +421,17 @@ def _export_vertices(blender_mesh_object, mesh_index, bone_palette, model_boundi
 
     return vertices_array
 
+def _check_vertex_groups(blender_mesh_object):
+    armature = blender_mesh_object.parent
+    bone_names = set()
+    vertex_group_names = set()
+    difference = set()
+    bone_names = {bone.name for bone in armature.data.bones}
+    vertex_group_names = {group.name for group in blender_mesh_object.vertex_groups}
+    difference = vertex_group_names.difference(bone_names)
+    if difference:
+        raise ExportError("There is no bones in the armature {} for the mesh {}".format(difference, blender_mesh_object.name ))
+
 def _create_bone_palettes(blender_mesh_objects):
     bone_palette_dicts = []
     MAX_BONE_PALETTE_SIZE = 32
@@ -428,16 +439,17 @@ def _create_bone_palettes(blender_mesh_objects):
     bone_palette = {'mesh_indices': set(), 'bone_indices': set()}
     for i, mesh in enumerate(blender_mesh_objects):
         armature = mesh.parent
+
+        _check_vertex_groups(mesh)
         vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
         vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
         try:
             bone_indices = {vertex_group_mapping[vgroup.group] for vertex in mesh.data.vertices for vgroup in vertex.groups}
         except:
             print("Can't find vertex group in the armature")
-
         msg = "Mesh {} is influenced by more than 32 bones, which is not supported".format(mesh.name)
         assert len(bone_indices) <= MAX_BONE_PALETTE_SIZE, msg
-
+    
         current = bone_palette['bone_indices']
         potential = current.union(bone_indices)
         if len(potential) > MAX_BONE_PALETTE_SIZE:

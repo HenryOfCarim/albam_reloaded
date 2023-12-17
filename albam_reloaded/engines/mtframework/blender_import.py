@@ -348,7 +348,7 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
         blender_material.use_nodes = True
         blender_material.blend_method = 'CLIP' # set transparency method 'OPAQUE', 'CLIP', 'HASHED', 'BLEND'
         #blender_material.alpha_treshhold = 0.33
-
+        
         #node_to_delete = blender_material.node_tree.nodes.get("Principled BSDF")
         node_to_delete = None
         for node in blender_material.node_tree.nodes:
