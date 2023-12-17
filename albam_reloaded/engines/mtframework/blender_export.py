@@ -114,6 +114,9 @@ def export_arc(blender_object, file_path):
             #texture_name = blender_texture.image.name
             resolved_path = ntpath_to_os_path(texture_dirs[texture_name])
             tex_file_path = bpy.path.abspath(blender_texture.image.filepath)
+            tests = os.path.splitext(tex_file_path)[1]
+            if os.path.splitext(tex_file_path)[1] != ".dds":
+                raise ExportError("Exported texture {} uses not a .dds image {}".format(texture_name, blender_texture.image.name))
             tex_filename_no_ext = os.path.splitext(os.path.basename(tex_file_path))[0]
             destination_path = os.path.join(tmpdir, resolved_path, tex_filename_no_ext + '.tex')
             tex = Tex112.from_dds(file_path=bpy.path.abspath(blender_texture.image.filepath))
