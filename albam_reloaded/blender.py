@@ -1,4 +1,5 @@
 import os
+import json
 
 try:
     import bpy
@@ -86,14 +87,79 @@ class PasteCustomPropertiesMat(bpy.types.Operator):
             if not attr_name.startswith('unk_'):
                 continue 
             setattr(active_mat, attr_name, getattr(copied_mat, attr_name))
-
         return {'FINISHED'}
+
+class StoreCustomPropertiesMat(bpy.types.Operator):
+    """Copy Albam material properties from the active material"""
+    bl_idname = "material.custom_property_store"
+    bl_label = "Store to a file"
+
+    filepath: bpy.props.StringProperty(subtype="DIR_PATH")
+    filename = bpy.props.StringProperty(default="")
     
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        active_mat = bpy.context.active_object.active_material
+        material_data = MaterialData()
+        params ={}
+        for field in material_data._fields_:
+            attr_name = field[0]
+            if not attr_name.startswith('unk_'):
+                continue 
+            params[attr_name] = getattr(active_mat, attr_name)
+        with open(self.filepath, "w") as file:
+            file.write(json.dumps(params, indent = 4))
+            print("store mat params")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        self.filepath = bpy.context.active_object.active_material.name + ".json"
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+class LoadCustomPropertiesMat(bpy.types.Operator):
+    """Load Albam material properties from a file to the active material"""
+    bl_idname = "material.custom_property_load"
+    bl_label = "Load from a file"
+
+    filepath: bpy.props.StringProperty(subtype="DIR_PATH")
+    filename = bpy.props.StringProperty(default="")
+    filter_glob: bpy.props.StringProperty(
+        default="*.json",
+        options={'HIDDEN'},
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+    
+    def execute(self, context):
+        active_mat = bpy.context.active_object.active_material
+        material_data = MaterialData()
+        params ={}
+        with open(self.filepath) as file:
+            loaded_param = json.load(file)
+        for field in material_data._fields_:
+            attr_name = field[0]
+            if not attr_name.startswith('unk_'):
+                continue 
+            if loaded_param.get(attr_name):
+                setattr(active_mat, attr_name, loaded_param[attr_name])
+        print("It works!")
+        return{'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
 class CopyCustomPropertiesMesh(bpy.types.Operator):
     """Copy Albam mesh properties from the active mesh"""
     bl_idname = "mesh.custom_property_copy"
     bl_label = "Copy Properties"
-    
+
     @classmethod
     def poll(cls, context):
         return context.active_object is not None
@@ -104,7 +170,7 @@ class CopyCustomPropertiesMesh(bpy.types.Operator):
           bpy.types.Scene.albam_copypaste_buffer_mesh = obj
           print(bpy.types.Scene.albam_copypaste_buffer_mesh )
       return {'FINISHED'}
-    
+
 class PasteCustomPropertiesMesh(bpy.types.Operator):
     """Paste Albam mesh properties to the active material"""
     bl_idname = "mesh.custom_property_paste"
@@ -155,6 +221,9 @@ class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
         row = layout.row()
         row.operator("material.custom_property_copy")
         row.operator("material.custom_property_paste")
+        row1 = layout.row()
+        row1.operator("material.custom_property_store")
+        row1.operator("material.custom_property_load")
         for prop_name, _, _ in blender_registry.bpy_props.get('material', []): # get unk_ properties for a material:'unk_01' 32835
             layout.prop(mat, prop_name) # add property for panel
 
