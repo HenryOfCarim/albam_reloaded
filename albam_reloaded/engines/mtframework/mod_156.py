@@ -150,10 +150,10 @@ class MaterialData(Structure):
     _defaults_ = DEFAULT_MATERIAL
     _fields_ = (('unk_01_flag_01', c_uint16, 1), # previously c_ushort
                 ('unk_01_flag_02', c_uint16, 1),
-                ('unk_01_flag_03', c_uint16, 1),
+                ('unk_01_flag_03', c_uint16, 1),# brige geometry
                 ('unk_01_flag_04', c_uint16, 1),
                 ('unk_01_flag_05', c_uint16, 1),
-                ('unk_01_flag_06', c_uint16, 1),
+                ('unk_01_flag_06', c_uint16, 1), #alpha clip
                 ('unk_01_no_alpha', c_uint16, 1),#opaque
                 ('unk_01_flag_08', c_uint16, 1), #translusent
                 ('unk_01_alpha_transparency', c_uint16, 1),#alpha transparency
@@ -216,7 +216,7 @@ class MaterialData(Structure):
                 ('unk_f_08', c_float),
                 ('unk_f_09', c_float),
                 ('unk_f_10', c_float),
-                ('unk_f_11', c_float),
+                ('unk_detail_power', c_float),
                 ('unk_detail_factor', c_float),
                 ('unk_f_13', c_float),
                 ('unk_f_14', c_float),
@@ -253,7 +253,7 @@ class Mesh156(LittleEndianStructure):
                 ('material_index', c_ushort),
                 ('constant', c_ubyte),  # always 1
                 ('level_of_detail', c_ubyte),
-                ('unk_01', c_ubyte),
+                ('unk_z_order', c_ubyte),
                 ('vertex_format', c_ubyte),
                 ('vertex_stride', c_ubyte),
                 ('unk_02', c_ubyte), # vertex_stride_2

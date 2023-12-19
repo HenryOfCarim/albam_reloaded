@@ -78,7 +78,7 @@ DEFAULT_MATERIAL = {
     "unk_f_08": 1.0,
     "unk_f_09": 1.0,
     "unk_f_10": 0.0,
-    "unk_f_11": 0.25,
+    "unk_detail_power": 0.25,
     "unk_detail_factor": 10.0, # detail map multiplier 10.00 default
     "unk_f_13": 0.0,
     "unk_f_14": 0.5,
@@ -99,7 +99,7 @@ DEFAULT_MATERIAL = {
 
 DEFAULT_MESH = {
     "unk_render_group_index": 0.0,
-    "unk_01": 0, # Z-buffer order
+    "unk_z_order": 0, # Z-buffer order
     "unk_02": 0, 
     "unk_03": 0, # Messes up meshes with any value>0
     "unk_flag_01": 0,
