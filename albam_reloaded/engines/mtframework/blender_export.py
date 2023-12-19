@@ -492,7 +492,10 @@ def calculate_vertex_group_weight_bound(blender_mesh, armature, vertex_group):
 
     vertices_in_group_bone_space = [pose_bone_matrix @ v.co for v in vertices_in_group]
 
-    min_x = min((v[0] for v in vertices_in_group_bone_space))
+    try:
+        min_x = min((v[0] for v in vertices_in_group_bone_space))
+    except:
+        raise ExportError("The mesh {} has empty vertices group, remove them before the export".format(blender_mesh.name))
     min_y = min((v[1] for v in vertices_in_group_bone_space))
     min_z = min((v[2] for v in vertices_in_group_bone_space))
     max_x = max((v[0] for v in vertices_in_group_bone_space))

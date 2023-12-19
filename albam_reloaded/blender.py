@@ -46,7 +46,13 @@ class AlbamSettings(bpy.types.PropertyGroup):
         description="Clear temporary folder before the import",
         default = False
         )
-    
+    transfer_normals_bool : bpy.props.BoolProperty(
+        name="AlbamSet transfer normals",
+        description="Automatically transfer normals from a temporary copy",
+        default = True
+        )
+
+
 class CopyCustomPropertiesMat(bpy.types.Operator):
     """Copy Albam material properties from the active material"""
     bl_idname = "material.custom_property_copy"
@@ -221,9 +227,9 @@ class ALBAM_PT_CustomMaterialOptions(bpy.types.Panel):
         row = layout.row()
         row.operator("material.custom_property_copy")
         row.operator("material.custom_property_paste")
-        row1 = layout.row()
-        row1.operator("material.custom_property_store")
-        row1.operator("material.custom_property_load")
+        row = layout.row()
+        row.operator("material.custom_property_store")
+        row.operator("material.custom_property_load")
         for prop_name, _, _ in blender_registry.bpy_props.get('material', []): # get unk_ properties for a material:'unk_01' 32835
             layout.prop(mat, prop_name) # add property for panel
 
@@ -307,8 +313,11 @@ class ALBAM_PT_ToolsPanel(bpy.types.Panel):
 
     def draw(self, context):
         scn = context.scene
+        export_settings = scn.albam_export_settings
         layout = self.layout
-        layout.operator('albam_tools.fix_leaked_texures', text="Fix leaked textures")
+        row = layout.row()
+        row.operator('albam_tools.fix_leaked_texures', text="Fix leaked textures")
+        row.prop(export_settings, "transfer_normals_bool", text="")
         layout.operator('albam_tools.select_invalid_meshes', text="Select invalid meshes")
         layout.operator('albam_tools.remove_empty_vertex_groups', text="Remove empty vertex groups")
         layout.operator('albam_tools.rename_bones', text="Auto-rename bones")

@@ -99,8 +99,8 @@ DEFAULT_MATERIAL = {
 
 DEFAULT_MESH = {
     "unk_render_group_index": 0.0,
-    "unk_01": 0,
-    "unk_02": 0,
+    "unk_01": 0, # Z-buffer order
+    "unk_02": 0, 
     "unk_03": 0, # Messes up meshes with any value>0
     "unk_flag_01": 0,
     "unk_flag_02": 0,
