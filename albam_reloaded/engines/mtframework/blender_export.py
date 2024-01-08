@@ -80,7 +80,7 @@ def export_arc(blender_object, file_path):
         if not exportable:
             continue
 
-        exported_mod = export_mod156(child) #run export_mod156 function
+        exported_mod = export_mod156(child)  # run export_mod156 function
         mods[child.name] = exported_mod # {'Pl0200.mod': <ExportedMod, len() = 2>}
         texture_dirs.update(exported_mod.exported_materials.texture_dirs) # path inside arc 'pawn\\pl\\pl02\\model'
         textures_to_export.extend(exported_mod.exported_materials.blender_textures)
@@ -113,9 +113,6 @@ def export_arc(blender_object, file_path):
             texture_name = blender_texture.name
             resolved_path = ntpath_to_os_path(texture_dirs[texture_name])
             tex_file_path = bpy.path.abspath(blender_texture.image.filepath)
-            #check extension
-            if os.path.splitext(tex_file_path)[1] != ".dds":
-                raise ExportError("Exported texture {} uses not a .dds image {}".format(texture_name, blender_texture.image.name))
             tex_filename_no_ext = os.path.splitext(os.path.basename(tex_file_path))[0]
             destination_path = os.path.join(tmpdir, resolved_path, tex_filename_no_ext + '.tex')
             tex = Tex112.from_dds(file_path=bpy.path.abspath(blender_texture.image.filepath))
@@ -142,9 +139,7 @@ def export_mod156(parent_blender_object):
 
     first_children = [child for child in parent_blender_object.children]
     blender_meshes = [c for c in first_children if c.type == 'MESH']
-    if len(blender_meshes)==0:
-        raise ExportError("There is no mesh paternted to a node {}".format(parent_blender_object.name))
-    if (bpy.context.scene.albam_export_settings.export_visible_bool == True):
+    if (bpy.context.scene.albam_export_settings.export_visible_bool):
         visible_meshes = [mesh for mesh in blender_meshes if mesh.visible_get()]
         blender_meshes = visible_meshes
 
@@ -152,9 +147,12 @@ def export_mod156(parent_blender_object):
     if not blender_meshes:
         children_objects = list(chain.from_iterable(child.children for child in first_children))
         blender_meshes = [c for c in children_objects if c.type == 'MESH']
-        if (bpy.context.scene.albam_export_settings.export_visible_bool == True):
+        if (bpy.context.scene.albam_export_settings.export_visible_bool):
             visible_meshes = [mesh for mesh in blender_meshes if mesh.visible_get()]
             blender_meshes = visible_meshes
+
+    if len(blender_meshes) == 0:
+        raise ExportError("There is no mesh paternted to a node {}".format(parent_blender_object.name))
 
     if saved_mod.bone_count:
         bone_palettes = _create_bone_palettes(blender_meshes)

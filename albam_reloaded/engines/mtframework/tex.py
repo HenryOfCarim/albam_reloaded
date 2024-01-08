@@ -1,6 +1,7 @@
 from ctypes import c_int, c_uint, c_char, c_short, c_float, c_ubyte, sizeof
 import os
 
+from ...exceptions import ExportError
 from ...image_formats.dds import DDSHeader, DDS
 from ...lib.structure import DynamicStructure
 from ...registry import blender_registry
@@ -61,6 +62,10 @@ class Tex112(DynamicStructure):
 
     @classmethod
     def from_dds(cls, file_path):
+        with open(file_path, 'rb') as f:
+            magic = f.read(4)
+        if magic != b"DDS ":
+            raise ExportError("Exported texture {} is not a .dds image".format(file_path))
         dds = DDS(file_path=file_path)
         mipmap_count = dds.header.dwMipMapCount
         width = dds.header.dwWidth
