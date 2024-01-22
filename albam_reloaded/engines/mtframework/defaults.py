@@ -11,23 +11,23 @@ DEFAULT_TEXTURE = {
 
 # Mod156, Chris material 19
 DEFAULT_MATERIAL = {
-    #"unk_01": 32835,
-    "unk_01_flag_01":1,
-    "unk_01_flag_02":1,
-    "unk_01_flag_03":0,
-    "unk_01_flag_04":0,
-    "unk_01_flag_05":0,
-    "unk_01_flag_06":0,
-    "unk_01_no_alpha":1,
-    "unk_01_flag_08":0,
-    "unk_01_alpha_transparency'":0,
-    "unk_01_flag_10":0,
-    "unk_01_flag_11":0,
-    "unk_01_flag_12":0,
-    "unk_01_flag_13":0,
-    "unk_01_flag_14":0,
-    "unk_01_flag_15":0,
-    "unk_01_flag_16":0,
+    # "unk_01": 32835,
+    "unk_01_flag_01": 1,
+    "unk_01_flag_02": 1,
+    "unk_01_flag_03": 0,
+    "unk_01_flag_04": 0,
+    "unk_01_flag_05": 0,
+    "unk_01_flag_06": 0,
+    "unk_01_no_alpha": 1,
+    "unk_01_flag_08": 0,
+    "unk_01_alpha_transparency'": 0,
+    "unk_01_flag_10": 0,
+    "unk_01_flag_11": 0,
+    "unk_01_flag_12": 0,
+    "unk_01_flag_13": 0,
+    "unk_01_flag_14": 0,
+    "unk_01_flag_15": 0,
+    "unk_01_flag_16": 0,
     "unk_flag_01": 0,
     "unk_flag_02": 1,
     "unk_flag_03": 0,
@@ -43,7 +43,7 @@ DEFAULT_MATERIAL = {
     "unk_flag_13": 0,
     "unk_flag_14": 0,
     "unk_flag_15": 1,
-    "unk_02_flag_01": 1, #"unk_02": 18563,
+    "unk_02_flag_01": 1,  # "unk_02": 18563,
     "unk_02_flag_02": 1,
     "unk_02_flag_03": 0,
     "unk_02_flag_04": 0,
@@ -79,7 +79,7 @@ DEFAULT_MATERIAL = {
     "unk_f_09": 1.0,
     "unk_f_10": 0.0,
     "unk_f_11": 0.25,
-    "unk_detail_factor": 10.0, # detail map multiplier 10.00 default
+    "unk_detail_factor": 10.0,  # detail map multiplier 10.00 default
     "unk_f_13": 0.0,
     "unk_f_14": 0.5,
     "unk_f_15": 0.0,
@@ -99,15 +99,15 @@ DEFAULT_MATERIAL = {
 
 DEFAULT_MESH = {
     "unk_render_group_index": 0.0,
-    "unk_01": 0, # Z-buffer order
-    "unk_02": 0, 
-    "unk_03": 0, # Messes up meshes with any value>0
+    "unk_01": 0,  # Z-buffer order
+    "unk_02": 0,
+    "unk_03": 0,  # Messes up meshes with any value>0
     "unk_flag_01": 0,
     "unk_flag_02": 0,
     "unk_flag_03": 0,
     "unk_flag_04": 0,
     "unk_flag_05": 0,
-    "unk_flag_06": 1, # High brightness with 0
+    "unk_flag_06": 1,  # High brightness with 0
     "unk_flag_07": 0,
     "unk_05": 0,
     "unk_06": 0,

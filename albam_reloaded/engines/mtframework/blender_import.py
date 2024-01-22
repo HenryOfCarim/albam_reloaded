@@ -10,7 +10,7 @@ try:
 except ImportError:
     pass
 
-from ...exceptions import BuildMeshError, TextureError #my lines IDK where they originally imported
+from ...exceptions import BuildMeshError, TextureError
 
 from ...engines.mtframework import Arc, Mod156, Tex112, KNOWN_ARC_BLENDER_CRASH, CORRUPTED_ARCS
 from ...engines.mtframework.utils import (
@@ -42,8 +42,7 @@ def import_arc(blender_object, file_path, **kwargs):
         raise ValueError('The arc file provided is not supported yet, it might crash Blender')
 
     base_dir = os.path.basename(file_path).replace('.arc', '_arc_extracted')
-    out = unpack_dir or os.path.join(os.path.expanduser('~'), '.albam', 're5', base_dir) #causing an error
-    #out = os.path.join(os.path.expanduser('~'), '.albam', 're5', base_dir)
+    out = unpack_dir or os.path.join(os.path.expanduser('~'), '.albam', 're5', base_dir)
     if not os.path.isdir(out):
         os.makedirs(out)
     if not out.endswith(os.path.sep):
@@ -51,7 +50,7 @@ def import_arc(blender_object, file_path, **kwargs):
 
     arc = Arc(file_path=file_path)
     # make sure we have an empty dir (from previous imports)
-    if (bpy.context.scene.albam_export_settings.clear_temp_foder_bool == True):
+    if (bpy.context.scene.albam_export_settings.clear_temp_foder_bool):
         existing_files = [os.path.join(root, f) for root, _, files in os.walk(out) for f in files]
         for f in existing_files:
             os.remove(f)
@@ -71,7 +70,7 @@ def import_arc(blender_object, file_path, **kwargs):
 
 @blender_registry.register_function('import', identifier=b'MOD\x00')
 def import_mod(blender_object, file_path, **kwargs):
-    base_dir = kwargs.get('base_dir') # full path to _extracted folder
+    base_dir = kwargs.get('base_dir')  # full path to _extracted folder
 
     mod = Mod156(file_path=file_path)
     textures = _create_blender_textures_from_mod(mod, base_dir)
@@ -96,7 +95,7 @@ def import_mod(blender_object, file_path, **kwargs):
     if mod.bone_count:
         armature_name = 'skel_{}'.format(blender_object.name)
         root = _create_blender_armature_from_mod(blender_object, mod, armature_name)
-        root.show_in_front = True # set x-ray view for bones
+        root.show_in_front = True  # set x-ray view for bones
     else:
         root = blender_object
 
@@ -142,8 +141,8 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
     me_ob.use_auto_smooth = True
 
     mesh_material = materials[mesh.material_index]
-    if not mesh.use_cast_shadows and mesh_material.shadow_method: # code gets .use_cast_shadows from mesh's custom props
-        mesh_material.shadow_method = 'NONE' # if use_cast_shadows is false and a material shadows is enabled, set it to NONE
+    if not mesh.use_cast_shadows and mesh_material.shadow_method:  # code gets .use_cast_shadows from mesh's custom props
+        mesh_material.shadow_method = 'NONE'  # if use_cast_shadows is false and a material shadows is enabled, set it to NONE
     me_ob.materials.append(mesh_material)
 
     for bone_index, data in weights_per_bone.items():
@@ -173,22 +172,22 @@ def _build_blender_mesh_from_mod(mod, mesh, mesh_index, name, materials):
             offset = loop.vertex_index * 2
             per_loop_list.extend((source_uvs[offset], source_uvs[offset + 1]))
         uv_layer.data.foreach_set('uv', per_loop_list)
-    
-    # vertex colors import for static meshes 
+
+    # vertex colors import for static meshes
     if mesh.vertex_format == 0 and mesh_material.unk_flag_8_bones_vertex:
         me_ob.vertex_colors.new(name="imported_colors")
         color_layer = me_ob.vertex_colors["imported_colors"]
         for poly in me_ob.polygons:
             # loop through all loops in the polygon
             for loop_index in poly.loop_indices:
-                #print("loop index is {}".format(loop_index))
+                # print("loop index is {}".format(loop_index))
                 # get the loop object
                 loop = me_ob.loops[loop_index]
                 # check if the loop's vertex index matches the desired one
                 if vertex_colors[loop.vertex_index]:
                     # set the color of the loop to red
-                    #color_layer.data[loop_index].color = (0.0, 1.0, 0.0, 1.0)
-                    color_layer.data[loop_index].color = vertex_colors [loop.vertex_index]
+                    # color_layer.data[loop_index].color = (0.0, 1.0, 0.0, 1.0)
+                    color_layer.data[loop_index].color = vertex_colors[loop.vertex_index]
 
     # Saving unknown metadata for export
     # TODO: use a util function
@@ -207,7 +206,7 @@ def _import_vertices(mod, mesh):
 
 
 def _import_vertices_mod156(mod, mesh):
-    vertices_array = get_vertices_array(mod, mesh) # get vertices according to vertex format
+    vertices_array = get_vertices_array(mod, mesh)  # get vertices according to vertex format
     material_array = mod.materials_data_array
 
     if mesh.vertex_format != 0:
@@ -223,19 +222,19 @@ def _import_vertices_mod156(mod, mesh):
                              ((v.normal_z / 255) * 2) - 1), vertices_array)
     # y up to z up
     normals = map(lambda n: (n[0], n[2] * -1, n[1]), normals)
-    uvs = [(unpack_half_float(v.uv_x), (1- unpack_half_float(v.uv_y))) for v in vertices_array]
+    uvs = [(unpack_half_float(v.uv_x), (1 - unpack_half_float(v.uv_y))) for v in vertices_array]
     sorted_vertex_colors = []
     # XXX: normalmap has uvs as well? and then this should be uv3?
     if mesh.vertex_format == 0:
-        uvs2 = [(unpack_half_float(v.uv2_x), (unpack_half_float(v.uv2_y) * -1) +1) for v in vertices_array]
+        uvs2 = [(unpack_half_float(v.uv2_x), (unpack_half_float(v.uv2_y) * -1) + 1) for v in vertices_array]
         # from [0, 255] to [0.0, 1]
         if material_array[mesh.material_index].unk_flag_8_bones_vertex:
             uvs3 = []
-            vertex_colors = map (lambda v: ((v.uv3_x & 0xFF) / 255,
-                                            (v.uv3_x>>8 & 0xFF) / 255,
+            vertex_colors = map(lambda v: ((v.uv3_x & 0xFF) / 255,
+                                            (v.uv3_x >> 8 & 0xFF) / 255,
                                             (v.uv3_y & 0xFF) / 255,
-                                            (v.uv3_y>>8 & 0xFF) / 255
-                                            ),vertices_array)
+                                            (v.uv3_y >> 8 & 0xFF) / 255
+                                            ), vertices_array)
             vertex_colors = list(chain.from_iterable(vertex_colors))
             # pack colors to a list
             for vc in range(len(vertex_colors)//4):
@@ -269,6 +268,7 @@ def _get_path_to_albam():
         else:
             pass
 
+
 def _create_dummy_texture(i, path):
     texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
     texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
@@ -291,15 +291,15 @@ def _create_blender_textures_from_mod(mod, base_dir):
     # here the whole array of chars
 
     for i, texture_path in enumerate(mod.textures_array):
-        path = texture_path[:].decode('ascii').partition('\x00')[0] # relative path to a texture in the ARC archive without extension
-        path = os.path.join(base_dir, *path.split(ntpath.sep))# full path to a texture
-        path = '.'.join((path, 'tex')) # full path to a texture with .tex extension
+        path = texture_path[:].decode('ascii').partition('\x00')[0]  # relative path to a texture in the ARC archive without extension
+        path = os.path.join(base_dir, *path.split(ntpath.sep))  # full path to a texture
+        path = '.'.join((path, 'tex'))  # full path to a texture with .tex extension
         if not os.path.isfile(path):
             # TODO: log warnings, figure out 'rtex' format
             print('path {} does not exist'.format(path))
             # add a placeholder instead of the missing texure
-            dummy_texture =_create_dummy_texture(i, path)
-            textures.append(dummy_texture) 
+            dummy_texture = _create_dummy_texture(i, path)
+            textures.append(dummy_texture)
             continue
         tex = Tex112(path)
         try:
@@ -308,21 +308,21 @@ def _create_blender_textures_from_mod(mod, base_dir):
             # TODO: log this instead of printing it
             print('Error converting "{}"to dds: {}'.format(path, err))
             dummy_texture = _create_dummy_texture(i, path)
-            textures.append(dummy_texture) 
+            textures.append(dummy_texture)
             continue
-        dds_path = path.replace('.tex', '.dds') # change extension in the full path
-        with open(dds_path, 'wb') as w: #write bynary
+        dds_path = path.replace('.tex', '.dds')  # change extension in the full path
+        with open(dds_path, 'wb') as w:  # write bynary
             w.write(dds)
         image = bpy.data.images.load(dds_path, check_existing=True)
         texture_name_no_extension = os.path.splitext(os.path.basename(path))[0]
-        #texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
+        # texture_name_no_extension = str(i).zfill(2) + texture_name_no_extension
         texture = bpy.data.textures.get(texture_name_no_extension)
         # Create a texture data block if not exist
         if not texture:
-            texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE') # bpy.data.textures['00pl0200_09AllHair_BM']
-            texture.use_fake_user = True # Set fake user to prevent removing after saving to .blend
-            texture.image = image 
-        textures.append(texture) #create a list with bpy.data.textures
+            texture = bpy.data.textures.new(texture_name_no_extension, type='IMAGE')  # bpy.data.textures['00pl0200_09AllHair_BM']
+            texture.use_fake_user = True  # Set fake user to prevent removing after saving to .blend
+            texture.image = image
+        textures.append(texture)  # create a list with bpy.data.textures
 
         # saving meta data for export
         # TODO: use a util function
@@ -339,30 +339,24 @@ def _create_blender_textures_from_mod(mod, base_dir):
 def _create_blender_materials_from_mod(mod, model_name, textures):
     '''textures: bpy.data.textures'''
     materials = []
-    existed_textures = []
     if not bpy.data.node_groups.get("MT Framework shader"):
-        shader_node = create_shader_node_group()
+        create_shader_node_group()
 
     for i, material in enumerate(mod.materials_data_array):
         blender_material = bpy.data.materials.new('{}_{}'.format(model_name, str(i).zfill(2)))
         blender_material.use_nodes = True
-        blender_material.blend_method = 'CLIP' # set transparency method 'OPAQUE', 'CLIP', 'HASHED', 'BLEND'
-        #blender_material.alpha_treshhold = 0.33
-        
-        #node_to_delete = blender_material.node_tree.nodes.get("Principled BSDF")
+        blender_material.blend_method = 'CLIP'  # set transparency method 'OPAQUE', 'CLIP', 'HASHED', 'BLEND'
         node_to_delete = None
         for node in blender_material.node_tree.nodes:
             if node.type == 'BSDF_PRINCIPLED':
                 node_to_delete = node
                 break
         if node_to_delete:
-            blender_material.node_tree.nodes.remove( node_to_delete )
-        #principled_node.inputs['Specular'].default_value = 0.2 # change specular
+            blender_material.node_tree.nodes.remove(node_to_delete)
         shader_node_group = blender_material.node_tree.nodes.new('ShaderNodeGroup')
         shader_node_group.node_tree = bpy.data.node_groups["MT Framework shader"]
         shader_node_group.name = "MTFrameworkGroup"
         shader_node_group.width = 300
-        #material_output = blender_material.node_tree.nodes.get("Material Output")
         material_output = None
         for node in blender_material.node_tree.nodes:
             if node.type == 'OUTPUT_MATERIAL':
@@ -375,7 +369,7 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
 
         # unknown data for export, registered already
         # TODO: do this with a util function
-        for field_tuple in material._fields_: # add custom properties to material
+        for field_tuple in material._fields_:  # add custom properties to material
             attr_name = field_tuple[0]
             if not attr_name.startswith('unk_'):
                 continue
@@ -396,13 +390,13 @@ def _create_blender_materials_from_mod(mod, model_name, textures):
                 # This means the conversion failed before
                 # TODO: logging
                 continue
-            #if texture_code == 6:
+            # if texture_code == 6:
             #    print('texture_code not supported', texture_code)
             #    continue
-            texture_node = blender_material.node_tree.nodes.new('ShaderNodeTexImage') 
+            texture_node = blender_material.node_tree.nodes.new('ShaderNodeTexImage')
             texture_code_to_blender_texture(texture_code, texture_node, blender_material)
-            texture_node.image = texture_target.image # set bpy.data.textures[].image as a texures for ShaderNodeTexImage
-            if  texture_code  == 1 or texture_code  == 7: # change color settings for normal and detail maps
+            texture_node.image = texture_target.image  # set bpy.data.textures[].image as a texures for ShaderNodeTexImage
+            if texture_code == 1 or texture_code == 7:  # change color settings for normal and detail maps
                 texture_node.image.colorspace_settings.name = 'Non-Color'
 
     return materials
@@ -413,8 +407,8 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
     armature_ob = bpy.data.objects.new(armature_name, armature)
     armature_ob.parent = blender_object
 
-    #set to Object mode
-    if bpy.context.mode != 'OBJECT': 
+    # set to Object mode
+    if bpy.context.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
     # deselect all objects
     for i in bpy.context.scene.objects:
@@ -427,7 +421,7 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
     blender_bones = []
     non_deform_bone_indices = get_non_deform_bone_indices(mod)
 
-    for i, bone in enumerate(mod.bones_array): # add counter to the array
+    for i, bone in enumerate(mod.bones_array):  # add counter to the array
         blender_bone = armature.edit_bones.new(str(i))
 
         if i in non_deform_bone_indices:
@@ -450,9 +444,7 @@ def _create_blender_armature_from_mod(blender_object, mod, armature_name):
         blender_bone.tail = Vector((blender_bone.head[0], blender_bone.head[1], blender_bone.head[2] + 0.01))
         blender_bones.append(blender_bone)
 
-
     assert len(blender_bones) == len(mod.bones_array)
-
 
     bpy.ops.object.mode_set(mode='OBJECT')
     assert len(armature.bones) == len(mod.bones_array)

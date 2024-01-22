@@ -5,11 +5,11 @@ except ImportError:
     pass
 
 
-def show_message_box(message = "", title = "Message Box", icon = 'INFO'):
+def show_message_box(message="", title="Message Box", icon='INFO'):
     def draw(self, context):
         self.layout.label(text=message)
 
-    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
 
 
 def split_seams(me):
@@ -39,20 +39,20 @@ def split_UV_seams_operator(selected_meshes):
             temp_list = []
             temp_data = me.copy()
             temp_mesh = mesh.copy()
-            temp_mesh.data = temp_data 
+            temp_mesh.data = temp_data
         # in order to select edges, you need to make sure that
         # previously you deselected everything in the Edit Mode
         # and set the select_mode to 'EDGE'
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.mesh.select_mode(type = 'EDGE')
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_mode(type='EDGE')
         bpy.ops.mesh.select_all(action='SELECT')
-        split_seams(me) 
-        bpy.ops.mesh.select_all(action = 'DESELECT')
-        
+        split_seams(me)
+        bpy.ops.mesh.select_all(action='DESELECT')
+
         # we need to return back to the OBJECT mode,
         # otherwise, the result won't be seen,
         # see https://blender.stackexchange.com/questions/43127 for info
-        bpy.ops.object.mode_set(mode = 'OBJECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
         if (bpy.context.scene.albam_export_settings.transfer_normals_bool):
             # transfer normals and remove temporal mesh
             temp_list.append(mesh)
@@ -74,7 +74,7 @@ def select_invalid_meshes_operator(scene_meshes):
     invalid_vertex_groups = []
     visible_meshes = [ob for ob in scene_meshes if ob.visible_get()]
     for mesh in visible_meshes:
-        armature = mesh.parent #
+        armature = mesh.parent
         if armature:
             vertex_group_mapping = {vg.index: armature.pose.bones.find(vg.name) for vg in mesh.vertex_groups}
             vertex_group_mapping = {k: v for k, v in vertex_group_mapping.items() if v != -1}
@@ -85,15 +85,13 @@ def select_invalid_meshes_operator(scene_meshes):
                 invalid_vertex_groups.append(mesh)
                 bone_indices = {}
 
-            if len(bone_indices)>32:
+            if len(bone_indices) > 32:
                 invalid_meshes.append(mesh)
         else:
             continue
     if invalid_meshes:
         for mesh in invalid_meshes:
-            #mesh.hide_select = False
             mesh.select_set(True)
-            #bpy.context.view_layer.objects.active = mesh
         show_message_box(message="Meshes with more than 32 bone influences selected")
     else:
         show_message_box(message="There is no invalid mesh among visible")
@@ -106,5 +104,5 @@ def transfer_normals(source_obj, target_objs):
             modifier.use_loop_data = True
             modifier.data_types_loops = {'CUSTOM_NORMAL'}
             modifier.object = source_obj
-            bpy.context.view_layer.objects.active  = obj
+            bpy.context.view_layer.objects.active = obj
             bpy.ops.object.modifier_apply(modifier=modifier.name)
