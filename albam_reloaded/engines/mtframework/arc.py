@@ -81,8 +81,12 @@ class Arc(DynamicStructure):
                 chunk = zlib.compress(f.read())
             data.extend(chunk)
             ext = os.path.splitext(file_path)[1].replace('.', '')
+            try:
+                default = int(ext)
+            except ValueError:
+                default = 0
             file_entries[i] = FileEntry(file_path=cls._set_path(source_path, file_path),
-                                        file_id=EXTENSION_TO_FILE_ID.get(ext) or 0,
+                                        file_id=EXTENSION_TO_FILE_ID.get(ext, default),
                                         flags=2,  # always compressing
                                         size=os.path.getsize(file_path),
                                         zsize=len(chunk), offset=current_offset)
