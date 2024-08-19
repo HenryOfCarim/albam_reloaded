@@ -22,7 +22,9 @@ Basic overview of the addon and its limitation you can find on the [wiki page](h
 Basic demonstration of modding process is here [youtube playlist link](https://www.youtube.com/playlist?list=PLylhrXLaRiau0Q27cBihqJIkgxQr-CEUh)
 
 # Contacts
-<img src="https://discord.com/api/guilds/1008767651578925076/widget.png?style=banner2" alt="Discord Banner 2"/>
+
+[<img src="https://discord.com/api/guilds/1008767651578925076/widget.png?style=banner2" alt="Discord Banner 2"/>](https://discord.gg/69sphky9UX)
+
 If you are willing to help in development or get quick help you can visit our discord server
 
 # Thanks
