@@ -75,7 +75,7 @@ def register():
             kwargs['default'] = default
         prop_instance = prop_cls(**kwargs)
         setattr(bpy.types.Mesh, prop_name, prop_instance)
-    
+
     ''' Classic blender 2.80 registration of classes'''
     from bpy.utils import register_class
     for cls in classes:
@@ -88,19 +88,21 @@ def register():
     bpy.types.Scene.albam_copypaste_buffer_mesh = bpy.props.StringProperty()
     bpy.types.Scene.albam_scene_meshes = bpy.props.PointerProperty(type=bpy.types.Object, poll=mesh_filter)
 
+
 def unregister():
     ''' Classic blender 2.80 unregistration of classes'''
     from bpy.utils import unregister_class
     for cls in reversed(classes):
-         unregister_class(cls)
-    
-    del bpy.types.Scene.albam_item_to_export 
+        unregister_class(cls)
+
+    del bpy.types.Scene.albam_item_to_export
     del bpy.types.Scene.albam_items_imported
     del bpy.types.Object.albam_imported_item
     del bpy.types.Scene.albam_export_settings
     del bpy.types.Scene.albam_copypaste_buffer
     del bpy.types.Scene.albam_copypaste_buffer_mesh
     del bpy.types.Scene.albam_scene_meshes
+
 
 if __name__ == "__main__":
     register()
