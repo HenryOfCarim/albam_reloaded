@@ -1,7 +1,8 @@
 # Albam Reloaded
 Updated and upgraded Sebastian Brachi's albam addon to blender 2.80+ for Resident Evil 5 modding
 
-The addon was tested on Blender 2.80 - 3.6, functionality on other versions hasn't been tested
+> [!NOTE]
+This is a legacy addon intended for Blender 2.8-3.6, The addon for further Blender version is here [Albam Redux](https://github.com/Brachi/albam)
 
 With the current version you can:
 - edit character meshes
